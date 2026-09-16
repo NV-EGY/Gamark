@@ -1,2 +1,1 @@
-# Gamark
-lkj[ la]hj 
+مشدات كورسيه
