@@ -38,24 +38,23 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GAMARK | مشدات كورسيه فاخرة</title>
-<meta name="description" content="مشدات كورسيه فاخرة من CURVÉ. تصاميم أنيقة، خامات عالية الجودة، أسعار تنافسية.">
+ <title>GAMARK | مشدات كورسيه فاخرة</title>
 
-  <!-- تحسين SEO -->
-  <meta name="description" content="اكتشفي تشكيلة فانتي GAMARK الفاخرة من الإكسسوارات الحريمي المصنوعة من الدهب الاستانلس. خواتم، سلاسل، أساور، حلقان بجودة ممتازة وأسعار تنافسية. تسوقي الآن واستمتعي بخصومات حصرية.">
-  <meta name="keywords" content="فانتي, GAMARK, دهب استانلس, اكسسوارات حريمي, خواتم, سلاسل, أساور, حلقان, إكسسوارات فاخرة, دهب صيني, ستانلس ستيل, مجوهرات نسائية, هدايا">
-  <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#D4AF37">
+<!-- تحسين SEO -->
+<meta name="description" content="اكتشفي تشكيلة GAMARK الفاخرة من مشدات الكورسيه. مشدات بطن، مشدات كامل الجسم، مشدات فخذ وذراع بجودة عالية وأسعار تنافسية. تسوقي الآن واستمتعي بخصومات حصرية.">
+<meta name="keywords" content="GAMARK, جمرك, مشدات كورسيه, كورسيه, شيبوير, مشد بطن, مشدات كامل الجسم, مشدات فخذ, مشدات ذراع, أحزمة بطن, تحديد القوام">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#5D3A7A">
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="فانتي GAMARK - إكسسوارات حريمي دهب استانلس فاخرة">
-  <meta property="og:description" content="أحدث تشكيلة من الإكسسوارات الحريمي الفاخرة من فانتي GAMARK. خواتم، سلاسل، أساور وحلقان بجودة ممتازة وأسعار تنافسية.">
-  <meta property="og:image" content="https://Vante.sbs/images/preview.jpg">
-  <meta property="og:url" content="https://Vante.sbs">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="GAMARK - إكسسوارات فاخرة">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="https://Vante.sbs/images/preview.jpg">
+<!-- Open Graph -->
+<meta property="og:title" content="GAMARK - مشدات كورسيه فاخرة">
+<meta property="og:description" content="أحدث تشكيلة من مشدات الكورسيه الفاخرة من GAMARK. تحديد القوام وشد الجسم بثقة.">
+<meta property="og:image" content="https://nv-egy.github.io/Gamark/images/preview.jpg">
+<meta property="og:url" content="https://nv-egy.github.io/Gamark/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="GAMARK - مشدات كورسيه فاخرة">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://nv-egy.github.io/Gamark/images/preview.jpg">
 
   <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
   <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
@@ -70,7 +69,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="application-name" content="GAMARK">
   <link rel="manifest" href="manifest.json">
 
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;700;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
   <style>
@@ -2792,61 +2791,61 @@ button, input, select { font-family: inherit; outline: none; }
   min-height: 0;                 /* مهم عشان يشتغل مع flex */
     }
 
-  /* ==========================================================
-   🎨 GAMARK Theme - Purple & Gold (Based on Logo)
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    padding: 5px 0;
+    transition: all 0.3s ease;
+}
+.logo-wrapper img {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+.logo-wrapper:hover img {
+    transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+    .logo-wrapper img {
+        height: 40px;
+    }
+}
+
+ /* ==========================================================
+   🎨 GAMARK - Theme Override (Purple & Gold from Logo)
    ========================================================== */
 
 :root {
-    /* الألوان الأساسية من اللوجو */
-    --gm-purple-dark: #5D3A7A;      /* البنفسجي الغامق */
-    --gm-purple: #7B4B8A;            /* البنفسجي المتوسط */
-    --gm-purple-light: #8E5A9E;      /* البنفسجي الفاتح */
-    --gm-purple-pale: #F0E6F5;       /* البنفسجي الباهت (للخلفيات) */
-    
-    --gm-gold: #D4A017;              /* الذهبي الأساسي */
-    --gm-gold-light: #E8B923;        /* الذهبي الفاتح */
-    --gm-gold-dark: #A67C00;         /* الذهبي الغامق */
-    
-    --gm-teal-dark: #1F5A6E;         /* الأزرق المخضر */
-    --gm-teal: #2C6E7F;              /* الأزرق المتوسط */
-    
-    /* الأساسيات */
-    --gm-black: #1A1A1A;
-    --gm-white: #FFFFFF;
-    --gm-bg: #FAF8FB;                /* خلفية فاتحة بلمسة بنفسجية */
+    --gm-purple-dark: #5D3A7A;
+    --gm-purple: #7B4B8A;
+    --gm-purple-light: #8E5A9E;
+    --gm-gold: #D4A017;
+    --gm-gold-light: #E8B923;
+    --gm-gold-dark: #A67C00;
+    --gm-teal: #1F5A6E;
+    --gm-bg: #FAF8FB;
     --gm-text: #2D2D2D;
-    --gm-text-light: #6B6B6B;
     --gm-border: #E8E0ED;
 }
 
-
-
-/* ==========================================================
-   GAMARK OVERRIDE - Purple & Gold Theme
-   ========================================================== */
-
-/* ===== الخلفية العامة ===== */
+/* ===== الخلفية والنصوص ===== */
 body {
     background: var(--gm-bg) !important;
     color: var(--gm-text) !important;
 }
 
-/* ===== الشريط العلوي (Offer Bar) ===== */
+/* ===== الشريط العلوي ===== */
 .top-offer {
     background: linear-gradient(180deg, #1A1A1A 0%, #2D1F3A 100%) !important;
 }
 .top-offer::after {
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        rgba(93,58,122,0.3) 10%, 
-        #5D3A7A 50%, 
-        rgba(93,58,122,0.3) 90%, 
-        transparent 100%) !important;
-    box-shadow: 0 0 8px rgba(93,58,122,0.5), 0 0 3px rgba(212,160,23,0.3) !important;
+    background: linear-gradient(90deg, transparent 0%, rgba(93,58,122,0.4) 10%, #5D3A7A 50%, rgba(93,58,122,0.4) 90%, transparent 100%) !important;
+    box-shadow: 0 0 8px rgba(93,58,122,0.6), 0 0 3px rgba(212,160,23,0.3) !important;
 }
-.offer-text {
-    color: #F0E6F5 !important;
-}
+.offer-text { color: #F0E6F5 !important; }
 .offer-text::before {
     color: var(--gm-gold) !important;
     text-shadow: 0 0 6px var(--gm-gold) !important;
@@ -2860,43 +2859,56 @@ body {
     color: #1A1A1A !important;
 }
 
-/* ===== شريط التنقل ===== */
+/* ===== النافبار ===== */
 .nav-bar {
     background: #FFFFFF !important;
     border-bottom: 1px solid var(--gm-border) !important;
     box-shadow: 0 5px 20px rgba(93,58,122,0.05) !important;
 }
-.menu a {
-    color: var(--gm-black) !important;
+
+/* اللوجو - يحافظ على الصورة */
+.logo-wrapper img {
+    height: 50px;
+    width: auto;
+    transition: transform 0.3s ease;
 }
-.menu a:hover {
-    color: var(--gm-purple-dark) !important;
+.logo-wrapper:hover img {
+    transform: scale(1.05);
 }
+
+/* لو مفيش صورة، اللوجو النصي */
+.logo {
+    font-family: 'Playfair Display', 'Cairo', serif !important;
+    font-weight: 900 !important;
+    background: linear-gradient(135deg, #5D3A7A, #8E5A9E, #D4A017) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* روابط القائمة */
+.menu a { color: #1A1A1A !important; }
+.menu a:hover { color: var(--gm-purple-dark) !important; }
 .menu a::after {
     background: linear-gradient(90deg, var(--gm-purple-dark), var(--gm-gold)) !important;
 }
 
-/* ===== الأيقونات ===== */
+/* أيقونات النافبار */
 .icons button {
     background: var(--gm-purple-dark) !important;
 }
 .icons button:hover {
     background: linear-gradient(135deg, var(--gm-gold), var(--gm-gold-light)) !important;
-    color: var(--gm-black) !important;
+    color: #1A1A1A !important;
 }
 .cart-count {
     background: linear-gradient(135deg, var(--gm-gold), var(--gm-gold-light)) !important;
-    color: var(--gm-black) !important;
+    color: #1A1A1A !important;
 }
 
-/* ===== العناوين الرئيسية ===== */
+/* ===== العناوين الرئيسية (flame-title) ===== */
 .flame-title {
-    background: linear-gradient(90deg, 
-        #5D3A7A 0%, 
-        #8E5A9E 20%, 
-        #E8B923 40%, 
-        #8E5A9E 60%, 
-        #5D3A7A 100%) !important;
+    background: linear-gradient(90deg, #5D3A7A 0%, #8E5A9E 20%, #E8B923 40%, #8E5A9E 60%, #5D3A7A 100%) !important;
     background-size: 200% auto !important;
     -webkit-background-clip: text !important;
     background-clip: text !important;
@@ -2933,12 +2945,21 @@ body {
     background: #F0E6F5 !important;
     color: #5D3A7A !important;
 }
+.sort-option.active {
+    background: #5D3A7A !important;
+    color: #FFFFFF !important;
+}
+.sort-option:hover {
+    background: #F0E6F5 !important;
+    color: #5D3A7A !important;
+}
 
 /* ===== شارات الخصم ===== */
 .discount-badge {
     background: linear-gradient(135deg, #D4A017 0%, #E8B923 50%, #D4A017 100%) !important;
     color: #1A1A1A !important;
     box-shadow: 0 0 8px rgba(212,160,23,0.5) !important;
+    border-color: rgba(232,185,35,0.8) !important;
 }
 
 /* ===== أزرار "أضف للسلة" ===== */
@@ -2949,10 +2970,10 @@ body {
 .btn-primary:hover, .add-cart-btn:hover {
     background: linear-gradient(135deg, #D4A017, #E8B923) !important;
     color: #1A1A1A !important;
-    box-shadow: 0 12px 30px rgba(212,160,23,0.35) !important;
+    box-shadow: 0 12px 30px rgba(212,160,23,0.4) !important;
 }
 
-/* ===== السعر ===== */
+/* ===== الأسعار ===== */
 .price, .product-price .current, .modal-price,
 .cart-item-price, .total {
     color: #5D3A7A !important;
@@ -2964,6 +2985,33 @@ body {
 .stars-container span.active {
     color: #D4A017 !important;
     text-shadow: 0 0 8px rgba(212,160,23,0.6), 0 0 18px rgba(212,160,23,0.4) !important;
+}
+.stars-container span {
+    color: #ddd !important;
+}
+
+/* ===== مودال المنتج ===== */
+#productModal .modal-sku-bar {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
+}
+#productModal .modal-sku-bar span:first-child {
+    color: #E8B923 !important;
+}
+
+/* الأزرار داخل المودال */
+.modal-footer-actions .modal-add-btn {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
+    color: #FFFFFF !important;
+}
+.modal-footer-actions .modal-add-btn:hover {
+    background: linear-gradient(135deg, #D4A017, #E8B923) !important;
+    color: #1A1A1A !important;
+}
+
+/* حجم المقاس */
+.size-select:focus {
+    border-color: #5D3A7A !important;
+    box-shadow: 0 0 0 4px rgba(93,58,122,0.15) !important;
 }
 
 /* ===== الفوتر ===== */
@@ -2987,16 +3035,14 @@ body {
     border-top-color: rgba(212,160,23,0.15) !important;
 }
 
-/* ===== السلة ===== */
-.drawer h2 {
-    color: #5D3A7A !important;
-}
+/* ===== السلة (Drawer) ===== */
+.drawer h2 { color: #5D3A7A !important; }
 .qty-btn:hover {
     background: #5D3A7A !important;
     color: #FFFFFF !important;
 }
 
-/* ===== الـ checkmark/confirm ===== */
+/* ===== أزرار Confirm ===== */
 .confirm-btn-confirm {
     background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
     color: #FFFFFF !important;
@@ -3013,9 +3059,15 @@ body {
     color: #1A1A1A !important;
 }
 
-/* ===== ستوك ===== */
+/* ===== الستوك ===== */
 .stock-progress-fill.normal {
     background: linear-gradient(90deg, #5D3A7A, #D4A017) !important;
+}
+.stock-progress-fill.critical {
+    background: linear-gradient(90deg, #c0392b, #e74c3c) !important;
+}
+.stock-progress-fill.low {
+    background: linear-gradient(90deg, #f39c12, #e67e22) !important;
 }
 
 /* ===== زر "كل المنتجات" ===== */
@@ -3030,9 +3082,7 @@ body {
     color: #E8B923 !important;
     box-shadow: 0 18px 55px rgba(212,160,23,0.4) !important;
 }
-.btn-all-products i {
-    color: #D4A017 !important;
-}
+.btn-all-products i { color: #D4A017 !important; }
 
 /* ===== الـ sidebar (الديسكتوب) ===== */
 .desktop-sidebar .filter-group .filter-option:hover,
@@ -3043,7 +3093,7 @@ body {
     border-color: #5D3A7A !important;
 }
 
-/* ===== الـ modal ===== */
+/* ===== الأزرار العامة ===== */
 .close-modal:hover {
     background: #5D3A7A !important;
     color: #FFFFFF !important;
@@ -3064,6 +3114,9 @@ body {
     background: linear-gradient(135deg, #D4A017, #E8B923) !important;
     color: #1A1A1A !important;
 }
+.sticky-search-box i {
+    color: #E8B923 !important;
+}
 
 /* ===== زر "عرض المزيد" ===== */
 .load-more-btn {
@@ -3076,10 +3129,12 @@ body {
     box-shadow: 0 10px 30px rgba(93,58,122,0.3) !important;
 }
 
-/* ===== الشارات ===== */
+/* ===== Collection Toggle ===== */
 .collection-toggle.active {
     color: #5D3A7A !important;
 }
+
+/* ===== شارة التقييم على البطاقة ===== */
 .review-badge {
     color: #E8B923 !important;
     border-color: rgba(212,160,23,0.3) !important;
@@ -3100,9 +3155,60 @@ body {
     color: #E8B923 !important;
 }
 
-.logo {
-    font-family: 'Playfair Display', serif !important;
-    font-weight: 900 !important;
+/* ===== صندوق "تصفح كل المشدات" في الموبايل ===== */
+.promo-box {
+    background: linear-gradient(135deg, #F0E6F5, #FAF8FB) !important;
+    border-right-color: #5D3A7A !important;
+}
+.promo-box .promo-icon {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
+}
+.promo-box .promo-icon i {
+    color: #E8B923 !important;
+}
+.promo-box .promo-title {
+    color: #5D3A7A !important;
+}
+.promo-box .promo-link {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
+    color: #FFFFFF !important;
+}
+.promo-box .promo-link:hover {
+    background: linear-gradient(135deg, #D4A017, #E8B923) !important;
+    color: #1A1A1A !important;
+}
+
+/* ===== خلفية "لا توجد منتجات" ===== */
+.empty-products-msg {
+    color: #5D3A7A !important;
+}
+
+/* ===== الـ toast ===== */
+.vante-toast {
+    border-color: #D4A017 !important;
+}
+.vante-toast.success {
+    border-color: #D4A017 !important;
+    background: rgba(45, 31, 58, 0.95) !important;
+}
+
+/* ===== زر "كن أول من يقيم" ===== */
+.btn-be-first-review {
+    border-color: #5D3A7A !important;
+    color: #5D3A7A !important;
+}
+.btn-be-first-review:hover {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 6px 20px rgba(93,58,122,0.25) !important;
+}
+
+/* ===== زر عرض المزيد للوصف ===== */
+.read-more-btn {
+    color: #5D3A7A !important;
+}
+.read-more-btn:hover {
+    color: #D4A017 !important;
 }
 
 </style>
@@ -3145,50 +3251,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- القائمة الجانبية (موبايل) -->
   <nav class="mobile-menu" id="mobileMenu">
     <div class="mobile-menu-header">
-      <div class="mobile-icons-row">
-        <button class="mobile-icon" onclick="openAccount()"><i class="fas fa-user"></i></button>
-        <button class="mobile-icon" onclick="openSearch(); closeMobileMenu()"><i class="fas fa-search"></i></button>
-      </div>
-      <button class="close-menu" onclick="closeMobileMenu()"><i class="fas fa-times"></i></button>
+        <div class="mobile-icons-row">
+            <button class="mobile-icon" onclick="openAccount()"><i class="fas fa-user"></i></button>
+            <button class="mobile-icon" onclick="openSearch(); closeMobileMenu()"><i class="fas fa-search"></i></button>
+        </div>
+        <button class="close-menu" onclick="closeMobileMenu()"><i class="fas fa-times"></i></button>
     </div>
     <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all'); closeMobileMenu()">الصفحة الرئيسية</a>
     <div class="menu-item">
         <a href="#" class="collection-toggle" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
         <div id="collectionsSub" class="collections-sub">
             <a href="?category=all" data-category="all" onclick="handleMenuClick(event, 'all', this); closeMobileMenu()">كل الأقسام</a>
-         <a href="?category=waist" data-category="waist" 
-         onclick="handleMenuClick(event, 'waist', this); closeMobileMenu()">مشدات البطن</a>
-            <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'bracelets', this); closeMobileMenu()">مشدات كامل الجسم</a>
-            <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'rings', this); closeMobileMenu()">مشدات الفخذ</a>
+            <a href="?category=waist" data-category="waist" onclick="handleMenuClick(event, 'waist', this); closeMobileMenu()">مشدات البطن</a>
+            <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'fullbody', this); closeMobileMenu()">مشدات كامل الجسم</a>
+            <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'thigh', this); closeMobileMenu()">مشدات الفخذ</a>
             <a href="?category=arm" data-category="arm" onclick="handleMenuClick(event, 'arm', this); closeMobileMenu()">مشدات الذراع</a>
             <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this); closeMobileMenu()">أطقم مشدات</a>
-            <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'anklets', this); closeMobileMenu()">أحزمة البطن</a>
+            <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'belts', this); closeMobileMenu()">أحزمة البطن</a>
         </div>
     </div>
-    <a href="#" onclick="openContactModal(event)">تواصل مع المسئول</a>
+    <a href="#" onclick="openContactModal(event); return false;">تواصل مع المسئول</a>
     <a href="#" onclick="openInfoModal(); closeMobileMenu(); return false;">دليل المتسوق</a>
-    
-  </nav>
+</nav>
 
   <!-- القائمة الرئيسية (Desktop) -->
   <nav class="menu">
     <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">الصفحة الرئيسية</a>
     <div class="menu-item desktop-dropdown">
-  <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-  <div id="collectionsSubDesktop" class="collections-sub desktop-sub">
-    <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">الأقسام</a>
-    <a href="?category=waist" data-category="waist" onclick="handleMenuClick(event, 'necklaces', this); closeMobileMenu()">مشدات البطن</a>
-            <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'bracelets', this); closeMobileMenu()">مشدات كامل الجسم</a>
-            <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'rings', this); closeMobileMenu()">مشدات الفخذ</a>
-            <a href="?category=arm" data-category="arm" onclick=="handleMenuClick(event, 'earrings', this); closeMobileMenu()">مشدات الذراع</a>
-            <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this); closeMobileMenu()">أطقم مشدات</a>
-            <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'anklets', this); closeMobileMenu()">أحزمة البطن</a>
-  </div>
-</div>
-    <a href="#" onclick="openContactModal(event)">تواصل مع المسئول</a>
-    <a href="#" onclick="openInfoModal()">دليل المتسوق</a>
-    
-  </nav>
+        <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
+        <div id="collectionsSubDesktop" class="collections-sub desktop-sub">
+            <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a>
+            <a href="?category=waist" data-category="waist" onclick="event.preventDefault(); window.setCategory('waist')">مشدات البطن</a>
+            <a href="?category=fullbody" data-category="fullbody" onclick="event.preventDefault(); window.setCategory('fullbody')">مشدات كامل الجسم</a>
+            <a href="?category=thigh" data-category="thigh" onclick="event.preventDefault(); window.setCategory('thigh')">مشدات الفخذ</a>
+            <a href="?category=arm" data-category="arm" onclick="event.preventDefault(); window.setCategory('arm')">مشدات الذراع</a>
+            <a href="?category=sets" data-category="sets" onclick="event.preventDefault(); window.setCategory('sets')">أطقم مشدات</a>
+            <a href="?category=belts" data-category="belts" onclick="event.preventDefault(); window.setCategory('belts')">أحزمة البطن</a>
+        </div>
+    </div>
+    <a href="#" onclick="openContactModal(event); return false;">تواصل مع المسئول</a>
+    <a href="#" onclick="openInfoModal(); return false;">دليل المتسوق</a>
+</nav>
 
   <div class="icons">
     <button onclick="openSearch()"><i class="fas fa-search"></i></button>
@@ -3286,9 +3389,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </div>
     <div class="products-counter" id="productsCounter" style="text-align: center; margin-top: 20px; font-size: 15px; color: #555;"></div>
 
-   /main>
+    </main>
 </div>
-
 <!-- ============================================================
      CART DRAWER
 ============================================================ -->
