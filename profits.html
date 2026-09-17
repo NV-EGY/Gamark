@@ -1,0 +1,1564 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <link rel="manifest" href="manifest-profits.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="أرباح VANTÉ">
+    <meta name="application-name" content="أرباح VANTÉ">
+    <meta name="theme-color" content="#D4AF37">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
+    <link rel="apple-touch-icon" href="images/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="images/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512x512.png">
+    <meta charset="UTF-8">
+    <title>لوحة الأرباح المتكاملة - VANTÉ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* جميع الأنماط كما هي مع بعض التحسينات */
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Cairo',sans-serif;background:#f4f6f9;padding:20px;}
+        .container{max-width:1400px;margin:auto;}
+        .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:30px;}
+        .stat-card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 5px 15px rgba(0,0,0,0.05);border-right:5px solid #D4AF37;transition:all 0.3s ease;}
+        .stat-card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,0.08);}
+        .stat-card h3{font-size:14px;color:#666;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+        .stat-card .value{font-size:32px;font-weight:900;color:#111;}
+        .stat-card .sub-value{font-size:14px;color:#888;margin-top:4px;}
+        .filter-bar{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center;background:#fff;padding:15px 20px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,0.04);}
+        .filter-bar select, .filter-bar input, .filter-bar button{padding:10px 16px;border-radius:12px;border:1px solid #ddd;font-family:Cairo;font-size:14px;background:#fff;transition:all 0.3s;}
+        .filter-bar select:focus, .filter-bar input:focus{border-color:#D4AF37;outline:none;box-shadow:0 0 0 3px rgba(212,175,55,0.15);}
+        .btn{background:#111;color:#fff;padding:10px 20px;border:none;border-radius:30px;cursor:pointer;transition:all 0.3s ease;font-weight:700;display:inline-flex;align-items:center;gap:8px;}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,0.15);}
+        .btn-primary{background:#D4AF37;color:#000;}
+        .btn-primary:hover{background:#B8860B;color:#fff;box-shadow:0 8px 20px rgba(212,175,55,0.3);}
+        .btn-danger{background:#e74c3c;color:#fff;}
+        .btn-danger:hover{background:#c0392b;}
+        .btn-success{background:#27ae60;color:#fff;}
+        .btn-success:hover{background:#219a52;}
+        .btn-sm{padding:6px 14px;font-size:12px;border-radius:20px;}
+        /* Password Overlay */
+        .password-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            z-index: 10000; display: flex; align-items: center; justify-content: center;
+            visibility: visible; opacity: 1; transition: 0.4s ease;
+        }
+        .password-overlay.hide { visibility: hidden; opacity: 0; pointer-events: none; }
+        .password-box {
+            background: #fff; border-radius: 32px; padding: 40px 35px;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+        }
+        .password-box .lock-icon {
+            width: 70px; height: 70px;
+            background: linear-gradient(135deg, #D4AF37, #B8860B);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+        }
+        .password-box .lock-icon i { font-size: 32px; color: #000; }
+        .password-box h2 { color: #111; margin-bottom: 10px; font-size: 24px; }
+        .password-box p { color: #888; margin-bottom: 20px; font-size: 14px; }
+        .password-box input {
+            width: 100%; padding: 14px 20px;
+            border-radius: 30px; border: 2px solid #eee;
+            margin: 10px 0 15px; font-size: 16px;
+            text-align: center; letter-spacing: 4px;
+            transition: 0.3s; font-family: 'Cairo', sans-serif;
+        }
+        .password-box input:focus { border-color: #D4AF37; outline: none; }
+        .password-box .error-msg { color: #e74c3c; font-size: 13px; margin-top: 8px; min-height: 24px; }
+        .password-box button {
+            width: 100%; padding: 14px;
+            border-radius: 30px; border: none;
+            background: #111; color: #fff;
+            font-weight: 700; font-size: 16px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .password-box button:hover { background: #D4AF37; color: #000; }
+        /* جداول */
+        .table-wrapper { overflow-x: auto; border-radius: 16px; border: 1px solid #eee; background: #fff; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { background: #111; color: #fff; padding: 14px 16px; text-align: center; white-space: nowrap; font-weight: 700; }
+        td { padding: 12px 16px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        tbody tr:hover { background: #fafafa; }
+        .detail-cell { text-align: right; font-size: 12px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .profit-positive { color: #27ae60; font-weight: 700; }
+        .profit-negative { color: #e74c3c; font-weight: 700; }
+        /* بطاقات المرتجعات */
+        .pending-return-card {
+            background: #fff; border: 1px solid #f0c27a; border-radius: 16px;
+            padding: 18px 20px; margin-bottom: 12px; transition: 0.3s;
+            border-right: 4px solid #f39c12;
+        }
+        .pending-return-card:hover { box-shadow: 0 4px 15px rgba(243, 156, 18, 0.15); transform: translateY(-2px); }
+        .status-badge {
+            display: inline-block; padding: 2px 14px;
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+        }
+        .status-badge.undelivered { background: #e67e22; color: #fff; }
+        .status-badge.rejected { background: #c0392b; color: #fff; }
+        .status-badge.returned { background: #9b59b6; color: #fff; }
+        .confirm-return-btn {
+            background: #27ae60; color: #fff; border: none;
+            padding: 6px 18px; border-radius: 30px;
+            font-weight: 700; cursor: pointer; transition: 0.3s;
+            font-size: 12px; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .confirm-return-btn:hover { background: #2ecc71; transform: translateY(-2px); }
+        .confirm-return-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .return-details { font-size: 13px; color: #555; margin-top: 8px; line-height: 1.8; }
+        .return-details strong { color: #111; }
+        /* الأقسام */
+        .section-title { margin-bottom: 15px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+        .section-title .badge-count {
+            background: #f39c12; color: #fff;
+            border-radius: 30px; padding: 2px 14px; font-size: 14px;
+        }
+        .section-pending {
+            border: 2px solid #f39c12; border-radius: 20px;
+            padding: 20px; margin-bottom: 30px; background: #fff;
+        }
+        .section-delivered, .section-confirmed, .section-expenses {
+            background: #fff; border-radius: 20px;
+            padding: 20px; margin-bottom: 30px;
+        }
+        /* إدارة المصروفات */
+        .expense-form {
+            display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;
+            background: #f8f9fa; padding: 20px; border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        .expense-form .form-group { flex: 1; min-width: 150px; }
+        .expense-form label {
+            display: block; font-weight: 700; font-size: 13px;
+            color: #555; margin-bottom: 6px;
+        }
+        .expense-form input {
+            width: 100%; padding: 10px 14px;
+            border-radius: 12px; border: 1px solid #ddd;
+            font-family: 'Cairo', sans-serif; font-size: 14px;
+            transition: 0.3s;
+        }
+        .expense-form input:focus { border-color: #D4AF37; outline: none; box-shadow: 0 0 0 3px rgba(212,175,55,0.15); }
+        .expense-item {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            transition: 0.2s;
+        }
+        .expense-item:hover { background: #fafafa; padding: 10px 8px; border-radius: 8px; }
+        .expense-item .desc { font-weight: 600; color: #333; flex:1; text-align:right; }
+        .expense-item .amount { font-weight: 700; color: #e74c3c; min-width:100px; text-align:left; }
+        .expense-item .date { font-size: 12px; color: #999; min-width:120px; }
+        .expense-item .actions { display: flex; gap: 8px; }
+        .expense-item .actions button {
+            background: none; border: none; cursor: pointer;
+            padding: 4px 8px; border-radius: 6px; transition: 0.2s;
+            font-size: 14px;
+        }
+        .expense-item .actions .edit-btn:hover { background: #e8f0fe; color: #3498db; }
+        .expense-item .actions .delete-btn:hover { background: #fee; color: #e74c3c; }
+        .expense-total {
+            text-align: left; font-weight: 700; font-size: 16px;
+            padding: 12px 0; border-top: 2px solid #eee;
+            margin-top: 10px;
+        }
+        .expense-total span { color: #e74c3c; }
+        .empty-expenses { color: #999; text-align: center; padding: 30px; }
+        /* شارة التاريخ */
+        .delivery-date-badge {
+            display: inline-block;
+            background: #3498db;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .delivery-date-badge.fallback {
+            background: #f39c12;
+        }
+        /* مودال تعديل المصروف */
+        .custom-confirm-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+            z-index: 99999; display: none; align-items: center; justify-content: center;
+        }
+        .custom-confirm-overlay.active { display: flex; }
+        .custom-confirm-box {
+            background: #fff; border-radius: 28px; width: 90%; max-width: 360px;
+            overflow: hidden; box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+            direction: rtl;
+        }
+        .custom-confirm-overlay.active .custom-confirm-box { transform: scale(1); }
+        .confirm-header { background: #111; padding: 20px; text-align: center; }
+        .confirm-header i { font-size: 50px; color: #f39c12; margin-bottom: 10px; }
+        .confirm-header h3 { color: #fff; font-size: 20px; font-weight: 800; margin: 0; }
+        .confirm-message { padding: 25px 20px; font-size: 16px; color: #333; text-align: center; line-height: 1.6; }
+        .confirm-buttons { display: flex; border-top: 1px solid #eee; }
+        .confirm-buttons button {
+            flex: 1; padding: 15px; border: none; background: #fff;
+            font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .confirm-buttons button:first-child { border-left: 1px solid #eee; color: #e74c3c; }
+        .confirm-buttons button:last-child { color: #0F7B65; }
+        .confirm-buttons button:hover { background: #f9f9f9; }
+        /* Custom Alert */
+        .custom-alert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+            z-index: 99999; display: none; align-items: center; justify-content: center;
+        }
+        .custom-alert-overlay.active { display: flex; }
+        .custom-alert-box {
+            background: #fff; border-radius: 28px; width: 90%; max-width: 380px;
+            overflow: hidden; box-shadow: 0 30px 50px rgba(0,0,0,0.3);
+            transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+            direction: rtl;
+        }
+        .custom-alert-overlay.active .custom-alert-box { transform: scale(1); }
+        .alert-header { padding: 20px 20px 10px; text-align: center; }
+        .alert-header i { font-size: 48px; margin-bottom: 10px; }
+        .alert-header.success i { color: #2ecc71; }
+        .alert-header.error i { color: #e74c3c; }
+        .alert-header.warning i { color: #f39c12; }
+        .alert-header.info i { color: #3498db; }
+        .alert-title { font-size: 22px; font-weight: 800; color: #111; }
+        .alert-message { padding: 0 20px 20px; font-size: 15px; color: #555; text-align: center; line-height: 1.6; }
+        .alert-buttons { display: flex; border-top: 1px solid #eee; }
+        .alert-buttons button {
+            flex: 1; padding: 14px; border: none; background: #fff;
+            font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .alert-buttons button:first-child { border-left: 1px solid #eee; color: #0F7B65; }
+        .alert-buttons button:last-child { color: #888; }
+        .alert-buttons button:hover { background: #f9f9f9; }
+        .logout-btn {
+            background: #e74c3c; color: white; border: none;
+            padding: 6px 18px; border-radius: 30px; cursor: pointer;
+            font-size: 13px; font-weight: 700; transition: 0.3s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .logout-btn:hover { background: #c0392b; transform: translateY(-2px); }
+        @media(max-width:700px){th,td{font-size:11px;padding:6px;}}
+        @media(max-width:480px){.container{padding:0;} .expense-form{flex-direction:column;} }
+    </style>
+</head>
+<body>
+
+    <!-- Password Overlay -->
+    <div id="passwordOverlay" class="password-overlay">
+        <div class="password-box">
+            <div class="lock-icon"><i class="fas fa-lock"></i></div>
+            <h2>دخول خاص للأرباح</h2>
+            <p>أدخل كلمة السر للوصول إلى لوحة الأرباح</p>
+            <input type="password" id="passwordInput" placeholder="••••••••">
+            <div id="passwordError" class="error-msg"></div>
+            <button id="confirmPasswordBtn">تأكيد الدخول</button>
+        </div>
+    </div>
+
+    <!-- المحتوى الرئيسي -->
+    <div id="pageContent" style="display: none;">
+        <div class="container">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:10px;">
+                <h1 style="font-size:28px; display:flex; align-items:center; gap:12px;">
+                    <i class="fas fa-chart-line" style="color:#D4AF37;"></i> حساب الأرباح المتكامل
+                </h1>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+                    <button class="btn" onclick="window.location.href='admin-orders.html'">📦 العودة للطلبات</button>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="filter-bar">
+                <select id="monthFilter">
+                    <option value="all">كل الشهور</option>
+                </select>
+                <button class="btn btn-primary" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+                <button class="btn btn-primary" onclick="printReport()" style="background:#9b59b6; color:#fff;">
+    <i class="fas fa-print"></i> طباعة التقرير
+</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <!-- ========== قسم إدارة المصروفات ========== -->
+            <div class="section-expenses">
+                <h3 class="section-title"><i class="fas fa-receipt" style="color:#D4AF37;"></i> المصروفات</h3>
+                
+                <div class="expense-form">
+                    <div class="form-group">
+                        <label><i class="fas fa-tag"></i> وصف المصروف</label>
+                        <input type="text" id="expenseDescription" placeholder="مثال: فاتورة كهرباء">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-dollar-sign"></i> المبلغ (جنيه)</label>
+                        <input type="number" id="expenseAmount" placeholder="0.00" step="0.01" min="0">
+                    </div>
+                    <div class="form-group" style="flex:0.8; min-width:120px;">
+                        <label><i class="fas fa-calendar-alt"></i> التاريخ</label>
+                        <input type="date" id="expenseDate">
+                    </div>
+                    <button class="btn btn-success" onclick="addExpense()" style="padding:12px 30px; margin-bottom:2px;">
+                        <i class="fas fa-plus"></i> إضافة مصروف
+                    </button>
+                </div>
+                
+                <div id="expensesList">
+                    <div class="empty-expenses"><i class="fas fa-inbox" style="font-size:32px; display:block; margin-bottom:10px; color:#ddd;"></i> لا توجد مصروفات مسجلة</div>
+                </div>
+                <div class="expense-total" id="expenseTotal">
+                    إجمالي المصروفات: <span id="totalExpensesDisplay">0.00</span> جنيه
+                </div>
+            </div>
+
+            <!-- ========== قسم الطلبات المسلمة (مع تاريخ التسليم الفعلي) ========== -->
+            <div class="section-delivered">
+                <h3 class="section-title">📋 تفاصيل الطلبات المسلمة</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم الطلب</th>
+                                <th>العميل</th>
+                                <th>المحافظة</th>
+                                <th>المدينة</th>
+                                <th>📅 تاريخ التسليم الفعلي</th>
+                                <th>المنتجات</th>
+                                <th>الإجمالي (العميل)</th>
+                                <th>تكلفة المنتجات</th>
+                                <th>تكلفة الشحن الفعلية</th>
+                                <th>صافي الربح</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersList"><tr><td colspan="10">⏳ جاري التحميل...</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ========== قسم المرتجعات المعلقة ========== -->
+            <div class="section-pending">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <h3 class="section-title" style="margin:0; color:#f39c12;">
+                        <i class="fas fa-clock"></i> مرتجعات قيد المراجعة
+                        <span class="badge-count" id="pendingCount">0</span>
+                    </h3>
+                    <span style="font-size:13px; color:#888;">🔄 هذه الطلبات لم تؤثر على المخزون، قم بتأكيد الاستلام لتحديثه</span>
+                </div>
+                <div id="pendingReturnsList">
+                    <p style="color:#888; text-align:center; padding:30px;">⏳ جاري تحميل المرتجعات المعلقة...</p>
+                </div>
+            </div>
+
+            <!-- ========== قسم المرتجعات المؤكدة ========== -->
+            <div class="section-confirmed">
+                <h3 class="section-title">📦 مرتجعات مؤكدة (تم استلامها)</h3>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم الطلب</th>
+                                <th>العميل</th>
+                                <th>المحافظة</th>
+                                <th>المدينة</th>
+                                <th>تاريخ التأكيد</th>
+                                <th>المنتجات</th>
+                                <th>الإجمالي (العميل)</th>
+                                <th>تكلفة المنتجات</th>
+                                <th>تكلفة الشحن الفعلية</th>
+                                <th>صافي الخسارة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="confirmedReturnsList"><tr><td colspan="10">⏳ جاري التحميل...</td></tr>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== مودال تعديل المصروف ===== -->
+    <div id="editExpenseModal" class="custom-confirm-overlay">
+        <div class="custom-confirm-box" style="max-width:420px;">
+            <div class="confirm-header">
+                <i class="fas fa-edit" style="color:#3498db;"></i>
+                <h3>تعديل المصروف</h3>
+            </div>
+            <div class="confirm-message" style="text-align:right; direction:rtl;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:700; margin-bottom:5px;">الوصف</label>
+                    <input type="text" id="editExpenseDescription" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; font-family:'Cairo',sans-serif;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:700; margin-bottom:5px;">المبلغ (جنيه)</label>
+                    <input type="number" id="editExpenseAmount" step="0.01" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; font-family:'Cairo',sans-serif;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:700; margin-bottom:5px;">التاريخ</label>
+                    <input type="date" id="editExpenseDate" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ddd; font-family:'Cairo',sans-serif;">
+                </div>
+            </div>
+            <div class="confirm-buttons">
+                <button id="editExpenseCancelBtn">إلغاء</button>
+                <button id="editExpenseSaveBtn" style="color:#3498db;">حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="customAlertOverlay" class="custom-alert-overlay">
+        <div class="custom-alert-box">
+            <div class="alert-header" id="alertHeaderIcon">
+                <i class="fas fa-check-circle"></i>
+                <div class="alert-title" id="alertTitle">نجاح</div>
+            </div>
+            <div class="alert-message" id="alertMessage">تمت العملية بنجاح</div>
+            <div class="alert-buttons">
+                <button id="alertConfirmBtn">موافق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="customConfirmOverlay" class="custom-confirm-overlay">
+        <div class="custom-confirm-box">
+            <div class="confirm-header">
+                <i class="fas fa-question-circle"></i>
+                <h3>تأكيد العملية</h3>
+            </div>
+            <div class="confirm-message" id="confirmMessage">هل أنت متأكد؟</div>
+            <div class="confirm-buttons">
+                <button id="confirmNoBtn">إلغاء</button>
+                <button id="confirmYesBtn">تأكيد</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== سكربت كلمة السر ========== -->
+    <script>
+        const SECRET_HASH = "VmFudGVQcm9maXRAMjAyNg==";
+
+        window.customAlert = function(message, type = 'success', title = '') {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('customAlertOverlay');
+                const headerIcon = document.getElementById('alertHeaderIcon');
+                const titleEl = document.getElementById('alertTitle');
+                const msgEl = document.getElementById('alertMessage');
+                const confirmBtn = document.getElementById('alertConfirmBtn');
+                
+                let iconClass = 'fa-check-circle';
+                let defaultTitle = '';
+                if (type === 'success') { iconClass = 'fa-check-circle'; defaultTitle = '✅ نجاح'; }
+                else if (type === 'error') { iconClass = 'fa-exclamation-triangle'; defaultTitle = '❌ خطأ'; }
+                else if (type === 'warning') { iconClass = 'fa-exclamation-circle'; defaultTitle = '⚠️ تنبيه'; }
+                else { iconClass = 'fa-info-circle'; defaultTitle = 'ℹ️ معلومات'; }
+                
+                headerIcon.innerHTML = `<i class="fas ${iconClass}"></i><div class="alert-title">${title || defaultTitle}</div>`;
+                msgEl.innerText = message;
+                overlay.classList.add('active');
+                
+                const onConfirm = () => {
+                    overlay.classList.remove('active');
+                    confirmBtn.removeEventListener('click', onConfirm);
+                    resolve();
+                };
+                confirmBtn.addEventListener('click', onConfirm);
+                
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                        confirmBtn.removeEventListener('click', onConfirm);
+                        resolve();
+                    }
+                });
+            });
+        };
+
+        window.customConfirm = function(message) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('customConfirmOverlay');
+                const msgEl = document.getElementById('confirmMessage');
+                const yesBtn = document.getElementById('confirmYesBtn');
+                const noBtn = document.getElementById('confirmNoBtn');
+                
+                msgEl.innerText = message;
+                overlay.classList.add('active');
+                
+                const onYes = () => { overlay.classList.remove('active'); cleanup(); resolve(true); };
+                const onNo = () => { overlay.classList.remove('active'); cleanup(); resolve(false); };
+                const cleanup = () => {
+                    yesBtn.removeEventListener('click', onYes);
+                    noBtn.removeEventListener('click', onNo);
+                };
+                
+                yesBtn.addEventListener('click', onYes);
+                noBtn.addEventListener('click', onNo);
+                
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove('active');
+                        cleanup();
+                        resolve(false);
+                    }
+                });
+            });
+        };
+
+        function checkPassword() {
+            const input = document.getElementById("passwordInput").value;
+            const decodedSecret = atob(SECRET_HASH);
+            if (input === decodedSecret) {
+                document.getElementById("passwordOverlay").classList.add("hide");
+                document.getElementById("pageContent").style.display = "block";
+                if (typeof loadData === 'function') loadData();
+            } else {
+                document.getElementById("passwordError").innerText = "❌ كلمة السر غير صحيحة";
+                document.getElementById("passwordInput").value = "";
+                document.getElementById("passwordInput").focus();
+            }
+        }
+
+        function logout() {
+            document.getElementById("pageContent").style.display = "none";
+            document.getElementById("passwordOverlay").classList.remove("hide");
+            document.getElementById("passwordInput").value = "";
+            document.getElementById("passwordError").innerText = "";
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("passwordOverlay").classList.remove("hide");
+            document.getElementById("pageContent").style.display = "none";
+            document.getElementById("confirmPasswordBtn").addEventListener("click", checkPassword);
+            document.getElementById("passwordInput").addEventListener("keypress", function(e) {
+                if (e.key === "Enter") checkPassword();
+            });
+        });
+
+        window.logout = logout;
+    </script>
+
+    <!-- ========== الموديول الرئيسي (مع التعديلات الجبارة) ========== -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getFirestore, collection, query, where, onSnapshot, getDocs,
+            doc, getDoc, updateDoc, serverTimestamp, addDoc, deleteDoc, orderBy
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { logAuditEvent } from './js/logger.js';
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        
+        const firebaseConfig = {
+  apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
+  authDomain: "gamark-d04ff.firebaseapp.com",
+  projectId: "gamark-d04ff",
+  storageBucket: "gamark-d04ff.firebasestorage.app",
+  messagingSenderId: "802246864333",
+  appId: "1:802246864333:web:23b5336c0c54280a736884",
+  measurementId: "G-DNSGDRCYST"
+};
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth();
+
+        console.log("✅ Firebase initialized");
+
+        // ========== متغيرات عامة ==========
+        let allDeliveredOrders = [];
+        let pendingReturns = [];
+        let confirmedReturns = [];
+        let allExpenses = [];
+        let totalExpenses = 0;
+        let currentMonthFilter = "all";
+        let editingExpenseId = null;
+
+        // ========== تحميل الطلبات المسلمة (مرتبة حسب تاريخ التسليم الفعلي) ==========
+        // ========== تحميل الطلبات المسلمة (مرتبة حسب تاريخ التسليم الفعلي) ==========
+function loadDeliveredOrders() {
+    const q = query(collection(db, "orders"), where("status", "==", "delivered"));
+    onSnapshot(q, (snap) => {
+        allDeliveredOrders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        
+        // ✅ ترتيب تنازلي حسب تاريخ التسليم الفعلي (deliveredAt أو updatedAt)
+        allDeliveredOrders.sort((a, b) => {
+            // استخدام deliveredAt إن وجد، وإلا updatedAt
+            const getDate = (order) => {
+                if (order.deliveredAt?.toDate) return order.deliveredAt.toDate();
+                if (order.updatedAt?.toDate) return order.updatedAt.toDate();
+                return order.createdAt?.toDate?.() || new Date(0);
+            };
+            return getDate(b) - getDate(a);
+        });
+        populateMonthFilter();
+        applyFilters();
+    }, (error) => {
+        console.error("❌ خطأ في تحميل المسلمة:", error);
+        document.getElementById("ordersList").innerHTML = `<tr><td colspan="10">⚠️ خطأ في تحميل البيانات: ${error.message}</td></tr>`;
+    });
+}
+
+        // ========== تحميل المرتجعات المعلقة ==========
+        function loadPendingReturns() {
+            const statuses = ["undelivered", "rejected", "returned"];
+            const q = query(collection(db, "orders"), where("status", "in", statuses));
+            onSnapshot(q, (snap) => {
+                pendingReturns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderPendingReturns();
+            }, (error) => {
+                console.error("❌ خطأ في تحميل المعلقة:", error);
+                document.getElementById("pendingReturnsList").innerHTML = `<p style="color:#e74c3c;">❌ خطأ في التحميل: ${error.message}</p>`;
+            });
+        }
+
+        // ========== تحميل المرتجعات المؤكدة ==========
+        function loadConfirmedReturns() {
+            const q = query(collection(db, "orders"), where("status", "==", "returned_confirmed"));
+            onSnapshot(q, (snap) => {
+                confirmedReturns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderConfirmedReturns();
+            }, (error) => {
+                console.error("❌ خطأ في تحميل المؤكدة:", error);
+                document.getElementById("confirmedReturnsList").innerHTML = `<tr><td colspan="10">⚠️ خطأ في التحميل: ${error.message}</td></tr>`;
+            });
+        }
+
+        // ========== تحميل المصروفات (بدون شرط deleted لإظهار الكل ثم التصفية) ==========
+        function loadExpenses() {
+            // ✅ جلب جميع المصروفات بدون شرط deleted
+            const q = query(collection(db, "expenses"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snap) => {
+                // ✅ تصفية المصروفات التي ليس بها deleted: true
+                allExpenses = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(exp => exp.deleted !== true);
+                applyFilters();
+            }, (error) => {
+                console.error("❌ خطأ في تحميل المصروفات:", error);
+            });
+        }
+
+// ========== دالة طباعة التقرير الاحترافية ==========
+window.printReport = function() {
+    // ✅ التحقق من وجود بيانات
+    if (allDeliveredOrders.length === 0 && allExpenses.length === 0) {
+        customAlert('⚠️ لا توجد بيانات للطباعة', 'warning');
+        return;
+    }
+
+    // ✅ فتح نافذة طباعة جديدة
+    const printWindow = window.open('', '_blank', 'width=1100,height=800');
+
+    // ✅ الحصول على الشهر المحدد
+    const filterVal = document.getElementById('monthFilter').value;
+    const monthName = filterVal === "all" ? "كل الشهور" : 
+        new Date(filterVal.split('-')[0], parseInt(filterVal.split('-')[1])-1)
+        .toLocaleDateString('ar-EG', { year:'numeric', month:'long' });
+
+    // ✅ بناء HTML للتقرير
+    let html = `
+    <!DOCTYPE html>
+    <html dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>تقرير أرباح VANTÉ - ${monthName}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { 
+                font-family: 'Cairo', sans-serif; 
+                padding: 30px; 
+                background: #fff; 
+                color: #111;
+                direction: rtl;
+            }
+            .report-header {
+                text-align: center;
+                border-bottom: 3px solid #D4AF37;
+                padding-bottom: 20px;
+                margin-bottom: 25px;
+            }
+            .report-header h1 {
+                font-size: 28px;
+                color: #D4AF37;
+                margin-bottom: 5px;
+            }
+            .report-header .subtitle {
+                color: #666;
+                font-size: 14px;
+            }
+            .report-header .date {
+                color: #888;
+                font-size: 13px;
+                margin-top: 5px;
+            }
+            .summary-grid {
+                display: grid;
+                grid-template-columns: repeat(5, 1fr);
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            .summary-item {
+                background: #f8f9fa;
+                border-radius: 12px;
+                padding: 15px;
+                text-align: center;
+                border-right: 4px solid #D4AF37;
+            }
+            .summary-item .label {
+                font-size: 12px;
+                color: #888;
+                font-weight: 700;
+            }
+            .summary-item .value {
+                font-size: 22px;
+                font-weight: 900;
+                color: #111;
+                margin-top: 5px;
+            }
+            .summary-item .value.positive { color: #27ae60; }
+            .summary-item .value.negative { color: #e74c3c; }
+            .section-title {
+                font-size: 18px;
+                font-weight: 700;
+                margin: 25px 0 15px;
+                padding: 10px 15px;
+                background: #111;
+                color: #fff;
+                border-radius: 10px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+                margin-bottom: 20px;
+            }
+            th {
+                background: #111;
+                color: #fff;
+                padding: 10px 12px;
+                text-align: center;
+                font-weight: 700;
+            }
+            td {
+                padding: 8px 12px;
+                text-align: center;
+                border-bottom: 1px solid #eee;
+            }
+            tr:hover { background: #fafafa; }
+            .profit-positive { color: #27ae60; font-weight: 700; }
+            .profit-negative { color: #e74c3c; font-weight: 700; }
+            .expense-row .amount { color: #e74c3c; font-weight: 700; }
+            .total-row {
+                font-weight: 700;
+                background: #f8f9fa;
+                border-top: 2px solid #D4AF37;
+            }
+            .total-row td { padding: 12px; }
+            .footer {
+                text-align: center;
+                margin-top: 40px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+                color: #999;
+                font-size: 12px;
+            }
+            .no-data {
+                text-align: center;
+                padding: 30px;
+                color: #999;
+            }
+            @media print {
+                body { padding: 15px; }
+                .no-print { display: none; }
+                .summary-grid { break-inside: avoid; }
+                table { break-inside: auto; }
+                tr { break-inside: avoid; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="report-header">
+            <h1>📊 VANTÉ - تقرير الأرباح</h1>
+            <div class="subtitle">${monthName}</div>
+            <div class="date">📅 تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG', { year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+        </div>
+    `;
+
+    // ========== الإحصائيات ==========
+    const totalRevenue = allDeliveredOrders.reduce((s, o) => s + (o.finalTotal || 0), 0);
+    const totalCostProducts = allDeliveredOrders.reduce((s, o) => s + (o.totalCost || 0), 0);
+    const totalShippingCost = allDeliveredOrders.reduce((s, o) => s + (o.shippingCostPaid || 0), 0);
+    const netProfit = totalRevenue - totalCostProducts - totalShippingCost - totalExpenses;
+
+    html += `
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="label">💰 إجمالي الإيرادات</div>
+                <div class="value">${totalRevenue.toFixed(2)} جنيه</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">📦 تكلفة المنتجات</div>
+                <div class="value">${totalCostProducts.toFixed(2)} جنيه</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">🚚 تكلفة الشحن</div>
+                <div class="value">${totalShippingCost.toFixed(2)} جنيه</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">📝 إجمالي المصروفات</div>
+                <div class="value" style="color:#e74c3c;">${totalExpenses.toFixed(2)} جنيه</div>
+            </div>
+            <div class="summary-item">
+                <div class="label">✅ صافي الربح</div>
+                <div class="value ${netProfit >= 0 ? 'positive' : 'negative'}">${netProfit.toFixed(2)} جنيه</div>
+            </div>
+        </div>
+    `;
+
+    // ========== الطلبات المسلمة ==========
+    if (allDeliveredOrders.length > 0) {
+        html += `<div class="section-title">📋 تفاصيل الطلبات المسلمة (${allDeliveredOrders.length})</div>`;
+        html += `
+        <table>
+            <thead>
+                <tr>
+                    <th>رقم الطلب</th>
+                    <th>العميل</th>
+                    <th>المحافظة</th>
+                    <th>المدينة</th>
+                    <th>تاريخ التسليم</th>
+                    <th>المنتجات</th>
+                    <th>الإجمالي</th>
+                    <th>تكلفة المنتجات</th>
+                    <th>تكلفة الشحن</th>
+                    <th>صافي الربح</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+        allDeliveredOrders.forEach(o => {
+            const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+            const productsStr = details.map(item => `${item.name}(${item.size})x${item.qty}`).join(', ');
+            const profit = (o.finalTotal - (o.totalCost||0) - (o.shippingCostPaid||0)).toFixed(2);
+            const profitClass = parseFloat(profit) >= 0 ? 'profit-positive' : 'profit-negative';
+            
+            let deliveryDate = o.deliveredAt?.toDate?.() || o.updatedAt?.toDate?.() || o.createdAt?.toDate?.() || new Date();
+            html += `
+                <tr>
+                    <td><strong>${o.orderID}</strong></td>
+                    <td>${o.customerName || '-'}</td>
+                    <td>${o.gov || '-'}</td>
+                    <td>${o.city || '-'}</td>
+                    <td>${deliveryDate.toLocaleDateString('ar-EG')}</td>
+                    <td style="text-align:right; font-size:11px; max-width:150px;">${productsStr || '-'}</td>
+                    <td>${(o.finalTotal || 0).toFixed(2)}</td>
+                    <td>${(o.totalCost || 0).toFixed(2)}</td>
+                    <td>${(o.shippingCostPaid || 0).toFixed(2)}</td>
+                    <td class="${profitClass}">${profit}</td>
+                </tr>
+            `;
+        });
+        html += `
+            </tbody>
+        </table>
+        `;
+    } else {
+        html += `<div class="no-data">📭 لا توجد طلبات مسلمة في هذه الفترة</div>`;
+    }
+
+    // ========== المصروفات ==========
+    if (allExpenses.length > 0) {
+        html += `<div class="section-title">📝 المصروفات (${allExpenses.length})</div>`;
+        html += `
+        <table>
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>الوصف</th>
+                    <th>المبلغ</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+        allExpenses.forEach(exp => {
+            const date = exp.createdAt?.toDate?.() || new Date();
+            html += `
+                <tr class="expense-row">
+                    <td>${date.toLocaleDateString('ar-EG')}</td>
+                    <td style="text-align:right;">${exp.description || '-'}</td>
+                    <td class="amount">-${Number(exp.amount || 0).toFixed(2)} جنيه</td>
+                </tr>
+            `;
+        });
+        html += `
+                <tr class="total-row">
+                    <td colspan="2" style="text-align:left;">إجمالي المصروفات</td>
+                    <td style="color:#e74c3c;">${totalExpenses.toFixed(2)} جنيه</td>
+                </tr>
+            </tbody>
+        </table>
+        `;
+    } else {
+        html += `<div class="no-data">📭 لا توجد مصروفات مسجلة</div>`;
+    }
+
+    // ========== التذييل ==========
+    html += `
+        <div class="footer">
+            <p>© ${new Date().getFullYear()} VANTÉ - جميع الحقوق محفوظة</p>
+            <p style="font-size:11px; color:#bbb;">تم الطباعة بواسطة لوحة تحكم VANTÉ</p>
+        </div>
+        <script>
+            // ✅ طباعة تلقائية بعد تحميل الصفحة
+            window.onload = function() {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            };
+        <\/script>
+    </body>
+    </html>
+    `;
+
+    // ✅ كتابة المحتوى في النافذة الجديدة
+    printWindow.document.write(html);
+    printWindow.document.close();
+};
+
+        // ========== دالة تطبيق الفلتر على الطلبات والمصروفات معاً ==========
+function applyFilters() {
+    const filterVal = document.getElementById("monthFilter").value;
+    
+    // 1. فلترة الطلبات حسب الشهر (باستخدام deliveredAt أو updatedAt)
+    let filteredOrders = allDeliveredOrders;
+    if (filterVal !== "all") {
+        const [year, month] = filterVal.split('-');
+        filteredOrders = allDeliveredOrders.filter(o => {
+            // استخدام deliveredAt إن وجد، وإلا updatedAt
+            let date = null;
+            if (o.deliveredAt?.toDate) date = o.deliveredAt.toDate();
+            else if (o.updatedAt?.toDate) date = o.updatedAt.toDate();
+            else date = o.createdAt?.toDate?.();
+            return date && date.getFullYear() == year && (date.getMonth()+1) == month;
+        });
+    }
+    renderDeliveredOrders(filteredOrders);
+
+
+            // 2. فلترة المصروفات حسب نفس الشهر
+            let filteredExpenses = allExpenses;
+            if (filterVal !== "all") {
+                const [year, month] = filterVal.split('-');
+                filteredExpenses = allExpenses.filter(exp => {
+                    const date = exp.createdAt?.toDate?.();
+                    if (!date) return false;
+                    return date.getFullYear() == year && (date.getMonth()+1) == month;
+                });
+            }
+            renderExpenses(filteredExpenses);
+            
+            // 3. تحديث إجمالي المصروفات بناءً على الفلترة
+            totalExpenses = filteredExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+            const displayEl = document.getElementById('totalExpensesDisplay');
+            if (displayEl) displayEl.textContent = totalExpenses.toFixed(2);
+            
+            // 4. تحديث الإحصائيات
+            updateStats(filteredOrders);
+        }
+
+        // ========== عرض المصروفات ==========
+        function renderExpenses(expensesToShow) {
+            const container = document.getElementById('expensesList');
+            if (!container) return;
+
+            if (!expensesToShow || expensesToShow.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-expenses">
+                        <i class="fas fa-inbox" style="font-size:32px; display:block; margin-bottom:10px; color:#ddd;"></i>
+                        لا توجد مصروفات${document.getElementById("monthFilter").value !== "all" ? ' في هذا الشهر' : ''}
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = expensesToShow.map(exp => `
+                <div class="expense-item">
+                    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; flex:1;">
+                        <span class="date">${exp.createdAt?.toDate ? formatDate(exp.createdAt.toDate()) : 'تاريخ غير محدد'}</span>
+                        <span class="desc">${escapeHtml(exp.description || 'بدون وصف')}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                        <span class="amount">-${Number(exp.amount || 0).toFixed(2)} جنيه</span>
+                        <div class="actions">
+                            <button class="edit-btn" onclick="window.openEditExpense('${exp.id}')" title="تعديل المصروف">
+                                <i class="fas fa-edit" style="color:#3498db;"></i>
+                            </button>
+                            <button class="delete-btn" onclick="window.deleteExpense('${exp.id}')" title="حذف المصروف">
+                                <i class="fas fa-trash-alt" style="color:#e74c3c;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ========== عرض الطلبات المسلمة (مع تاريخ التسليم الفعلي) ==========
+        // ========== عرض الطلبات المسلمة (مع تاريخ التسليم الفعلي) ==========
+function renderDeliveredOrders(orders) {
+    const tbody = document.getElementById("ordersList");
+    if (orders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10">📭 لا توجد طلبات مسلمة في هذه الفترة</td></tr>`;
+        return;
+    }
+    let html = '';
+    orders.forEach(o => {
+        const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+        const productsStr = details.map(item => `${item.name} (${item.size}) x${item.qty}`).join(', ');
+        const totalCost = o.totalCost || 0;
+        const shippingCostPaid = o.shippingCostPaid || 0;
+        const finalTotal = o.finalTotal || 0;
+        const profit = (finalTotal - totalCost - shippingCostPaid).toFixed(2);
+        const profitClass = parseFloat(profit) >= 0 ? 'profit-positive' : 'profit-negative';
+        
+        // ✅ استخدام timestamp من وقت تغيير الحالة إلى delivered
+        // نقارن بين createdAt و updatedAt، لأن updatedAt هو وقت آخر تعديل (تغيير الحالة)
+        let deliveryDate;
+        let isFallback = false;
+        
+        // ✅ إذا كان الطلب فيه deliveredAt (مضاف من admin-order عند تغيير الحالة)
+        if (o.deliveredAt?.toDate) {
+            deliveryDate = o.deliveredAt.toDate();
+        }
+        // ✅ وإلا نستخدم updatedAt (آخر تعديل على الطلب)
+        else if (o.updatedAt?.toDate) {
+            deliveryDate = o.updatedAt.toDate();
+            isFallback = true;
+        }
+        // ✅ وإلا نستخدم createdAt (تاريخ الإنشاء - حل أخير)
+        else {
+            deliveryDate = o.createdAt?.toDate?.() || new Date();
+            isFallback = true;
+        }
+        
+        const deliveryDateStr = deliveryDate.toLocaleDateString('ar-EG', {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+        });
+        const badgeClass = isFallback ? 'delivery-date-badge fallback' : 'delivery-date-badge';
+        const badgeTitle = isFallback ? '⚠️ تاريخ آخر تحديث (غير متوفر تاريخ تسليم فعلي)' : '✅ تاريخ التسليم الفعلي';
+        
+        html += `<tr>
+            <td><strong>${o.orderID}</strong></td>
+            <td>${o.customerName || '-'}</td>
+            <td>${o.gov || '-'}</td>
+            <td>${o.city || '-'}</td>
+            <td><span class="${badgeClass}" title="${badgeTitle}">${deliveryDateStr}</span></td>
+            <td class="detail-cell" title="${productsStr}">${productsStr || '-'}</td>
+            <td>${finalTotal.toFixed(2)}</td>
+            <td>${totalCost.toFixed(2)}</td>
+            <td>${shippingCostPaid.toFixed(2)}</td>
+            <td class="${profitClass}">${profit}</td>
+        </tr>`;
+    });
+    tbody.innerHTML = html;
+}
+
+        // ========== عرض المرتجعات المعلقة ==========
+        function renderPendingReturns() {
+            const container = document.getElementById("pendingReturnsList");
+            const countEl = document.getElementById("pendingCount");
+            if (!container) return;
+
+            if (pendingReturns.length === 0) {
+                container.innerHTML = `<p style="color:#888; text-align:center; padding:20px;">✅ لا توجد مرتجعات معلقة</p>`;
+                if (countEl) countEl.textContent = "0";
+                return;
+            }
+
+            if (countEl) countEl.textContent = pendingReturns.length;
+
+            let html = '';
+            pendingReturns.forEach(order => {
+                const statusLabels = {
+                    undelivered: 'لم يصل',
+                    rejected: 'رفض',
+                    returned: 'مرتجع'
+                };
+                const statusClass = order.status;
+                const details = Array.isArray(order.orderDetails) ? order.orderDetails : [];
+                const productsStr = details.map(item => `${item.name} (${item.size}) x${item.qty}`).join(', ');
+                const totalCost = order.totalCost || 0;
+                const shippingCostPaid = order.shippingCostPaid || 0;
+                const finalTotal = order.finalTotal || 0;
+                const netLoss = (finalTotal - totalCost - shippingCostPaid).toFixed(2);
+                const lossClass = parseFloat(netLoss) >= 0 ? 'profit-positive' : 'profit-negative';
+
+                html += `
+                    <div class="pending-return-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                            <div>
+                                <strong style="font-size:16px; color:#111;">${order.orderID}</strong>
+                                <span class="status-badge ${statusClass}">${statusLabels[order.status] || order.status}</span>
+                            </div>
+                            <div>
+                                <span style="color:#D4AF37; font-weight:800;">${finalTotal.toFixed(2)} جنيه</span>
+                            </div>
+                        </div>
+                        <div class="return-details">
+                            👤 <strong>${order.customerName || 'غير معروف'}</strong>
+                            📞 ${order.phone || '-'}
+                            📍 ${order.gov || ''} - ${order.city || ''}
+                            <br>
+                            📦 المنتجات: ${productsStr || 'لا توجد تفاصيل'}
+                            <br>
+                            💰 الإجمالي: ${finalTotal.toFixed(2)} | تكلفة المنتجات: ${totalCost.toFixed(2)} | تكلفة الشحن الفعلية: ${shippingCostPaid.toFixed(2)}
+                            <br>
+                            📉 صافي الخسارة المحتملة: <span class="${lossClass}">${netLoss}</span>
+                            ${order.notes ? `<br>📝 ملاحظة: ${order.notes}` : ''}
+                        </div>
+                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="confirm-return-btn" onclick="confirmReturnReceipt('${order.id}')" data-orderid="${order.id}">
+                                <i class="fas fa-check-circle"></i> تأكيد استلام المرتجع
+                            </button>
+                            <span style="font-size:12px; color:#999;">⚠️ سيتم إعادة الكميات إلى المخزون</span>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // ========== عرض المرتجعات المؤكدة ==========
+        function renderConfirmedReturns() {
+            const tbody = document.getElementById("confirmedReturnsList");
+            if (!tbody) return;
+
+            if (confirmedReturns.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="10">📭 لا توجد مرتجعات مؤكدة</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            confirmedReturns.forEach(order => {
+                const details = Array.isArray(order.orderDetails) ? order.orderDetails : [];
+                const productsStr = details.map(item => `${item.name} (${item.size}) x${item.qty}`).join(', ');
+                const totalCost = order.totalCost || 0;
+                const shippingCostPaid = order.shippingCostPaid || 0;
+                const finalTotal = order.finalTotal || 0;
+                const netLoss = (finalTotal - totalCost - shippingCostPaid).toFixed(2);
+                const confirmDate = order.returnedConfirmedAt?.toDate ?
+                    order.returnedConfirmedAt.toDate().toLocaleDateString('ar-EG') : '-';
+
+                html += `<tr>
+                    <td><strong>${order.orderID}</strong></td>
+                    <td>${order.customerName || '-'}</td>
+                    <td>${order.gov || '-'}</td>
+                    <td>${order.city || '-'}</td>
+                    <td>${confirmDate}</td>
+                    <td class="detail-cell" title="${productsStr}">${productsStr || '-'}</td>
+                    <td>${finalTotal.toFixed(2)}</td>
+                    <td>${totalCost.toFixed(2)}</td>
+                    <td>${shippingCostPaid.toFixed(2)}</td>
+                    <td class="profit-negative">${netLoss}</td>
+                </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
+        // ========== الإحصائيات ==========
+        function updateStats(orders) {
+            let totalRevenue = orders.reduce((s, o) => s + (o.finalTotal || 0), 0);
+            let totalCostProducts = orders.reduce((s, o) => s + (o.totalCost || 0), 0);
+            let totalShippingCost = orders.reduce((s, o) => s + (o.shippingCostPaid || 0), 0);
+            let netProfit = totalRevenue - totalCostProducts - totalShippingCost - totalExpenses;
+
+            document.getElementById("statsGrid").innerHTML = `
+                <div class="stat-card">
+                    <h3><i class="fas fa-coins" style="color:#D4AF37;"></i> إجمالي الإيرادات</h3>
+                    <div class="value">${totalRevenue.toFixed(2)} <span style="font-size:14px;color:#888;">جنيه</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-boxes" style="color:#3498db;"></i> تكلفة المنتجات (جملة)</h3>
+                    <div class="value">${totalCostProducts.toFixed(2)} <span style="font-size:14px;color:#888;">جنيه</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-truck" style="color:#9b59b6;"></i> تكلفة الشحن الفعلية</h3>
+                    <div class="value">${totalShippingCost.toFixed(2)} <span style="font-size:14px;color:#888;">جنيه</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-receipt" style="color:#e74c3c;"></i> إجمالي المصروفات (للشهر المحدد)</h3>
+                    <div class="value" style="color:#e74c3c;">${totalExpenses.toFixed(2)} <span style="font-size:14px;color:#888;">جنيه</span></div>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-chart-line" style="color:${netProfit>=0?'#27ae60':'#e74c3c'};"></i> صافي الربح</h3>
+                    <div class="value" style="color:${netProfit>=0?'#27ae60':'#e74c3c'};">${netProfit.toFixed(2)} <span style="font-size:14px;color:#888;">جنيه</span></div>
+                    ${netProfit >= 0 ? '<div class="sub-value" style="color:#27ae60;">📈 ربح</div>' : '<div class="sub-value" style="color:#e74c3c;">📉 خسارة</div>'}
+                </div>
+            `;
+        }
+
+        // ========== تعبئة فلتر الشهور ==========
+        function populateMonthFilter() {
+            const monthsSet = new Set();
+            allDeliveredOrders.forEach(o => {
+                const date = o.deliveredAt?.toDate?.() || o.updatedAt?.toDate?.() || o.createdAt?.toDate?.();
+                if (date) {
+                    monthsSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
+                }
+            });
+            allExpenses.forEach(exp => {
+                const date = exp.createdAt?.toDate?.();
+                if (date) {
+                    monthsSet.add(`${date.getFullYear()}-${date.getMonth()+1}`);
+                }
+            });
+            const select = document.getElementById("monthFilter");
+            const currentValue = select.value;
+            select.innerHTML = '<option value="all">كل الشهور</option>';
+            [...monthsSet].sort().reverse().forEach(m => {
+                const [year, month] = m.split('-');
+                const name = new Date(year, month-1).toLocaleDateString('ar-EG', { year:'numeric', month:'long' });
+                select.innerHTML += `<option value="${m}">${name}</option>`;
+            });
+            if (currentValue && monthsSet.has(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        // ========== دالة إضافة مصروف (مضمونة) ==========
+        window.addExpense = async function() {
+            const description = document.getElementById('expenseDescription').value.trim();
+            const amount = parseFloat(document.getElementById('expenseAmount').value);
+            const dateVal = document.getElementById('expenseDate').value;
+
+            if (!description) {
+                await customAlert('⚠️ يرجى إدخال وصف للمصروف', 'warning');
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                await customAlert('⚠️ يرجى إدخال مبلغ صحيح (أكبر من صفر)', 'warning');
+                return;
+            }
+
+            try {
+                const expenseData = {
+                    description: description,
+                    amount: amount,
+                    createdAt: dateVal ? new Date(dateVal) : serverTimestamp(),
+                    deleted: false  // ✅ ضروري للتصفية
+                };
+
+                await addDoc(collection(db, "expenses"), expenseData);
+
+                document.getElementById('expenseDescription').value = '';
+                document.getElementById('expenseAmount').value = '';
+                document.getElementById('expenseDate').value = '';
+                
+                await customAlert('✅ تم إضافة المصروف بنجاح!', 'success');
+                
+                // تسجيل في Audit Log
+                try {
+                    await logAuditEvent({
+                        action: 'expense_added',
+                        orderId: null,
+                        orderNumber: null,
+                        details: {
+                            description: description,
+                            amount: amount,
+                            date: dateVal || new Date().toISOString().split('T')[0]
+                        },
+                        performedBy: window.currentUserEmail || 'system',
+                        severity: 'info'
+                    });
+                } catch(e) { console.warn('⚠️ فشل تسجيل Audit Log:', e); }
+
+            } catch (error) {
+                console.error("❌ خطأ في إضافة المصروف:", error);
+                await customAlert('❌ حدث خطأ أثناء إضافة المصروف: ' + error.message, 'error');
+            }
+        };
+
+        // ========== دالة حذف مصروف ==========
+        window.deleteExpense = async function(expenseId) {
+            const confirmed = await customConfirm('⚠️ هل أنت متأكد من حذف هذا المصروف؟');
+            if (!confirmed) return;
+
+            try {
+                await updateDoc(doc(db, "expenses", expenseId), { deleted: true });
+                await customAlert('🗑️ تم حذف المصروف بنجاح', 'success');
+            } catch (error) {
+                console.error("❌ خطأ في حذف المصروف:", error);
+                await customAlert('❌ حدث خطأ أثناء حذف المصروف: ' + error.message, 'error');
+            }
+        };
+
+        // ========== دالة تعديل مصروف ==========
+        window.openEditExpense = function(expenseId) {
+            const expense = allExpenses.find(e => e.id === expenseId);
+            if (!expense) {
+                customAlert('⚠️ المصروف غير موجود', 'warning');
+                return;
+            }
+
+            editingExpenseId = expenseId;
+            document.getElementById('editExpenseDescription').value = expense.description || '';
+            document.getElementById('editExpenseAmount').value = expense.amount || 0;
+            const expDate = expense.createdAt?.toDate?.() || new Date();
+            document.getElementById('editExpenseDate').value = expDate.toISOString().split('T')[0];
+            
+            document.getElementById('editExpenseModal').classList.add('active');
+        };
+
+        window.saveEditExpense = async function() {
+            const description = document.getElementById('editExpenseDescription').value.trim();
+            const amount = parseFloat(document.getElementById('editExpenseAmount').value);
+            const dateVal = document.getElementById('editExpenseDate').value;
+
+            if (!description) {
+                await customAlert('⚠️ يرجى إدخال وصف للمصروف', 'warning');
+                return;
+            }
+            if (isNaN(amount) || amount <= 0) {
+                await customAlert('⚠️ يرجى إدخال مبلغ صحيح (أكبر من صفر)', 'warning');
+                return;
+            }
+
+            try {
+                const updateData = {
+                    description: description,
+                    amount: amount
+                };
+                if (dateVal) {
+                    updateData.createdAt = new Date(dateVal);
+                }
+
+                await updateDoc(doc(db, "expenses", editingExpenseId), updateData);
+                
+                document.getElementById('editExpenseModal').classList.remove('active');
+                await customAlert('✅ تم تعديل المصروف بنجاح!', 'success');
+                
+                try {
+                    await logAuditEvent({
+                        action: 'expense_edited',
+                        orderId: null,
+                        orderNumber: null,
+                        details: {
+                            description: description,
+                            amount: amount,
+                            date: dateVal || new Date().toISOString().split('T')[0]
+                        },
+                        performedBy: window.currentUserEmail || 'system',
+                        severity: 'info'
+                    });
+                } catch(e) { console.warn('⚠️ فشل تسجيل Audit Log:', e); }
+
+            } catch (error) {
+                console.error("❌ خطأ في تعديل المصروف:", error);
+                await customAlert('❌ حدث خطأ أثناء تعديل المصروف: ' + error.message, 'error');
+            }
+        };
+
+        // ===== أحداث مودال التعديل =====
+        document.getElementById('editExpenseCancelBtn').addEventListener('click', () => {
+            document.getElementById('editExpenseModal').classList.remove('active');
+        });
+        document.getElementById('editExpenseSaveBtn').addEventListener('click', window.saveEditExpense);
+        document.getElementById('editExpenseModal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                document.getElementById('editExpenseModal').classList.remove('active');
+            }
+        });
+
+        // ========== دالة تأكيد استلام المرتجع ==========
+        window.confirmReturnReceipt = async function(orderId) {
+            const btn = document.querySelector(`.confirm-return-btn[data-orderid="${orderId}"]`);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+            }
+
+            try {
+                const confirmed = await customConfirm("⚠️ هل أنت متأكد من استلام المنتجات المرتجعة؟ سيتم إعادة الكميات إلى المخزون.");
+                if (!confirmed) {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد استلام المرتجع'; }
+                    return;
+                }
+
+                const orderSnap = await getDoc(doc(db, "orders", orderId));
+                if (!orderSnap.exists()) {
+                    await customAlert("❌ الطلب غير موجود", "error");
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد استلام المرتجع'; }
+                    return;
+                }
+
+                const order = orderSnap.data();
+
+                await restoreStockForOrder(orderId, order);
+
+                await updateDoc(doc(db, "orders", orderId), {
+                    status: "returned_confirmed",
+                    stockRestored: true,
+                    returnedConfirmedAt: serverTimestamp(),
+                    notes: (order.notes || '') + ' | تم تأكيد استلام المرتجع'
+                });
+
+                try {
+                    await logAuditEvent({
+                        action: 'return_confirmed',
+                        orderId: orderId,
+                        orderNumber: order.orderID,
+                        details: {
+                            customerName: order.customerName,
+                            phone: order.phone,
+                            orderDetails: order.orderDetails,
+                            totalReturned: order.orderDetails?.reduce((sum, item) => sum + (item.qty * item.price), 0) || 0,
+                            totalCost: order.totalCost || 0,
+                            shippingCostPaid: order.shippingCostPaid || 0
+                        },
+                        performedBy: window.currentUserEmail || 'system',
+                        severity: 'info'
+                    });
+                } catch (e) { console.warn("⚠️ فشل تسجيل Audit Log:", e); }
+
+                await customAlert("✅ تم تأكيد استلام المرتجع وإعادة الكميات إلى المخزون بنجاح!", "success");
+
+                if (typeof window.forceRender === 'function') {
+                    await window.forceRender();
+                } else if (typeof window.render === 'function') {
+                    window.render();
+                }
+
+            } catch (error) {
+                console.error("❌ خطأ في تأكيد المرتجع:", error);
+                await customAlert("❌ حدث خطأ أثناء تأكيد المرتجع: " + error.message, "error");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check-circle"></i> تأكيد استلام المرتجع';
+                }
+            }
+        };
+
+        // ========== تصدير Excel ==========
+        // ========== تصدير Excel ==========
+window.exportToExcel = () => {
+    const filterVal = document.getElementById("monthFilter").value;
+    
+    let ordersToExport = allDeliveredOrders;
+    if (filterVal !== "all") {
+        const [year, month] = filterVal.split('-');
+        ordersToExport = allDeliveredOrders.filter(o => {
+            let date = null;
+            if (o.deliveredAt?.toDate) date = o.deliveredAt.toDate();
+            else if (o.updatedAt?.toDate) date = o.updatedAt.toDate();
+            else date = o.createdAt?.toDate?.();
+            return date && date.getFullYear() == year && (date.getMonth()+1) == month;
+        });
+    }
+            
+            let expensesToExport = allExpenses;
+            if (filterVal !== "all") {
+                const [year, month] = filterVal.split('-');
+                expensesToExport = allExpenses.filter(exp => {
+                    const date = exp.createdAt?.toDate?.();
+                    return date && date.getFullYear() == year && (date.getMonth()+1) == month;
+                });
+            }
+
+            const rows = [];
+            const monthName = filterVal === "all" ? "كل الشهور" : 
+                new Date(filterVal.split('-')[0], parseInt(filterVal.split('-')[1])-1)
+                .toLocaleDateString('ar-EG', { year:'numeric', month:'long' });
+            rows.push([`تقرير أرباح VANTÉ - ${monthName}`]);
+            rows.push([]);
+            
+            rows.push(['رقم الطلب', 'العميل', 'المحافظة', 'المدينة', 'تاريخ التسليم الفعلي', 'المنتجات', 'الإجمالي', 'تكلفة المنتجات', 'تكلفة الشحن', 'صافي الربح']);
+            ordersToExport.forEach(o => {
+                const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+                const productsStr = details.map(item => `${item.name}(${item.size})x${item.qty}`).join(', ');
+                const deliveryDate = o.deliveredAt?.toDate?.() || o.updatedAt?.toDate?.() || o.createdAt?.toDate?.() || new Date();
+                rows.push([
+                    o.orderID, o.customerName || '-', o.gov || '-', o.city || '-',
+                    deliveryDate.toLocaleDateString('ar-EG'),
+                    productsStr,
+                    (o.finalTotal || 0).toFixed(2),
+                    (o.totalCost || 0).toFixed(2),
+                    (o.shippingCostPaid || 0).toFixed(2),
+                    (o.finalTotal - (o.totalCost||0) - (o.shippingCostPaid||0)).toFixed(2)
+                ]);
+            });
+
+            rows.push([]);
+            rows.push(['ملخص المصروفات']);
+            rows.push(['التاريخ', 'الوصف', 'المبلغ']);
+            expensesToExport.forEach(exp => {
+                const date = exp.createdAt?.toDate?.() || new Date();
+                rows.push([
+                    date.toLocaleDateString('ar-EG'),
+                    exp.description || '-',
+                    Number(exp.amount || 0).toFixed(2)
+                ]);
+            });
+            const totalExp = expensesToExport.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+            rows.push(['', 'إجمالي المصروفات', totalExp.toFixed(2)]);
+
+            const ws = XLSX.utils.aoa_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "الأرباح");
+            XLSX.writeFile(wb, `profits_${filterVal === "all" ? "all" : filterVal}_${new Date().toISOString().slice(0,10)}.xlsx`);
+        };
+
+        // ========== دوال مساعدة ==========
+        function formatDate(date) {
+            return date.toLocaleString('ar-EG', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ========== تحميل البيانات ==========
+        function loadData() {
+            loadDeliveredOrders();
+            loadPendingReturns();
+            loadConfirmedReturns();
+            loadExpenses();
+        }
+        window.loadData = loadData;
+
+        // ========== مراقبة تغيير فلتر الشهر ==========
+        document.getElementById("monthFilter").addEventListener("change", function() {
+            applyFilters();
+        });
+
+        // ========== بدء التشغيل ==========
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUserEmail = user.email;
+                loadData();
+                console.log("✅ تم تفعيل لوحة الأرباح");
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        console.log("✅ موديول الأرباح جاهز (نسخة جبارة معدلة)");
+    </script>
+
+</body>
+</html>
