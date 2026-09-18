@@ -4569,7 +4569,315 @@ body {
 .read-more-btn:hover {
     color: #D4A017 !important;
 }
+/* ===== القائمة الجانبية (Mobile Menu) ===== */
+.mobile-menu {
+    background: #FFFFFF !important;
+    padding: 0 !important;
+    box-shadow: -10px 0 40px rgba(93, 58, 122, 0.15) !important;
+}
 
+/* ===== رأس القائمة ===== */
+.mobile-menu .mobile-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px 18px;
+    margin-bottom: 0 !important;
+    background: linear-gradient(135deg, #5D3A7A 0%, #7B4B8A 100%);
+    border-bottom: none !important;
+    position: relative;
+    overflow: hidden;
+}
+.mobile-menu .mobile-menu-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #D4A017, #E8B923, #D4A017);
+}
+
+/* أيقونات رأس القائمة (بحث + حساب) */
+.mobile-menu .mobile-icons-row {
+    display: flex;
+    gap: 10px;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+}
+.mobile-menu .mobile-icon {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(6px);
+}
+.mobile-menu .mobile-icon:hover {
+    background: #D4A017;
+    border-color: #D4A017;
+    color: #1A1A1A;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(212, 160, 23, 0.4);
+}
+
+/* زر الإغلاق */
+.mobile-menu .close-menu {
+    width: 42px;
+    height: 42px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    position: static !important;
+    backdrop-filter: blur(6px);
+}
+.mobile-menu .close-menu:hover {
+    background: #E8B923;
+    border-color: #E8B923;
+    color: #1A1A1A;
+    transform: rotate(90deg);
+    box-shadow: 0 6px 18px rgba(232, 185, 35, 0.4);
+}
+
+/* ===== روابط القائمة ===== */
+.mobile-menu-link {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 22px !important;
+    margin: 0 !important;
+    color: #2D2D2D !important;
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+    border-bottom: 1px solid #F0E6F5 !important;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    background: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+}
+.mobile-menu-link i:first-child {
+    margin-left: 12px;
+    color: #5D3A7A;
+    font-size: 16px;
+    width: 22px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.mobile-menu-link:hover {
+    background: linear-gradient(90deg, #FAF8FB 0%, #F0E6F5 100%);
+    color: #5D3A7A !important;
+    padding-right: 28px !important;
+}
+.mobile-menu-link:hover i:first-child {
+    color: #D4A017;
+    transform: scale(1.15);
+}
+
+/* الشريط الذهبي على اليمين عند الـ hover */
+.mobile-menu-link::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 0;
+    background: linear-gradient(180deg, #5D3A7A, #D4A017);
+    transition: height 0.3s ease;
+    border-radius: 0 3px 3px 0;
+}
+.mobile-menu-link:hover::before {
+    height: 60%;
+}
+
+/* ===== قائمة الأقسام الفرعية ===== */
+.mobile-menu .menu-item {
+    border-bottom: 1px solid #F0E6F5;
+    background: #FFFFFF;
+}
+.mobile-menu .collection-toggle {
+    border-bottom: none !important;
+    padding: 16px 22px !important;
+    background: #FFFFFF !important;
+}
+.mobile-menu .collection-toggle:hover {
+    padding-right: 22px !important;
+}
+.mobile-menu .collection-toggle .arrow-icon {
+    color: #5D3A7A;
+    font-size: 13px;
+    transition: transform 0.35s ease;
+    margin-left: 0 !important;
+    width: auto !important;
+}
+.mobile-menu .collection-toggle.active .arrow-icon {
+    transform: rotate(180deg);
+    color: #D4A017;
+}
+
+/* الأقسام الفرعية */
+.mobile-menu .collections-sub {
+    max-height: 0;
+    overflow: hidden;
+    padding: 0 !important;
+    background: linear-gradient(180deg, #FAF8FB 0%, #F5EDF8 100%);
+    transition: max-height 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
+    opacity: 0;
+}
+.mobile-menu .collections-sub.active {
+    max-height: 500px;
+    opacity: 1;
+}
+.mobile-menu .collections-sub a {
+    display: block !important;
+    padding: 13px 40px 13px 22px !important;
+    color: #555 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    border-bottom: 1px solid rgba(93, 58, 122, 0.06) !important;
+    margin: 0 !important;
+    transition: all 0.25s ease;
+    background: transparent;
+    position: relative;
+}
+.mobile-menu .collections-sub a::before {
+    content: '◆';
+    position: absolute;
+    right: 22px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #D4A017;
+    font-size: 8px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.mobile-menu .collections-sub a:hover {
+    color: #5D3A7A !important;
+    background: rgba(212, 160, 23, 0.08);
+    padding-right: 46px !important;
+}
+.mobile-menu .collections-sub a:hover::before {
+    opacity: 1;
+}
+
+/* ===== Overlay ===== */
+#menuOverlay {
+    background: rgba(45, 31, 58, 0.55) !important;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* ===== زر المنيو (Hamburger) ===== */
+.mobile-btn {
+    background: linear-gradient(135deg, #5D3A7A 0%, #7B4B8A 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 15px rgba(93, 58, 122, 0.3);
+    transition: all 0.3s ease;
+}
+.mobile-btn:hover {
+    background: linear-gradient(135deg, #D4A017 0%, #E8B923 100%) !important;
+    color: #1A1A1A !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(212, 160, 23, 0.4);
+}
+
+/* ===== اللوجو في الهيدر ===== */
+.logo-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 5px 0;
+    transition: all 0.3s ease;
+}
+.logo-wrapper img {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+.logo-wrapper:hover img {
+    transform: scale(1.05);
+}
+
+/* ===== أيقونات الهيدر (السلة - البحث - الحساب) ===== */
+.nav-bar .icons button {
+    background: linear-gradient(135deg, #5D3A7A 0%, #7B4B8A 100%);
+    color: #FFFFFF;
+    box-shadow: 0 3px 12px rgba(93, 58, 122, 0.25);
+}
+.nav-bar .icons button:hover {
+    background: linear-gradient(135deg, #D4A017 0%, #E8B923 100%);
+    color: #1A1A1A;
+    box-shadow: 0 6px 20px rgba(212, 160, 23, 0.4);
+}
+.nav-bar .cart-count {
+    background: linear-gradient(135deg, #D4A017 0%, #E8B923 100%);
+    color: #1A1A1A;
+    border: 2px solid #FFFFFF;
+    box-shadow: 0 2px 8px rgba(212, 160, 23, 0.5);
+}
+
+/* ===== ضبط الهيدر على الموبايل ===== */
+@media (max-width: 768px) {
+    .nav-bar {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px 15px !important;
+        direction: ltr !important;
+        height: 68px !important;
+        background: #FFFFFF !important;
+        box-shadow: 0 2px 15px rgba(93, 58, 122, 0.08);
+    }
+
+    /* الترتيب: [المنيو] [اللوجو] [الأيقونات] */
+    .mobile-actions { order: 1 !important; }
+    .logo-wrapper { order: 2 !important; margin: 0 auto; }
+    .icons { order: 3 !important; gap: 6px !important; }
+
+    /* اللوجو أصغر على الموبايل */
+    .logo-wrapper img {
+        height: 42px !important;
+    }
+
+    /* الأيقونات أصغر */
+    .nav-bar .icons button {
+        width: 38px !important;
+        height: 38px !important;
+    }
+    .nav-bar .icons button i {
+        font-size: 14px !important;
+    }
+
+    /* عرض أيقونة السلة فقط على الموبايل */
+    .nav-bar .icons button:not(:last-child) {
+        display: none !important;
+    }
+
+    /* زر المنيو */
+    .mobile-btn {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 16px !important;
+    }
+}
 
     </style>
 </head>
@@ -4594,76 +4902,96 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
     </div>
 
-    <header class="nav-bar">
-        <!-- ✅ الجديد - مع صورة اللوجو -->
-<div class="logo-wrapper" onclick="window.location.href='index.html'" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-    <img src="images/gamark-logo.png" alt="GAMARK" style="height: 50px; width: auto;">
-</div>
+<!-- ============================================================
+     NAVBAR
+============================================================ -->
+<header class="nav-bar">
 
-        <div class="mobile-actions">
-            <button class="mobile-btn" onclick="toggleMobileMenu(event)"><i class="fas fa-bars"></i></button>
-        </div>
-        <div id="menuOverlay" onclick="toggleMobileMenu(event)"></div>
+  <!-- اللوجو في الوسط -->
+  <div class="logo-wrapper" onclick="window.location.href='index.html'">
+    <img src="images/gamark-logo.png" alt="GAMARK">
+  </div>
 
-       <!-- ============================================
-     MOBILE MENU (نظيف ومصحح)
-============================================ -->
-<nav class="mobile-menu" id="mobileMenu">
+  <!-- زر المنيو (موبايل) -->
+  <div class="mobile-actions">
+    <button class="mobile-btn" onclick="toggleMobileMenu(event)" aria-label="القائمة">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <div id="menuOverlay" onclick="toggleMobileMenu(event)"></div>
+
+  <!-- ===== القائمة الجانبية (موبايل) ===== -->
+  <nav class="mobile-menu" id="mobileMenu">
+
+    <!-- رأس القائمة -->
     <div class="mobile-menu-header">
-        <div class="mobile-icons-row">
-            <button class="mobile-icon" onclick="openAccount()"><i class="fas fa-user"></i></button>
-            <button class="mobile-icon" onclick="openSearch(); closeMobileMenu()"><i class="fas fa-search"></i></button>
-        </div>
-        <button class="close-menu" onclick="closeMobileMenu()"><i class="fas fa-times"></i></button>
+      <div class="mobile-icons-row">
+        <button class="mobile-icon" onclick="openAccount()" aria-label="حسابي">
+          <i class="fas fa-user"></i>
+        </button>
+        <button class="mobile-icon" onclick="openSearch(); closeMobileMenu()" aria-label="بحث">
+          <i class="fas fa-search"></i>
+        </button>
+      </div>
+      <button class="close-menu" onclick="closeMobileMenu()" aria-label="إغلاق">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
 
-    <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all'); closeMobileMenu()">الصفحة الرئيسية</a>
+    <!-- الصفحة الرئيسية -->
+    <a href="?category=all" data-category="all"
+       onclick="event.preventDefault(); window.setCategory('all'); closeMobileMenu()"
+       class="mobile-menu-link">
+      <i class="fas fa-home"></i> الصفحة الرئيسية
+    </a>
 
+    <!-- الأقسام (Collapsible) -->
     <div class="menu-item">
-        <a href="#" class="collection-toggle" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-        <div id="collectionsSub" class="collections-sub">
-            <a href="?category=all" data-category="all" onclick="handleMenuClick(event, 'all', this); closeMobileMenu()">كل الأقسام</a>
-            <a href="?category=waist" data-category="waist" onclick="handleMenuClick(event, 'waist', this); closeMobileMenu()">مشدات البطن</a>
-            <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'fullbody', this); closeMobileMenu()">مشدات كامل الجسم</a>
-            <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'thigh', this); closeMobileMenu()">مشدات الفخذ</a>
-            <a href="?category=arm" data-category="arm" onclick="handleMenuClick(event, 'arm', this); closeMobileMenu()">مشدات الذراع</a>
-            <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this); closeMobileMenu()">أطقم مشدات</a>
-            <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'belts', this); closeMobileMenu()">أحزمة البطن</a>
-        </div>
+      <a href="#" class="collection-toggle mobile-menu-link" onclick="toggleCollections(event)">
+        <span><i class="fas fa-th-large"></i> الأقسام</span>
+        <i class="fas fa-chevron-down arrow-icon"></i>
+      </a>
+      <div id="collectionsSub" class="collections-sub">
+        <a href="?category=all" data-category="all" onclick="handleMenuClick(event, 'all', this)">كل الأقسام</a>
+        <a href="?category=waist" data-category="waist" onclick="handleMenuClick(event, 'waist', this)">مشدات البطن</a>
+        <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'fullbody', this)">مشدات كامل الجسم</a>
+        <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'thigh', this)">مشدات الفخذ</a>
+        <a href="?category=arm" data-category="arm" onclick="handleMenuClick(event, 'arm', this)">مشدات الذراع</a>
+        <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this)">أطقم مشدات</a>
+        <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'belts', this)">أحزمة البطن</a>
+      </div>
     </div>
 
-    <a href="#" onclick="openContactModal(event); return false;">تواصل مع المسئول</a>
-    <a href="#" onclick="openInfoModal(); closeMobileMenu(); return false;">دليل المتسوق</a>
-</nav>
+    <!-- تواصل مع المسئول -->
+    <a href="#" class="mobile-menu-link"
+       onclick="event.preventDefault(); closeMobileMenu(); openContactModal(); return false;">
+      <i class="fas fa-headset"></i> تواصل مع المسئول
+    </a>
 
-      <div class="menu-item">
-        <a href="#" class="collection-toggle" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-        <div id="collectionsSub" class="collections-sub">
-            <a href="?category=all" data-category="all" onclick="handleMenuClick(event, 'all', this); closeMobileMenu()">كل الأقسام</a>
-         <a href="?category=waist" data-category="waist" 
-         onclick="handleMenuClick(event, 'waist', this); closeMobileMenu()">مشدات البطن</a>
-            <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'bracelets', this); closeMobileMenu()">مشدات كامل الجسم</a>
-            <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'rings', this); closeMobileMenu()">مشدات الفخذ</a>
-            <a href="?category=arm" data-category="arm" onclick="handleMenuClick(event, 'arm', this); closeMobileMenu()">مشدات الذراع</a>
-            <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this); closeMobileMenu()">أطقم مشدات</a>
-            <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'anklets', this); closeMobileMenu()">أحزمة البطن</a>
-        </div>
-    </div>
-    
-    <a href="#" onclick="openContactModal(event)">تواصل مع المسئول</a>
-    <a href="#" onclick="openInfoModal()">دليل المتسوق</a>
-    </nav>
+    <!-- دليل المتسوق -->
+    <a href="#" class="mobile-menu-link"
+       onclick="event.preventDefault(); closeMobileMenu(); openInfoModal(); return false;">
+      <i class="fas fa-book-open"></i> دليل المتسوق
+    </a>
 
-        <div class="icons">
-            <button type="button" onclick="openSearch()"><i class="fas fa-search"></i></button>
-            <button type="button" onclick="openAccount()"><i class="fas fa-user" id="userIcon"></i></button>
-            <button type="button" onclick="openCart()">
-                <i class="fas fa-shopping-bag"></i>
-                <span class="cart-count" id="cartCount">0</span>
-            </button>
-        </div>
-    </header>
+  </nav>
 
+  <!-- أيقونات الهيدر (سلة - بحث - حساب) -->
+  <div class="icons">
+    <button onclick="openSearch()" aria-label="بحث">
+      <i class="fas fa-search"></i>
+    </button>
+    <button onclick="openAccount()" aria-label="حسابي">
+      <i class="fas fa-user"></i>
+    </button>
+    <button onclick="openCart()" aria-label="سلة التسوق">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+
+</header>
     <section class="hero">
         <img src="images/header.webp" alt="GAMARK Banner">
     </section>
