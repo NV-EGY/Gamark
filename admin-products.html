@@ -927,79 +927,72 @@ h2 {
 <!-- قسم إضافة/تعديل المنتج (قابل للطي) -->
    <div class="form-section" id="productFormSection">
        <h3 class="form-title" data-toggle="productFormContent">➕ إضافة / تعديل منتج</h3>
-       <div id="productFormContent" class="collapsible-content">
-           <div class="form-row">
-               <div class="form-group"><label><i class="fas fa-tag"></i> اسم المنتج</label><input id="name" placeholder="مثال: سوار ذهبي"></div>
-               <div class="form-group"><label><i class="fas fa-coins"></i> سعر البيع (EGP)</label><input id="price" type="number" placeholder="السعر"></div>
-           </div>
-           <div class="form-row">
-               <div class="form-group"><label><i class="fas fa-dollar-sign"></i> سعر الجملة (تكلفة الشراء)</label><input id="costPrice" type="number" placeholder="سعر شراء المنتج من التاجر"></div>
-               <div class="form-group"><label><i class="fas fa-link"></i> رابط التاجر (تيليجرام/واتساب)</label><input id="supplierLink" placeholder="https://t.me/..."></div>
-           </div>
-           <div class="form-row">
-               <div class="form-group"><label><i class="fas fa-image"></i> رابط الصورة الرئيسية</label><input id="image" placeholder="https://..."></div>
-               <div class="form-group"><label><i class="fas fa-images"></i> صور إضافية</label><input id="additionalImages" placeholder="رابط1, رابط2, رابط3"></div>
-           </div>
-           <div class="form-row">
-               <div class="form-group"><label><i class="fas fa-ruler"></i> المقاسات</label><input id="sizes" placeholder="مثال: S,M,L,XL,2XL"><small class="input-hint">أدخل المقاسات مفصولة بفاصلة</small></div>
-               <div class="form-group"><label><i class="fas fa-layer-group"></i> القسم</label><select id="category">
-    <option value="">-- اختر القسم --</option>
-    <option value="waist">مشدات البطن</option>
-    <option value="fullbody">مشدات كامل الجسم</option>
-    <option value="thigh">مشدات الفخذ</option>
-    <option value="arm">مشدات الذراع</option>
-    <option value="sets">أطقم مشدات</option>
-    <option value="belts">أحزمة البطن</option>
-</select></div>
-           </div>
-         <div class="form-row">
-    <div class="form-group">
-        <label><i class="fas fa-barcode"></i> SKU (تلقائي)</label>
-        <input type="text" id="skuDisplay" readonly style="background:#f5f5f5; color:#333; font-weight:bold; direction:ltr; cursor:default;">
-        <small class="input-hint">🔒 يتم إنشاء SKU تلقائياً عند إضافة منتج جديد، ولا يمكن تعديله يدوياً</small>
+      <div id="productFormContent" class="collapsible-content">
+    <div class="form-row">
+        <div class="form-group full-width"><label><i class="fas fa-tag"></i> اسم المنتج</label><input id="name" placeholder="مثال: مشد بطن طبي"></div>
     </div>
-    <div class="form-group">
-        <label><i class="fas fa-info-circle"></i> حالة SKU</label>
-        <div id="skuStatus" style="padding:10px 0; font-size:13px; color:#888;">
-            <i class="fas fa-check-circle" style="color:#27ae60;"></i> سيتم إنشاؤه تلقائياً عند الحفظ
+    <div class="form-row">
+        <div class="form-group"><label><i class="fas fa-dollar-sign"></i> سعر الجملة (تكلفة الشراء)</label><input id="costPrice" type="number" placeholder="سعر شراء المنتج"></div>
+        <div class="form-group"><label><i class="fas fa-coins"></i> سعر البيع (EGP)</label><input id="price" type="number" placeholder="السعر"></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label><i class="fas fa-tags"></i> السعر قبل الخصم</label><input id="comparePrice" type="number" placeholder="السعر الأصلي (اختياري)"></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label><i class="fas fa-image"></i> رابط الصورة الرئيسية</label><input id="image" placeholder="https://..."></div>
+        <div class="form-group"><label><i class="fas fa-images"></i> صور إضافية</label><input id="additionalImages" placeholder="رابط1, رابط2, رابط3"></div>
+    </div>
+    <div class="form-row">
+        <div class="form-group"><label><i class="fas fa-weight"></i> الوزن (كجم) <span style="color:#e74c3c;">*</span></label><input id="weight" type="number" placeholder="مثال: 65" step="0.1"></div>
+        <div class="form-group"><label><i class="fas fa-ruler-vertical"></i> الطول (سم) - اختياري</label><input id="length" type="number" placeholder="مثال: 165" step="0.1"></div>
+    </div>
+    <div style="text-align:center; margin: -8px 0 12px; font-size: 13px; color: #B8860B; background: #fff8e1; padding: 10px; border-radius: 10px; font-weight: 600;">
+        💡 لتحديد المقاس يجب إدخال الوزن والطول
+    </div>
+    <div class="form-row">
+        <div class="form-group full-width"><label><i class="fas fa-layer-group"></i> القسم</label><select id="category">
+            <option value="">-- اختر القسم --</option>
+            <option value="waist">مشدات البطن</option>
+            <option value="fullbody">مشدات كامل الجسم</option>
+            <option value="thigh">مشدات الفخذ</option>
+            <option value="arm">مشدات الذراع</option>
+            <option value="sets">أطقم مشدات</option>
+            <option value="belts">أحزمة البطن</option>
+        </select></div>
+    </div>
+    <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid #e0e6ed; padding-bottom: 8px;">
+        <button type="button" class="tool-btn" data-command="bold" title="غامق" onclick="formatDoc('bold')"><i class="fas fa-bold"></i></button>
+        <button type="button" class="tool-btn" data-command="italic" title="مائل" onclick="formatDoc('italic')"><i class="fas fa-italic"></i></button>
+        <button type="button" class="tool-btn" data-command="underline" title="تسطير" onclick="formatDoc('underline')"><i class="fas fa-underline"></i></button>
+        <button type="button" class="tool-btn" data-command="strikeThrough" title="شطب" onclick="formatDoc('strikeThrough')"><i class="fas fa-strikethrough"></i></button>
+        <button type="button" class="tool-btn" data-command="insertUnorderedList" title="قائمة نقطية" onclick="formatDoc('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+        <button type="button" class="tool-btn" data-command="insertOrderedList" title="قائمة رقمية" onclick="formatDoc('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+        <button type="button" class="tool-btn" data-command="justifyRight" title="محاذاة لليمين" onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
+        <button type="button" class="tool-btn" data-command="justifyCenter" title="محاذاة للوسط" onclick="formatDoc('justifyCenter')"><i class="fas fa-align-center"></i></button>
+        <button type="button" class="tool-btn" data-command="justifyLeft" title="محاذاة لليسار" onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
+        <button type="button" class="tool-btn" data-command="removeFormat" title="إزالة التنسيق" onclick="formatDoc('removeFormat')"><i class="fas fa-eraser"></i></button>
+    </div>
+    <div class="form-row">
+        <div class="form-group full-width"><label><i class="fas fa-align-right"></i> وصف المنتج</label>
+            <div id="descriptionEditor" contenteditable="true" style="border:1.5px solid #edf2f7; border-radius:12px; padding:12px; min-height:150px; background:#fff;"></div>
+            <input type="hidden" id="description">
         </div>
     </div>
+    <div class="form-row">
+        <div class="form-group"><label><i class="fas fa-ban"></i> قابل للخصم (كوبونات)</label><select id="discountable"><option value="true">✅ نعم</option><option value="false">❌ لا</option></select></div>
+    </div>
+    <div id="sizeStockContainer">
+        <h4>📦 الكمية المتاحة لكل مقاس</h4>
+        <div id="sizeStockInputs"></div>
+        <button type="button" onclick="generateSizeStockInputs()" class="secondary-btn" style="margin-top:10px;"><i class="fas fa-sync-alt"></i> تحديث حقول الكميات</button>
+    </div>
+    <div class="form-actions">
+        <button onclick="window.addProduct()" id="addBtn" class="primary-btn">
+            <i class="fas fa-save"></i> إضافة منتج
+        </button>
+        <button onclick="cancelEdit()" id="cancelBtn" class="cancel-btn" style="display:none;"><i class="fas fa-times"></i> إلغاء</button>
+    </div>
 </div>
-           <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid #e0e6ed; padding-bottom: 8px;">
-    <button type="button" class="tool-btn" data-command="bold" title="غامق" onclick="formatDoc('bold')"><i class="fas fa-bold"></i></button>
-    <button type="button" class="tool-btn" data-command="italic" title="مائل" onclick="formatDoc('italic')"><i class="fas fa-italic"></i></button>
-    <button type="button" class="tool-btn" data-command="underline" title="تسطير" onclick="formatDoc('underline')"><i class="fas fa-underline"></i></button>
-    <button type="button" class="tool-btn" data-command="strikeThrough" title="شطب" onclick="formatDoc('strikeThrough')"><i class="fas fa-strikethrough"></i></button>
-    <button type="button" class="tool-btn" data-command="insertUnorderedList" title="قائمة نقطية" onclick="formatDoc('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
-    <button type="button" class="tool-btn" data-command="insertOrderedList" title="قائمة رقمية" onclick="formatDoc('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
-    <button type="button" class="tool-btn" data-command="justifyRight" title="محاذاة لليمين" onclick="formatDoc('justifyRight')"><i class="fas fa-align-right"></i></button>
-    <button type="button" class="tool-btn" data-command="justifyCenter" title="محاذاة للوسط" onclick="formatDoc('justifyCenter')"><i class="fas fa-align-center"></i></button>
-    <button type="button" class="tool-btn" data-command="justifyLeft" title="محاذاة لليسار" onclick="formatDoc('justifyLeft')"><i class="fas fa-align-left"></i></button>
-    <button type="button" class="tool-btn" data-command="removeFormat" title="إزالة التنسيق" onclick="formatDoc('removeFormat')"><i class="fas fa-eraser"></i></button>
-</div>
-           <div class="form-row">
-               <div class="form-group full-width"><label><i class="fas fa-align-right"></i> وصف المنتج</label>
-                   <div id="descriptionEditor" contenteditable="true" style="border:1.5px solid #edf2f7; border-radius:12px; padding:12px; min-height:150px; background:#fff;"></div>
-                   <input type="hidden" id="description">
-               </div>
-           </div>
-           <div class="form-row">
-               <div class="form-group"><label><i class="fas fa-tags"></i> السعر قبل الخصم</label><input id="comparePrice" type="number" placeholder="السعر الأصلي (اختياري)"></div>
-               <div class="form-group"><label><i class="fas fa-ban"></i> قابل للخصم (كوبونات)</label><select id="discountable"><option value="true">✅ نعم</option><option value="false">❌ لا</option></select></div>
-           </div>
-           <div id="sizeStockContainer">
-               <h4>📦 الكمية المتاحة لكل مقاس</h4>
-               <div id="sizeStockInputs"><p class="empty-stock-hint">📌 أدخل المقاسات أولاً ثم اضغط "تحديث حقول الكميات"</p></div>
-               <button type="button" onclick="generateSizeStockInputs()" class="secondary-btn"><i class="fas fa-sync-alt"></i> تحديث حقول الكميات</button>
-           </div>
-           <div class="form-actions">
-               <button onclick="window.addProduct()" id="addBtn" class="primary-btn">
-    <i class="fas fa-save"></i> إضافة منتج
-</button>
-               <button onclick="cancelEdit()" id="cancelBtn" class="cancel-btn" style="display:none;"><i class="fas fa-times"></i> إلغاء</button>
-           </div>
-       </div>
-   </div>
 
    <!-- قسم قائمة المنتجات -->
    <div class="form-section" id="productsListSection">
@@ -1637,63 +1630,62 @@ function generateProductDetails(product, stockBySize) {
     if (unlimitedSizes.length > 0) sizesWarningHtml += `<div style="margin-top:5px;font-size:11px;color:#800080;">♾️ غير محدودة: ${unlimitedSizes.join(', ')}</div>`;
     if (outOfStockSizes.length > 0) sizesWarningHtml += `<div style="margin-top:5px;font-size:11px;color:#e74c3c;">⚠️ نفذت: ${outOfStockSizes.join(', ')}</div>`;
     if (lowStockSizes.length > 0) sizesWarningHtml += `<div style="margin-top:3px;font-size:11px;color:#f39c12;">⚡ قاربت على النفاذ: ${lowStockSizes.join(', ')}</div>`;
-    
-    // التفاصيل الأساسية (تظهر أول مرة)
-    let detailsHtml = `<div><strong>📏 المقاسات:</strong> ${Object.entries(stockBySize).map(([size, qty]) => { let displayQty="", color=""; if(qty===null||qty===undefined){ displayQty="∞ غير محدودة"; color="#800080"; } else { const qtyNum=parseInt(qty)||0; displayQty=qtyNum; color=qtyNum===0?'#e74c3c':(qtyNum<5?'#f39c12':'#27ae60'); } return `<span style="color:${color}; font-weight:${(qty===null||qty===0)?'bold':'normal'};">${size}: ${displayQty}</span>`; }).join(" | ") || "غير محدد"}</div>`;
+
+    let detailsHtml = `<div><strong>📏 المقاسات:</strong> ${Object.entries(stockBySize).map(([size, qty]) => { let displayQty="", color=""; if(qty===null||qty===undefined){ displayQty="∞"; color="#800080"; } else { const qtyNum=parseInt(qty)||0; displayQty=qtyNum; color=qtyNum===0?'#e74c3c':(qtyNum<5?'#f39c12':'#27ae60'); } return `<span style="color:${color}; font-weight:${(qty===null||qty===0)?'bold':'normal'};">${size}: ${displayQty}</span>`; }).join(" | ") || "غير محدد"}</div>`;
     detailsHtml += `<div><strong>🏷️ القسم:</strong> ${product.categoryLabel || "عام"}</div>`;
+    detailsHtml += `<div><strong>⚖️ الوزن:</strong> ${product.weight ? product.weight + ' كجم' : 'غير محدد'}</div>`;
+    if (product.length) detailsHtml += `<div><strong>📐 الطول:</strong> ${product.length} سم</div>`;
     detailsHtml += `<div><strong>💰 قابل للخصم:</strong> ${product.discountable !== false ? '✅ نعم' : '❌ لا'}</div>`;
     detailsHtml += `<div><strong>🖼️ صور إضافية:</strong> ${(product.additionalImages && product.additionalImages.length) ? product.additionalImages.length + " صور" : "لا يوجد"}</div>`;
     detailsHtml += sizesWarningHtml;
-  
+
     // التفاصيل الإضافية (مخفية مبدئياً)
     const productIdForToggle = product.id.replace(/[^a-zA-Z0-9]/g, '_');
     const extraDetailsId = `extra-details-${productIdForToggle}`;
-    let sku = product.sku || "غير محدد";
+    const sku = product.sku || "غير محدد";
     const qrId = `qr-${product.id.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    
+
     let extraHtml = `<div style="margin-top:12px; border-top:1px dashed #ccc; padding-top:8px;">
                         <button class="show-more-btn" data-extra="${extraDetailsId}" style="background: none; border: none; color: #D4AF37; font-weight: bold; cursor: pointer; width: auto; padding: 4px 8px;">🔽 عرض المزيد</button>
                         <div id="${extraDetailsId}" style="display: none; margin-top: 10px;">
-                   <div style="margin-bottom:8px;">
-    <strong>📦 SKU:</strong> ${sku}
-    <div class="sku-actions">
-        <button class="sku-btn sku-barcode" onclick="showBarcode('${sku}', '${qrId}')">
-            <i class="fas fa-barcode"></i> باركود
-        </button>
-        <button class="sku-btn sku-copy" onclick="copyToClipboard('${sku}')">
-            <i class="fas fa-copy"></i> نسخ
-        </button>
-    </div>
-    <div id="${qrId}" style="display:none; margin-top:8px;"></div>
-</div>
+                            <div style="margin-bottom:8px;">
+                                <strong>📦 SKU:</strong> ${sku}
+                                <div class="sku-actions">
+                                    <button class="sku-btn sku-barcode" onclick="showBarcode('${sku}', '${qrId}')"><i class="fas fa-barcode"></i> باركود</button>
+                                    <button class="sku-btn sku-copy" onclick="copyToClipboard('${sku}')"><i class="fas fa-copy"></i> نسخ</button>
+                                </div>
+                                <div id="${qrId}" style="display:none; margin-top:8px;"></div>
+                            </div>
                             <div><strong>💸 سعر الجملة:</strong> ${product.costPrice ? product.costPrice + ' جنيه' : 'غير محدد'}</div>
-                            ${product.supplierLink ? `<div><strong>📞 رابط التاجر:</strong> <a href="${product.supplierLink}" target="_blank" class="supplier-link-btn" style="background:#0088cc;"><i class="fab fa-telegram"></i> تليجرام</a></div>` : ''}
                             <div><strong>📝 الوصف:</strong> <div style="background:#f9f9f9; padding:8px; border-radius:12px; margin-top:5px;">${product.description || "لا يوجد وصف"}</div></div>
                         </div>
                     </div>`;
-    
+
     return detailsHtml + extraHtml;
 }
 document.getElementById("searchProductInput").addEventListener("input", function(e) { currentSearchTerm = e.target.value; renderFilteredProducts(); });
 window.generateSizeStockInputs = function() {
-    const sizesStr = document.getElementById("sizes").value.trim();
-    if (!sizesStr) { customAlert("⚠️ أدخل المقاسات أولاً", 'warning'); return; }
-    const sizes = sizesStr.split(",").map(s=>s.trim()).filter(Boolean);
     const container = document.getElementById("sizeStockInputs");
+    if (!container) return;
     let html = '';
-    for (let size of sizes) {
+    for (let size of CORSET_SIZES) {
         let currentValue = window._editingStockBySize[size] !== undefined ? window._editingStockBySize[size] : "";
         let displayValue = (currentValue === null || currentValue === undefined) ? "" : currentValue;
-        html += `<div class="size-stock-group"><label style="min-width:60px;">📏 مقاس ${size}</label><input type="number" class="size-stock-input" data-size="${size}" placeholder="اتركه فارغاً (غير محدود)" min="0" value="${displayValue}" style="flex:1; text-align:center;"><small style="font-size:10px; color:#B8860B;">💡 اتركه فارغاً = غير محدود</small></div>`;
+        html += `<div class="size-stock-group">
+            <label style="min-width:60px;">📏 مقاس ${size}</label>
+            <input type="number" class="size-stock-input" data-size="${size}" placeholder="اتركه فارغاً (غير محدود)" min="0" value="${displayValue}" style="flex:1; text-align:center;">
+            <small style="font-size:10px; color:#B8860B;">💡 فارغ = غير محدود</small>
+        </div>`;
     }
     container.innerHTML = html;
 };
+
+// توليد الحقول تلقائياً عند تحميل الصفحة
+setTimeout(() => { if (document.getElementById('sizeStockInputs')) generateSizeStockInputs(); }, 500);
 function collectSizeStock() { const inputs = document.querySelectorAll(".size-stock-input"); const stockBySize={}; inputs.forEach(inp=>{ const size=inp.dataset.size; const val=inp.value.trim(); stockBySize[size]= val===""?null:(parseInt(val)||0); }); return stockBySize; }
 // اجعل customAlert عامة أيضاً (لضمان ظهور الرسائل)
 window.customAlert = customAlert;
 
-// تعريف الدالة كدالة عادية ثم ربطها بـ window
-// تعريف الدالة كدالة عادية ثم ربطها بـ window
 async function addProduct() {
     try {
         console.log("✅ addProduct تم استدعاؤها");
@@ -1706,24 +1698,25 @@ async function addProduct() {
         const rawCategory = document.getElementById("category").value;
         const category = (rawCategory || "").toString().trim().toLowerCase().replace(/\s+/g, "");
         const description = document.getElementById("description").value.trim();
-        const sizes = document.getElementById("sizes").value.split(",").map(s => s.trim()).filter(Boolean);
+        const weight = Number(document.getElementById("weight").value);
+        const length = Number(document.getElementById("length").value) || null;
         const stockBySize = collectSizeStock();
         const costPrice = Number(document.getElementById("costPrice").value) || 0;
-        const supplierLink = document.getElementById("supplierLink").value.trim();
         const discountable = document.getElementById("discountable").value === "true";
 
-        // التحقق من الحقول الأساسية
-        if (!name || !price || !image || !category || !description || sizes.length === 0) {
-            customAlert("يرجى إدخال جميع البيانات الأساسية مع مقاس واحد على الأقل", "warning");
+        // التحقق من الحقول الأساسية (الوزن مطلوب)
+        if (!name || !price || !image || !category || !description || !weight) {
+            customAlert("يرجى إدخال جميع البيانات الأساسية مع الوزن", "warning");
             return;
         }
 
-        // الحصول على SKU من الحقل (إذا كان موجوداً)
-        let skuField = document.getElementById("skuDisplay");
-        let finalSKU = skuField ? skuField.value.trim() : "";
-
-        // إذا كان تعديل، نستخدم SKU الموجود، وإلا ننشئ واحداً جديداً
-        if (!editingProductId && (!finalSKU || finalSKU === "")) {
+        // الحصول على SKU (موجود أو إنشاء جديد)
+        let finalSKU = "";
+        if (editingProductId) {
+            const existing = window.allProducts.find(p => p.id === editingProductId);
+            finalSKU = existing?.sku || "";
+        }
+        if (!finalSKU) {
             finalSKU = await generateSKUByCategory(rawCategory);
         }
 
@@ -1736,33 +1729,29 @@ async function addProduct() {
             category,
             categoryLabel: rawCategory,
             description,
-            sizes,
+            sizes: CORSET_SIZES,           // مقاسات ثابتة
+            weight: weight,
+            length: length,
             comparePrice,
             stockBySize,
             costPrice,
-            supplierLink,
             updatedAt: serverTimestamp(),
             discountable
         };
 
         if (editingProductId) {
-            // ✅ تعديل منتج موجود
             await updateDoc(doc(db, "products", editingProductId), productData);
             customAlert("✅ تم تحديث المنتج بنجاح", "success");
-            
-            // تسجيل حدث التعديل
             await logAuditEvent({
                 action: 'product_edited',
                 details: { productId: editingProductId, name, sku: finalSKU },
                 performedBy: window.currentUserEmail || 'system',
                 severity: 'info'
             });
-            
             editingProductId = null;
             document.getElementById("addBtn").textContent = "إضافة منتج";
             document.getElementById("cancelBtn").style.display = "none";
         } else {
-            // ✅ إضافة منتج جديد
             productData.createdAt = serverTimestamp();
             await addDoc(collection(db, "products"), productData);
             customAlert("✅ تم إضافة المنتج بنجاح", "success");
@@ -1776,8 +1765,6 @@ async function addProduct() {
         customAlert("حدث خطأ أثناء حفظ المنتج: " + error.message, "error");
     }
 }
-
-// ربط الدالة بالكائن العام
 window.addProduct = addProduct;
 
 window.cancelEdit = function() {
@@ -1789,34 +1776,30 @@ window.cancelEdit = function() {
 };
 function clearForm() {
     document.getElementById("costPrice").value = "";
-    document.getElementById("supplierLink").value = "";
     document.getElementById("name").value = "";
     document.getElementById("price").value = "";
     document.getElementById("image").value = "";
     document.getElementById("additionalImages").value = "";
-    document.getElementById("sizes").value = "";
     document.getElementById("category").value = "";
     document.getElementById("comparePrice").value = "";
     document.getElementById("discountable").value = "true";
-    
+    document.getElementById("weight").value = "";
+    document.getElementById("length").value = "";
+
     const editor = document.getElementById("descriptionEditor");
     if (editor) editor.innerHTML = "";
     document.getElementById("description").value = "";
-    document.getElementById("sizeStockInputs").innerHTML = '<p style="color:#888; font-size:13px; text-align:center;">📌 أدخل المقاسات أولاً ثم اضغط "تحديث حقول الكميات"</p>';
+
+    // إعادة تعيين حقول المخزون (مع القيم الفارغة)
     window._editingStockBySize = {};
-    
-    // إخفاء حقل SKU عند الإلغاء (سيتم إعادة إنشائه عند الحاجة)
-    const skuField = document.getElementById("skuDisplay");
-    if (skuField) skuField.value = "";
-    
-    // إعادة تعيين حالة الزر
+    generateSizeStockInputs();
+
     document.getElementById("addBtn").textContent = "إضافة منتج";
     document.getElementById("cancelBtn").style.display = "none";
 }
 // ====== تعديل المنتج (نسخة محسنة واحترافية) ======
 window.editProduct = async function(id) {
     try {
-        // البحث عن المنتج في allProducts
         const product = window.allProducts.find(p => p.id === id);
         if (!product) {
             customAlert("❌ المنتج غير موجود", "error");
@@ -1825,63 +1808,34 @@ window.editProduct = async function(id) {
 
         editingProductId = id;
         window._editingStockBySize = product.stockBySize || {};
-        
-        // فتح قسم التعديل
+
         openSection('productFormContent');
         scrollToElement('productFormSection', 350);
 
-        // تعبئة الحقول الأساسية
+        // تعبئة الحقول
         document.getElementById("name").value = product.name || "";
         document.getElementById("price").value = product.price || "";
         document.getElementById("image").value = product.image || "";
         document.getElementById("additionalImages").value = (product.additionalImages || []).join(", ");
-        document.getElementById("sizes").value = (product.sizes || []).join(",");
         document.getElementById("category").value = product.category || "";
         document.getElementById("comparePrice").value = product.comparePrice || "";
         document.getElementById("costPrice").value = product.costPrice || "";
-        document.getElementById("supplierLink").value = product.supplierLink || "";
         document.getElementById("discountable").value = product.discountable !== false ? "true" : "false";
+        document.getElementById("weight").value = product.weight || "";
+        document.getElementById("length").value = product.length || "";
 
         // تعبئة الوصف
         const editor = document.getElementById("descriptionEditor");
-        if (editor) {
-            editor.innerHTML = product.description || "";
-        }
+        if (editor) editor.innerHTML = product.description || "";
         document.getElementById("description").value = product.description || "";
-
-        // إنشاء حقل SKU إذا لم يكن موجوداً
-        let skuField = document.getElementById("skuDisplay");
-        if (!skuField) {
-            const container = document.getElementById("productFormContent");
-            const skuDiv = document.createElement("div");
-            skuDiv.className = "form-group";
-            skuDiv.innerHTML = `
-                <label><i class="fas fa-barcode"></i> SKU (تلقائي)</label>
-                <input type="text" id="skuDisplay" readonly style="background:#f5f5f5; color:#333; font-weight:bold; direction:ltr;">
-                <small class="input-hint">🔒 يتم إنشاء SKU تلقائياً عند إضافة منتج جديد</small>
-            `;
-            const firstRow = container.querySelector(".form-row");
-            if (firstRow) {
-                firstRow.insertAdjacentElement('afterend', skuDiv);
-            }
-            skuField = document.getElementById("skuDisplay");
-        }
-
-        // تعيين SKU (مع الاحتفاظ بالقيمة الموجودة أو إنشاء جديدة)
-        let sku = product.sku;
-        if (!sku || sku.trim() === "") {
-            sku = await generateSKUByCategory(product.category);
-        }
-        skuField.value = sku;
 
         // تحديث حقول المخزون
         generateSizeStockInputs();
 
-        // تغيير نص الزر وإظهار زر الإلغاء
+        // تغيير نص الزر
         document.getElementById("addBtn").textContent = "💾 حفظ التعديل";
         document.getElementById("cancelBtn").style.display = "block";
 
-        // تمرير إلى أعلى النموذج
         document.getElementById('productFormSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         console.log(`📝 جاري تعديل المنتج: ${product.name} (${id})`);
