@@ -796,6 +796,9 @@
             <div class="icon-btn msg-icon" onclick="toggleInbox()" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f1f1f1; cursor: pointer; transition: 0.2s; position: relative;">
                 📩 <span id="msgBadge" style="position: absolute; top: 2px; right: 2px; background: red; color: #fff; border-radius: 50%; font-size: 10px; padding: 2px 5px; min-width: 16px; text-align: center;">0</span>
             </div>
+            <div class="icon-btn" onclick="openPasteOrdersModal()" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #0F7B65; color: #fff; cursor: pointer; transition: 0.2s;" title="لصق طلبات">
+    📋
+</div>
             <div class="icon-btn" onclick="printSelected()" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f1f1f1; cursor: pointer; transition: 0.2s;">
                 🖨️
             </div>
@@ -1058,7 +1061,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs, where, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, increment, query, orderBy, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs, where, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { logAuditEvent } from './js/logger.js';
 // ===== إدارة الإشعارات المحسّنة =====
@@ -1094,6 +1097,282 @@ async function registerSW() {
   console.log('ℹ️ Service Worker معطل (اختياري)');
   return;
 }
+
+// ============================================================
+// نظام لصق الطلبات المتعدد
+// ============================================================
+
+window.openPasteOrdersModal = function() {
+    const modal = document.getElementById('pasteOrdersModal');
+    const textarea = document.getElementById('pasteOrdersTextarea');
+    const preview = document.getElementById('pasteOrdersPreview');
+    textarea.value = '';
+    preview.innerHTML = '';
+    modal.classList.add('active');
+    setTimeout(() => textarea.focus(), 200);
+};
+
+window.closePasteOrdersModal = function() {
+    document.getElementById('pasteOrdersModal').classList.remove('active');
+};
+
+// ===== تحليل النص المدخل =====
+function parseOrdersFromPaste(text) {
+    const orders = [];
+    // نقسم حسب "اسم العميل" اللي بيمثل بداية كل طلب
+    const blocks = text.split(/(?=^\s*اسم العميل\s*:)/m).filter(b => b.trim());
+
+    for (const block of blocks) {
+        const lines = block.split('\n').filter(l => l.trim());
+        const order = {
+            customerName: '',
+            phone: '',
+            gov: '',
+            city: '',
+            address: '',
+            productName: '',
+            weight: null,
+            length: null,
+            price: 0,
+            shipping: 0,
+            notes: ''
+        };
+
+        for (const line of lines) {
+            // نقبل ":" و "：" و " : "
+            const match = line.match(/^(.+?)\s*[:：]\s*(.*)$/);
+            if (!match) continue;
+            const key = match[1].trim();
+            const value = match[2].trim();
+
+            switch (key) {
+                case 'اسم العميل': order.customerName = value; break;
+                case 'التليفون':
+                case 'الهاتف': order.phone = value.replace(/\D/g, ''); break;
+                case 'المحافظة': order.gov = value; break;
+                case 'المدينة': order.city = value; break;
+                case 'العنوان': order.address = value; break;
+                case 'المنتج': order.productName = value; break;
+                case 'الوزن/الطول':
+                case 'الوزن / الطول': {
+                    const parts = value.split('/').map(s => s.trim());
+                    order.weight = parseFloat(parts[0]) || null;
+                    order.length = parseFloat(parts[1]) || null;
+                    break;
+                }
+                case 'السعر': order.price = parseFloat(value) || 0; break;
+                case 'الشحن': order.shipping = parseFloat(value) || 0; break;
+                case 'ملاحظات': order.notes = value; break;
+            }
+        }
+
+        if (order.customerName && order.phone) {
+            orders.push(order);
+        }
+    }
+
+    return orders;
+}
+
+// ===== التحقق من رقم الهاتف المصري =====
+function isValidEgyptianPhone(phone) {
+    return /^01[0125][0-9]{8}$/.test(phone);
+}
+
+// ===== عرض المعاينة =====
+document.getElementById('pasteOrdersTextarea')?.addEventListener('input', function(e) {
+    const text = e.target.value;
+    const preview = document.getElementById('pasteOrdersPreview');
+    
+    if (!text.trim()) {
+        preview.innerHTML = '';
+        return;
+    }
+    
+    const orders = parseOrdersFromPaste(text);
+    
+    if (orders.length === 0) {
+        preview.innerHTML = `<div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; font-size: 13px;">⚠️ لم يتم التعرف على أي طلب. تأكد من استخدام الصيغة الصحيحة.</div>`;
+        return;
+    }
+    
+    let html = `<div style="background: #e8f5e9; color: #1e8449; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 10px;">
+        ✅ تم التعرف على ${orders.length} طلب
+    </div>`;
+    
+    orders.forEach((o, i) => {
+        const phoneOk = isValidEgyptianPhone(o.phone);
+        const phoneBadge = phoneOk 
+            ? `<span style="background: #27ae60; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px;">✓ مصري</span>`
+            : `<span style="background: #e74c3c; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 10px;">⚠️ غير مصري</span>`;
+        
+        html += `
+            <div style="background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 10px; margin-bottom: 8px; border-right: 3px solid ${phoneOk ? '#27ae60' : '#e74c3c'}; text-align: right; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-weight: 800; color: #0F7B65;">${i + 1}. ${o.customerName}</span>
+                    ${phoneBadge}
+                </div>
+                <div style="color: #555;">📞 ${o.phone} | 📍 ${o.gov} - ${o.city}</div>
+                <div style="color: #555;">🛍️ ${o.productName} | ⚖️ ${o.weight || '--'} / 📐 ${o.length || '--'}</div>
+                <div style="color: #0F7B65; font-weight: 700;">💰 ${o.price} + 🚚 ${o.shipping} = ${o.price + o.shipping} جنيه</div>
+            </div>
+        `;
+    });
+    
+    preview.innerHTML = html;
+});
+
+// ===== معالجة الإضافة =====
+window.processPastedOrders = async function() {
+    const text = document.getElementById('pasteOrdersTextarea')?.value || '';
+    const btn = document.getElementById('pasteConfirmBtn');
+    
+    if (!text.trim()) {
+        await customAlert('⚠️ الصق الطلبات أولاً', 'warning');
+        return;
+    }
+    
+    const parsedOrders = parseOrdersFromPaste(text);
+    
+    if (parsedOrders.length === 0) {
+        await customAlert('❌ لم يتم التعرف على أي طلب. تأكد من الصيغة.', 'error');
+        return;
+    }
+    
+    // ===== التحقق من الأرقام =====
+    const nonEgyptian = parsedOrders.filter(o => !isValidEgyptianPhone(o.phone));
+    
+    if (nonEgyptian.length > 0) {
+        const names = nonEgyptian.map(o => `• ${o.customerName} (${o.phone})`).join('\n');
+        const confirmed = await window.customConfirm(
+            `⚠️ فيه ${nonEgyptian.length} رقم غير مصري:\n\n${names}\n\nهل تريد المتابعة على أي حال؟`
+        );
+        if (!confirmed) return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإضافة...';
+    
+    let success = 0, failed = 0;
+    const allProducts = window.allProducts || [];
+    
+    try {
+        for (const order of parsedOrders) {
+            try {
+                // ===== البحث عن المنتج بالاسم =====
+                const product = allProducts.find(p => 
+                    p.name?.trim() === order.productName.trim() ||
+                    p.name?.includes(order.productName) ||
+                    order.productName.includes(p.name || '')
+                );
+                
+                // ===== إنشاء رقم الطلب =====
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}${mm}${dd}`;
+                
+                // عد الطلبات النهارده
+                const qToday = query(collection(db, "orders"), where("date", "==", dateStr));
+                const todaySnap = await getDocs(qToday);
+                const dailyCount = todaySnap.size + 1;
+                
+                // ===== بيانات العميل =====
+                const customersRef = collection(db, "customers");
+                const qCustomerDoc = query(customersRef, where("phone", "==", order.phone));
+                const customerDocSnap = await getDocs(qCustomerDoc);
+                
+                let customerCode;
+                if (!customerDocSnap.empty) {
+                    customerCode = customerDocSnap.docs[0].data().customerCode;
+                } else {
+                    const counterRef = doc(db, "counters", "customers");
+                    const counterSnap = await getDoc(counterRef);
+                    if (!counterSnap.exists()) await setDoc(counterRef, { value: 0 });
+                    await updateDoc(counterRef, { value: increment(1) });
+                    const newCustomerNumber = (await getDoc(counterRef)).data().value;
+                    customerCode = `V${newCustomerNumber}`;
+                    await setDoc(doc(db, "customers", order.phone), {
+                        phone: order.phone,
+                        name: order.customerName,
+                        customerCode,
+                        createdAt: serverTimestamp()
+                    });
+                }
+                
+                const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
+                
+                // ===== تفاصيل الطلب =====
+                const orderDetails = [{
+                    productId: product?.id || null,
+                    sku: product?.sku || null,
+                    name: order.productName,
+                    size: "",  // ← بدون مقاس
+                    qty: 1,
+                    price: order.price,
+                    image: product?.image || "",
+                    costPrice: product?.costPrice || 0,
+                    customerWeight: order.weight,
+                    customerLength: order.length
+                }];
+                
+                const totalCost = (product?.costPrice || 0) * 1;
+                const finalTotal = order.price + order.shipping;
+                
+                // ===== بيانات الطلب =====
+                const orderData = {
+                    orderID,
+                    customerName: order.customerName,
+                    phone: order.phone,
+                    gov: order.gov,
+                    city: order.city,
+                    address: order.address,
+                    orderDetails,
+                    quantity: 1,
+                    price: order.price,
+                    shipping: order.shipping,
+                    shippingCostPaid: order.shipping,
+                    finalTotal: finalTotal,
+                    status: "new",
+                    date: dateStr,
+                    notes: order.notes || '',
+                    stockDeducted: false,  // ← ما نخصمش مخزون (لسه محددناش مقاس)
+                    stockRestored: false,
+                    createdAt: serverTimestamp(),
+                    originalCreatedAt: serverTimestamp(),
+                    totalCost: totalCost,
+                    profit: finalTotal - totalCost - order.shipping,
+                    source: 'paste'  // ← علامة إنه من اللصق
+                };
+                
+                await addDoc(collection(db, "orders"), orderData);
+                success++;
+                
+            } catch (e) {
+                console.error(`❌ فشل إضافة طلب ${order.customerName}:`, e);
+                failed++;
+            }
+        }
+        
+        let msg = `✅ تم إضافة ${success} طلب بنجاح`;
+        if (failed > 0) msg += `\n❌ فشل ${failed} طلب`;
+        
+        await customAlert(msg, success > 0 ? 'success' : 'error');
+        
+        if (success > 0) {
+            closePasteOrdersModal();
+            sendNotification('📋 طلبات جديدة', `تم إضافة ${success} طلب`);
+        }
+        
+    } catch (e) {
+        console.error(e);
+        await customAlert('❌ حدث خطأ: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '✅ إضافة الطلبات';
+    }
+};
 
 // ✅ استخدم دالة محلية لإعادة المخزون فقط
 async function restoreStockForOrder(orderId, orderData = null) {
@@ -2071,7 +2350,7 @@ let msg = `VANTÉ\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
             let detailsHtml = details.map(item => `
     <div style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
         ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-        <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>المقاس: ${item.size || '--'} | العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ الوزن: ${item.customerWeight} كجم` : ''}${item.customerLength ? ` | 📐 الطول: ${item.customerLength} سم` : ''}</div>
+       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ الوزن: ${item.customerWeight} كجم` : ''}${item.customerLength ? ` | 📐 الطول: ${item.customerLength} سم` : ''}</div>
     </div>
 `).join("");
 
@@ -3240,5 +3519,39 @@ window.deleteShippingGroup = deleteShippingGroup;
 window.saveShippingRate = saveShippingRate;
 window.toggleShippingGroup = toggleShippingGroup;
 </script>
+<!-- ===== مودال لصق الطلبات ===== -->
+<div id="pasteOrdersModal" class="custom-confirm-overlay" style="padding: 20px;">
+  <div class="custom-confirm-box" style="max-width: 700px; width: 100%; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column;">
+    <div class="confirm-header" style="background: linear-gradient(135deg, #0F7B65, #0a5f4f);">
+      <i class="fas fa-paste" style="color: #fff;"></i>
+      <h3 style="color: #fff;">📋 لصق طلبات</h3>
+    </div>
+    <div style="padding: 20px; overflow-y: auto; flex: 1;">
+      <p style="font-size: 13px; color: #666; margin-bottom: 12px; text-align: right;">
+        الصق الطلبات بالشكل ده (كل طلب يبدأ بـ "اسم العميل"):
+      </p>
+      <div style="background: #f8f9fa; border-radius: 10px; padding: 10px; margin-bottom: 12px; font-size: 11px; font-family: monospace; direction: rtl; text-align: right; color: #555; line-height: 1.8;">
+        اسم العميل : ...<br>
+        التليفون : ...<br>
+        المحافظة : ...<br>
+        المدينة : ...<br>
+        العنوان : ...<br>
+        المنتج : ...<br>
+        الوزن/الطول : 60 / 120<br>
+        السعر : 300<br>
+        الشحن : 50<br>
+        ملاحظات :
+      </div>
+      <textarea id="pasteOrdersTextarea" placeholder="الصق الطلبات هنا..." 
+        style="width: 100%; min-height: 200px; padding: 12px; border: 2px solid #ddd; border-radius: 12px; font-family: 'Cairo', sans-serif; font-size: 13px; resize: vertical; direction: rtl; text-align: right; line-height: 1.8; outline: none; box-sizing: border-box;"></textarea>
+      
+      <div id="pasteOrdersPreview" style="margin-top: 15px;"></div>
+    </div>
+    <div class="confirm-buttons" style="border-top: 1px solid #eee;">
+      <button onclick="closePasteOrdersModal()" style="color: #e74c3c;">إلغاء</button>
+      <button onclick="processPastedOrders()" id="pasteConfirmBtn" style="color: #0F7B65; font-weight: 800;">✅ إضافة الطلبات</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
