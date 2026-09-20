@@ -976,10 +976,10 @@ h2 {
         <div class="form-group"><label><i class="fas fa-ban"></i> قابل للخصم (كوبونات)</label><select id="discountable"><option value="true">✅ نعم</option><option value="false">❌ لا</option></select></div>
     </div>
     <div id="sizeStockContainer">
-        <h4>📦 الكمية المتاحة لكل مقاس</h4>
-        <div id="sizeStockInputs"></div>
-        <button type="button" onclick="generateSizeStockInputs()" class="secondary-btn" style="margin-top:10px;"><i class="fas fa-sync-alt"></i> تحديث حقول الكميات</button>
-    </div>
+    <h4>📦 الكمية المتاحة لكل مقاس</h4>
+    <small class="input-hint" style="display:block; margin-bottom:10px; color:#B8860B;">💡 اترك الحقل فارغاً = كمية غير محدودة</small>
+    <div id="sizeStockInputs"></div>
+</div>
     <div class="form-actions">
         <button onclick="window.addProduct()" id="addBtn" class="primary-btn">
             <i class="fas fa-save"></i> إضافة منتج
@@ -1121,6 +1121,8 @@ h2 {
 </div>
 
 <script type="module">
+    // ===== مقاسات الكورسيه الثابتة =====
+const CORSET_SIZES = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp, query, orderBy, updateDoc, Timestamp, getDocs, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
@@ -1665,15 +1667,23 @@ window.generateSizeStockInputs = function() {
         let displayValue = (currentValue === null || currentValue === undefined) ? "" : currentValue;
         html += `<div class="size-stock-group">
             <label style="min-width:60px;">📏 مقاس ${size}</label>
-            <input type="number" class="size-stock-input" data-size="${size}" placeholder="اتركه فارغاً (غير محدود)" min="0" value="${displayValue}" style="flex:1; text-align:center;">
-            <small style="font-size:10px; color:#B8860B;">💡 فارغ = غير محدود</small>
+            <input type="number" class="size-stock-input" data-size="${size}" placeholder="غير محدود" min="0" value="${displayValue}" style="flex:1; text-align:center;">
         </div>`;
     }
     container.innerHTML = html;
 };
 
-// توليد الحقول تلقائياً عند تحميل الصفحة
-setTimeout(() => { if (document.getElementById('sizeStockInputs')) generateSizeStockInputs(); }, 500);
+// ✅ توليد الحقول تلقائياً فور تحميل الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        if (document.getElementById('sizeStockInputs')) {
+            generateSizeStockInputs();
+        }
+    }, 100);
+});
+
+// ✅ توليد الحقول تلقائياً عند تحميل الصفحة (أسرع)
+setTimeout(() => { if (document.getElementById('sizeStockInputs')) generateSizeStockInputs(); }, 100);
 function collectSizeStock() { const inputs = document.querySelectorAll(".size-stock-input"); const stockBySize={}; inputs.forEach(inp=>{ const size=inp.dataset.size; const val=inp.value.trim(); stockBySize[size]= val===""?null:(parseInt(val)||0); }); return stockBySize; }
 // اجعل customAlert عامة أيضاً (لضمان ظهور الرسائل)
 window.customAlert = customAlert;
