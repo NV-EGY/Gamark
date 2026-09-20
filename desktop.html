@@ -2342,18 +2342,7 @@ button, input, select { font-family: inherit; outline: none; }
   margin: 12px 0;
 }
 
-.modal-desc {
-  font-size: 15px;
-  line-height: 1.8;
-  color: #444;
-  max-height: 80px; /* الارتفاع المبدئي */
-  overflow: hidden;
-  transition: max-height 0.5s ease;
-}
 
-.modal-desc.expanded {
-  max-height: 600px; /* كافٍ لظهور النص كاملاً */
-}
 
 .read-more-btn {
   background: none;
@@ -2394,12 +2383,16 @@ button, input, select { font-family: inherit; outline: none; }
   font-size: 15px;
   line-height: 1.8;
   color: #444;
-  max-height: 80px;
+  /* ✅ ارتفاع مبدئي يعرض أول جزء من الوصف */
+  max-height: 110px;
   overflow: hidden;
-  transition: max-height 0.5s ease;
+  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
+
+/* ✅ عند التوسيع: ارتفاع كبير يظهر كل النص */
 .modal-desc.expanded {
-  max-height: 600px;
+  max-height: 3000px;   /* كبير كفاية لأي وصف */
 }
 .read-more-btn {
   background: none;
@@ -2708,14 +2701,7 @@ button, input, select { font-family: inherit; outline: none; }
 .desktop-dropdown:hover > a i {
   transform: rotate(180deg);
 }
-    .modal-desc {
-  max-height: 80px;
-  overflow: hidden;
-  transition: max-height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.modal-desc.expanded {
-  max-height: 600px;
-}
+  
 
     /* ===== أكورديون الشريط الجانبي ===== */
 .accordion-header {
@@ -3983,64 +3969,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <select id="modalSize" style="display: none !important; visibility: hidden; position: absolute; left: -9999px; width: 0; height: 0;">
     <option value=""></option>
 </select>
-    <!-- Header -->
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #d4c7dd;">
-        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 3px 12px rgba(93,58,122,0.3); flex-shrink: 0;">
-            <i class="fas fa-ruler-combined"></i>
-        </div>
-        <div style="flex: 1;">
-            <div style="font-weight: 800; font-size: 15px; color: #5D3A7A; line-height: 1.2;">بيانات القياس</div>
-            <div style="font-size: 11px; color: #888; margin-top: 2px;">ساعدينا لتحديد المقاس المثالي لك</div>
-        </div>
-    </div>
-
-    <!-- ⚖️ الوزن (مطلوب) -->
-    <div style="margin-bottom: 14px;">
-        <label for="customerWeight" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #333; margin-bottom: 8px; cursor: pointer;">
-            <i class="fas fa-weight-hanging" style="color: #D4A017; font-size: 14px;"></i>
-            <span>الوزن</span>
-            <span style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">مطلوب *</span>
-        </label>
-        <div style="position: relative;">
-            <input type="number" id="customerWeight" placeholder="أدخل وزنك بالكيلو جرام" step="0.1" inputmode="decimal" required
-                   style="width: 100%; padding: 14px 65px 14px 16px; border: 2px solid #D4A017; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; box-shadow: 0 3px 14px rgba(212,160,23,0.15); transition: all 0.3s ease; outline: none;"
-                   onfocus="this.style.borderColor='#E8B923'; this.style.boxShadow='0 0 0 4px rgba(232,185,35,0.15), 0 4px 18px rgba(212,160,23,0.25)';"
-                   onblur="this.style.borderColor='#D4A017'; this.style.boxShadow='0 3px 14px rgba(212,160,23,0.15)';">
-            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #D4A017; font-size: 12px; font-weight: 800; pointer-events: none; background: linear-gradient(135deg, #fff8e6, #fff4d9); padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">كجم</span>
-        </div>
-    </div>
-
-    <!-- 📐 الطول (اختياري) -->
-    <div style="margin-bottom: 14px;">
-        <label for="customerLength" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #555; margin-bottom: 8px; cursor: pointer;">
-            <i class="fas fa-ruler-vertical" style="color: #7B4B8A; font-size: 14px;"></i>
-            <span>الطول</span>
-            <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">اختياري</span>
-        </label>
-        <div style="position: relative;">
-            <input type="number" id="customerLength" placeholder="أدخل طولك بالسنتيمتر" step="0.1" inputmode="decimal"
-                   style="width: 100%; padding: 12px 65px 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; transition: all 0.3s ease; outline: none;"
-                   onfocus="this.style.borderColor='#7B4B8A'; this.style.boxShadow='0 0 0 4px rgba(123,75,138,0.1)';"
-                   onblur="this.style.borderColor='#e8dff0'; this.style.boxShadow='none';">
-            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7B4B8A; font-size: 12px; font-weight: 800; pointer-events: none; background: #f0e6f5; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">سم</span>
-        </div>
-    </div>
-
-    <!-- 💡 Hint -->
-    <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: linear-gradient(135deg, #fff8e6, #fff4d9); border-radius: 12px; border-right: 3px solid #D4A017;">
-        <i class="fas fa-lightbulb" style="color: #D4A017; font-size: 15px; flex-shrink: 0;"></i>
-        <div style="font-size: 11.5px; color: #8B6914; line-height: 1.55; font-weight: 600;">
-            فريقنا المختص سيحدد <strong style="color:#B8860B;">المقاس المثالي</strong> تلقائياً بناءً على بياناتك
-        </div>
-    </div>
-</div>
-
-<!-- ✅ Select مخفي للتوافق مع النظام (لا يُعرض للعميل) -->
-<select id="modalSize" style="display: none !important; visibility: hidden; position: absolute; left: -9999px; width: 0; height: 0;">
-    <option value=""></option>
-</select>
-      
-
+   
       <!-- شريط الأزرار الرئيسية -->
       <div class="modal-footer-actions">
         <button class="btn-primary modal-add-btn" onclick="addCurrentProductToCart(event)">
@@ -5279,41 +5208,53 @@ function copyFallback(text) {
     document.body.removeChild(textarea);
 }
 
-// ----- إعداد الوصف مع زر "عرض المزيد" -----
+// ----- إعداد الوصف مع زر "عرض المزيد" (نسخة محسّنة) -----
 const descElement = document.getElementById("modalDesc");
 const fullText = description || "منتج فاخر من GAMARK";
-const shortText = fullText.length > 100 ? fullText.slice(0, 100) + "..." : fullText;
 
-descElement.dataset.fullHtml = fullText;
-descElement.dataset.shortHtml = shortText;
-descElement.innerHTML = shortText;
+// ✅ ضع النص الكامل دائماً في الـ DOM (مفيش قص في JS)
+descElement.innerHTML = fullText;
 descElement.classList.remove('expanded');
 
 const readMoreBtn = document.getElementById("readMoreBtn");
-if (fullText.length > 100) {
-    readMoreBtn.style.display = 'inline-flex';
-    readMoreBtn.innerHTML = 'عرض المزيد <i class="fas fa-chevron-down"></i>';
-    let expanded = false;
-    const newBtn = readMoreBtn.cloneNode(true);
-    readMoreBtn.parentNode.replaceChild(newBtn, readMoreBtn);
-    newBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const desc = document.getElementById("modalDesc");
-        if (!expanded) {
-            desc.innerHTML = desc.dataset.fullHtml;
-            desc.classList.add('expanded');
-            this.innerHTML = 'عرض أقل <i class="fas fa-chevron-up"></i>';
-            expanded = true;
-        } else {
-            desc.innerHTML = desc.dataset.shortHtml;
-            desc.classList.remove('expanded');
-            this.innerHTML = 'عرض المزيد <i class="fas fa-chevron-down"></i>';
-            expanded = false;
-        }
-    });
-} else {
-    readMoreBtn.style.display = 'none';
-}
+
+// ✅ قياس الطول الفعلي بدل الاعتماد على عدد الأحرف
+requestAnimationFrame(() => {
+    const fullHeight = descElement.scrollHeight;
+    const collapsedHeight = 110; // نفس قيمة CSS
+
+    if (fullHeight > collapsedHeight + 15) {
+        // النص أطول من العرض المبدئي → أظهر الزر
+        readMoreBtn.style.display = 'inline-flex';
+        readMoreBtn.innerHTML = 'عرض المزيد <i class="fas fa-chevron-down"></i>';
+
+        // تنظيف المستمعات القديمة
+        const newBtn = readMoreBtn.cloneNode(true);
+        readMoreBtn.parentNode.replaceChild(newBtn, readMoreBtn);
+
+        let expanded = false;
+        newBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const desc = document.getElementById("modalDesc");
+
+            if (!expanded) {
+                desc.classList.add('expanded');
+                this.innerHTML = 'عرض أقل <i class="fas fa-chevron-up"></i>';
+                expanded = true;
+            } else {
+                desc.classList.remove('expanded');
+                this.innerHTML = 'عرض المزيد <i class="fas fa-chevron-down"></i>';
+                expanded = false;
+
+                // ✅ ارجع لأعلى الوصف بعد القفل (تجربة أنعم)
+                desc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        });
+    } else {
+        // النص قصير → اخف الزر خلاص
+        readMoreBtn.style.display = 'none';
+    }
+});
     document.getElementById("modalPrice").textContent = Number(price) + " جنيه";
 
     const oldPriceEl = document.getElementById("modalOldPrice");
@@ -5771,7 +5712,7 @@ function fallbackCopy(text) {
 // إضافة للسلة (من الكارد)
 // ============================================================
 window.addToCartFromCard = function(productId, name, price, image) {
-  const product = window.allProducts.find(p => p.id === productId);
+  const product = allProducts.find(p => p.id === productId);
   const cached = window._sizeDataCache[productId] || {};
   const customerWeight = cached.weight || null;
   const customerLength = cached.length || null;
