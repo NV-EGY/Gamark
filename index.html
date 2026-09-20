@@ -5209,25 +5209,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <span id="modalOldPrice" class="modal-old-price"></span>
             </div>
             <div id="modalStockInfo" style="text-align:center; margin:10px 0; font-size:14px;"></div>
-            <div class="modal-size">
-    <label>اختر المقاس</label>
+            <!-- ⚖️ الوزن (مطلوب وأساسي) -->
+<div style="margin-top: 12px;">
+    <label style="font-weight:800; font-size:15px; margin-bottom:6px; display:block; color:#111;">
+        ⚖️ الوزن (كجم) <span style="color:#e74c3c;">*</span>
+    </label>
+    <input type="number" id="customerWeight" placeholder="مثال: 65" step="0.1" required
+           style="width:100%; padding:14px; border:2px solid #D4AF37; border-radius:12px; font-size:15px; font-family:'Cairo',sans-serif; background:#fffdf5;">
+</div>
+
+<!-- 📐 الطول (اختياري) -->
+<div style="margin-top: 12px;">
+    <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block; color:#555;">
+        📐 الطول (سم) <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span>
+    </label>
+    <input type="number" id="customerLength" placeholder="مثال: 165" step="0.1"
+           style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
+</div>
+
+<!-- 📏 المقاس (اختياري) -->
+<div class="modal-size" style="margin-top: 12px;">
+    <label style="font-weight:700; font-size:14px; color:#555;">
+        📏 المقاس <span style="font-size:12px; color:#999; font-weight:400;">(اختياري - سيتم تحديده تلقائياً)</span>
+    </label>
     <select id="modalSize"></select>
 </div>
-<!-- ✅ حقول الوزن والطول (بيانات العميل) -->
-<div style="display: flex; gap: 10px; margin-top: 12px;">
-    <div style="flex: 1;">
-        <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block;">⚖️ الوزن (كجم)</label>
-        <input type="number" id="customerWeight" placeholder="مثال: 65" step="0.1"
-               style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
-    </div>
-    <div style="flex: 1;">
-        <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block;">📐 الطول (سم)</label>
-        <input type="number" id="customerLength" placeholder="مثال: 165" step="0.1"
-               style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
-    </div>
-</div>
-<div style="text-align:center; margin-top:8px; font-size:12px; color:#B8860B; font-weight:600;">
-    💡 أدخل وزنك وطولك لمساعدتنا في تحديد المقاس المناسب
+
+<div style="text-align:center; margin-top:10px; font-size:12px; color:#B8860B; font-weight:600;">
+    💡 الوزن إجباري لتحديد المقاس المناسب — الطول والمقاس اختياريان
 </div>
             <!-- تم إزالة زر الإضافة من هنا -->
             
@@ -6835,26 +6844,45 @@ const style = document.createElement('style');
 style.innerHTML = `.pair { scroll-snap-align: start; scroll-snap-stop: always; }`;
 document.head.appendChild(style);
     
-    window.addCurrentProductToCart = function(event) {
+   window.addCurrentProductToCart = function(event) {
     if (event) event.stopPropagation();
     if (!currentProduct) {
         customAlert("❌ خطأ في تحميل المنتج", 'error');
         return;
     }
     
-    const size = document.getElementById("modalSize")?.value;
-    if (!size) {
-        customAlert("⚠️ اختر المقاس أولاً", 'warning');
+    const product = allProducts.find(p => p.id === currentProduct.id);
+    
+    // ✅ الوزن إجباري
+    const customerWeight = parseFloat(document.getElementById("customerWeight")?.value) || null;
+    if (!customerWeight) {
+        customAlert("⚠️ يرجى إدخال الوزن أولاً", 'warning');
+        const weightEl = document.getElementById("customerWeight");
+        if (weightEl) {
+            weightEl.focus();
+            weightEl.style.borderColor = "#e74c3c";
+            setTimeout(() => weightEl.style.borderColor = "#D4AF37", 2000);
+        }
         return;
     }
     
-    // ✅ قراءة الوزن والطول
-    const customerWeight = parseFloat(document.getElementById("customerWeight")?.value) || null;
+    // ✅ الطول اختياري
     const customerLength = parseFloat(document.getElementById("customerLength")?.value) || null;
     
-    const product = allProducts.find(p => p.id === currentProduct.id);
+    // ✅ المقاس اختياري — إذا لم يُختَر نختار أول مقاس متاح تلقائياً
+    let size = document.getElementById("modalSize")?.value;
+    if (!size && product && product.stockBySize) {
+        const availableSizes = Object.entries(product.stockBySize)
+            .filter(([s, q]) => q === null || q === undefined || q > 0)
+            .map(([s]) => s);
+        if (availableSizes.length > 0) {
+            size = availableSizes[0]; // اختيار أول مقاس متاح
+        }
+    }
+    if (!size) size = "غير محدد";
     
-    if (product && product.stockBySize) {
+    // ✅ التحقق من المخزون (فقط لو المقاس محدد فعلًا وموجود في stockBySize)
+    if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
         const stockForSize = product.stockBySize[size];
         if (stockForSize === 0) {
             customAlert(`❌ عذراً، مقاس ${size} غير متوفر حالياً.`, 'error');
@@ -6873,7 +6901,6 @@ document.head.appendChild(style);
     const comparePrice = currentProduct.comparePrice || null;
     const sku = product?.sku || null;
     
-    // ✅ تمرير الوزن والطول لدالة addToCart
     const addResult = window.addToCart(
         currentProduct.name, 
         Number(currentProduct.price), 
@@ -7035,7 +7062,7 @@ if (typeof updateCart === 'function') updateCart();
         return `<div class="cart-item">
             <div class="cart-item-details">
                 <strong>${item.name}</strong>
-                <small>المقاس: ${item.size} ${isUnlimited ? '<span style="color:#800080;"> (كمية غير محدودة)</span>' : ''}</small>
+                <small>المقاس: ${item.size}</small>
             </div>
             <div class="qty-controls">
                 <button class="qty-btn" onclick="window.changeQty(${index},-1)">−</button>
@@ -7316,9 +7343,9 @@ async function executeCheckout() {
     cart.forEach(item => {
     message += `• ${item.name}\n`;
     if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
-    message += `المقاس: ${item.size}\n`;
     if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
     if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
+    if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
@@ -8434,11 +8461,11 @@ window.updateModalStockDisplay = function() {
     let stockMessage = '';
     let disableAdd = false;
     
-    if (stockForSize === null || stockForSize === undefined) {
-        if (isUnlimitedProduct) {
-            stockMessage = `<span style="color:#800080; font-weight:600;"><i class="fas fa-infinity"></i> متوفر دائماً (غير محدود)</span>`;
-            disableAdd = false;
-        } else if (totalStock === 0) {
+   if (stockForSize === null || stockForSize === undefined) {
+    if (isUnlimitedProduct) {
+        stockMessage = `<span style="color:#27ae60; font-weight:700;"><i class="fas fa-check-circle"></i> متوفر</span>`;
+        disableAdd = false;
+    } else if (totalStock === 0) {
             stockMessage = `<span style="color:#c0392b; font-weight:700;"><i class="fas fa-ban"></i> 🚫 المنتج بالكامل نفد من المخزون</span>`;
             disableAdd = true;
         } else {
