@@ -942,13 +942,7 @@ h2 {
         <div class="form-group"><label><i class="fas fa-image"></i> رابط الصورة الرئيسية</label><input id="image" placeholder="https://..."></div>
         <div class="form-group"><label><i class="fas fa-images"></i> صور إضافية</label><input id="additionalImages" placeholder="رابط1, رابط2, رابط3"></div>
     </div>
-    <div class="form-row">
-        <div class="form-group"><label><i class="fas fa-weight"></i> الوزن (كجم) <span style="color:#e74c3c;">*</span></label><input id="weight" type="number" placeholder="مثال: 65" step="0.1"></div>
-        <div class="form-group"><label><i class="fas fa-ruler-vertical"></i> الطول (سم) - اختياري</label><input id="length" type="number" placeholder="مثال: 165" step="0.1"></div>
-    </div>
-    <div style="text-align:center; margin: -8px 0 12px; font-size: 13px; color: #B8860B; background: #fff8e1; padding: 10px; border-radius: 10px; font-weight: 600;">
-        💡 لتحديد المقاس يجب إدخال الوزن والطول
-    </div>
+   
     <div class="form-row">
         <div class="form-group full-width"><label><i class="fas fa-layer-group"></i> القسم</label><select id="category">
             <option value="">-- اختر القسم --</option>
@@ -1633,8 +1627,6 @@ function generateProductDetails(product, stockBySize) {
 
     let detailsHtml = `<div><strong>📏 المقاسات:</strong> ${Object.entries(stockBySize).map(([size, qty]) => { let displayQty="", color=""; if(qty===null||qty===undefined){ displayQty="∞"; color="#800080"; } else { const qtyNum=parseInt(qty)||0; displayQty=qtyNum; color=qtyNum===0?'#e74c3c':(qtyNum<5?'#f39c12':'#27ae60'); } return `<span style="color:${color}; font-weight:${(qty===null||qty===0)?'bold':'normal'};">${size}: ${displayQty}</span>`; }).join(" | ") || "غير محدد"}</div>`;
     detailsHtml += `<div><strong>🏷️ القسم:</strong> ${product.categoryLabel || "عام"}</div>`;
-    detailsHtml += `<div><strong>⚖️ الوزن:</strong> ${product.weight ? product.weight + ' كجم' : 'غير محدد'}</div>`;
-    if (product.length) detailsHtml += `<div><strong>📐 الطول:</strong> ${product.length} سم</div>`;
     detailsHtml += `<div><strong>💰 قابل للخصم:</strong> ${product.discountable !== false ? '✅ نعم' : '❌ لا'}</div>`;
     detailsHtml += `<div><strong>🖼️ صور إضافية:</strong> ${(product.additionalImages && product.additionalImages.length) ? product.additionalImages.length + " صور" : "لا يوجد"}</div>`;
     detailsHtml += sizesWarningHtml;
@@ -1698,19 +1690,15 @@ async function addProduct() {
         const rawCategory = document.getElementById("category").value;
         const category = (rawCategory || "").toString().trim().toLowerCase().replace(/\s+/g, "");
         const description = document.getElementById("description").value.trim();
-        const weight = Number(document.getElementById("weight").value);
-        const length = Number(document.getElementById("length").value) || null;
         const stockBySize = collectSizeStock();
         const costPrice = Number(document.getElementById("costPrice").value) || 0;
         const discountable = document.getElementById("discountable").value === "true";
 
-        // التحقق من الحقول الأساسية (الوزن مطلوب)
-        if (!name || !price || !image || !category || !description || !weight) {
-            customAlert("يرجى إدخال جميع البيانات الأساسية مع الوزن", "warning");
-            return;
-        }
-
-        // الحصول على SKU (موجود أو إنشاء جديد)
+        if (!name || !price || !image || !category || !description) {
+    customAlert("يرجى إدخال جميع البيانات الأساسية", "warning");
+    return;
+}
+          // الحصول على SKU (موجود أو إنشاء جديد)
         let finalSKU = "";
         if (editingProductId) {
             const existing = window.allProducts.find(p => p.id === editingProductId);
@@ -1783,9 +1771,7 @@ function clearForm() {
     document.getElementById("category").value = "";
     document.getElementById("comparePrice").value = "";
     document.getElementById("discountable").value = "true";
-    document.getElementById("weight").value = "";
-    document.getElementById("length").value = "";
-
+   
     const editor = document.getElementById("descriptionEditor");
     if (editor) editor.innerHTML = "";
     document.getElementById("description").value = "";
@@ -1821,9 +1807,7 @@ window.editProduct = async function(id) {
         document.getElementById("comparePrice").value = product.comparePrice || "";
         document.getElementById("costPrice").value = product.costPrice || "";
         document.getElementById("discountable").value = product.discountable !== false ? "true" : "false";
-        document.getElementById("weight").value = product.weight || "";
-        document.getElementById("length").value = product.length || "";
-
+        
         // تعبئة الوصف
         const editor = document.getElementById("descriptionEditor");
         if (editor) editor.innerHTML = product.description || "";
