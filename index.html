@@ -5209,35 +5209,64 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <span id="modalOldPrice" class="modal-old-price"></span>
             </div>
             <div id="modalStockInfo" style="text-align:center; margin:10px 0; font-size:14px;"></div>
-            <!-- ⚖️ الوزن (مطلوب وأساسي) -->
-<div style="margin-top: 12px;">
-    <label style="font-weight:800; font-size:15px; margin-bottom:6px; display:block; color:#111;">
-        ⚖️ الوزن (كجم) <span style="color:#e74c3c;">*</span>
-    </label>
-    <input type="number" id="customerWeight" placeholder="مثال: 65" step="0.1" required
-           style="width:100%; padding:14px; border:2px solid #D4AF37; border-radius:12px; font-size:15px; font-family:'Cairo',sans-serif; background:#fffdf5;">
+  <!-- ⚖️ قسم بيانات القياس الاحترافي -->
+<div style="background: linear-gradient(135deg, #faf8fb 0%, #f5edf8 100%); border-radius: 20px; padding: 18px; margin-top: 15px; border: 1.5px solid #e8dff0; position: relative; overflow: hidden;">
+    <!-- Header -->
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #d4c7dd;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 3px 12px rgba(93,58,122,0.3); flex-shrink: 0;">
+            <i class="fas fa-ruler-combined"></i>
+        </div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 15px; color: #5D3A7A; line-height: 1.2;">بيانات القياس</div>
+            <div style="font-size: 11px; color: #888; margin-top: 2px;">ساعدينا لتحديد المقاس المثالي لك</div>
+        </div>
+    </div>
+
+    <!-- ⚖️ الوزن (مطلوب) -->
+    <div style="margin-bottom: 14px;">
+        <label for="customerWeight" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #333; margin-bottom: 8px; cursor: pointer;">
+            <i class="fas fa-weight-hanging" style="color: #D4A017; font-size: 14px;"></i>
+            <span>الوزن</span>
+            <span style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">مطلوب *</span>
+        </label>
+        <div style="position: relative;">
+            <input type="number" id="customerWeight" placeholder="أدخل وزنك بالكيلو جرام" step="0.1" inputmode="decimal" required
+                   style="width: 100%; padding: 14px 65px 14px 16px; border: 2px solid #D4A017; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; box-shadow: 0 3px 14px rgba(212,160,23,0.15); transition: all 0.3s ease; outline: none;"
+                   onfocus="this.style.borderColor='#E8B923'; this.style.boxShadow='0 0 0 4px rgba(232,185,35,0.15), 0 4px 18px rgba(212,160,23,0.25)';"
+                   onblur="this.style.borderColor='#D4A017'; this.style.boxShadow='0 3px 14px rgba(212,160,23,0.15)';">
+            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #D4A017; font-size: 12px; font-weight: 800; pointer-events: none; background: linear-gradient(135deg, #fff8e6, #fff4d9); padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">كجم</span>
+        </div>
+    </div>
+
+    <!-- 📐 الطول (اختياري) -->
+    <div style="margin-bottom: 14px;">
+        <label for="customerLength" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #555; margin-bottom: 8px; cursor: pointer;">
+            <i class="fas fa-ruler-vertical" style="color: #7B4B8A; font-size: 14px;"></i>
+            <span>الطول</span>
+            <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">اختياري</span>
+        </label>
+        <div style="position: relative;">
+            <input type="number" id="customerLength" placeholder="أدخل طولك بالسنتيمتر" step="0.1" inputmode="decimal"
+                   style="width: 100%; padding: 12px 65px 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; transition: all 0.3s ease; outline: none;"
+                   onfocus="this.style.borderColor='#7B4B8A'; this.style.boxShadow='0 0 0 4px rgba(123,75,138,0.1)';"
+                   onblur="this.style.borderColor='#e8dff0'; this.style.boxShadow='none';">
+            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7B4B8A; font-size: 12px; font-weight: 800; pointer-events: none; background: #f0e6f5; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">سم</span>
+        </div>
+    </div>
+
+    <!-- 💡 Hint -->
+    <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: linear-gradient(135deg, #fff8e6, #fff4d9); border-radius: 12px; border-right: 3px solid #D4A017;">
+        <i class="fas fa-lightbulb" style="color: #D4A017; font-size: 15px; flex-shrink: 0;"></i>
+        <div style="font-size: 11.5px; color: #8B6914; line-height: 1.55; font-weight: 600;">
+            فريقنا المختص سيحدد <strong style="color:#B8860B;">المقاس المثالي</strong> تلقائياً بناءً على بياناتك
+        </div>
+    </div>
 </div>
 
-<!-- 📐 الطول (اختياري) -->
-<div style="margin-top: 12px;">
-    <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block; color:#555;">
-        📐 الطول (سم) <span style="font-size:12px; color:#999; font-weight:400;">(اختياري)</span>
-    </label>
-    <input type="number" id="customerLength" placeholder="مثال: 165" step="0.1"
-           style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
-</div>
-
-<!-- 📏 المقاس (اختياري) -->
-<div class="modal-size" style="margin-top: 12px;">
-    <label style="font-weight:700; font-size:14px; color:#555;">
-        📏 المقاس <span style="font-size:12px; color:#999; font-weight:400;">(اختياري - سيتم تحديده تلقائياً)</span>
-    </label>
-    <select id="modalSize"></select>
-</div>
-
-<div style="text-align:center; margin-top:10px; font-size:12px; color:#B8860B; font-weight:600;">
-    💡 الوزن إجباري لتحديد المقاس المناسب — الطول والمقاس اختياريان
-</div>
+<!-- ✅ Select مخفي للتوافق مع النظام (لا يُعرض للعميل) -->
+<select id="modalSize" style="display: none !important; visibility: hidden; position: absolute; left: -9999px; width: 0; height: 0;">
+    <option value=""></option>
+</select>
             <!-- تم إزالة زر الإضافة من هنا -->
             
            <!-- نجوم التقييم -->
@@ -6844,89 +6873,93 @@ const style = document.createElement('style');
 style.innerHTML = `.pair { scroll-snap-align: start; scroll-snap-stop: always; }`;
 document.head.appendChild(style);
     
-   window.addCurrentProductToCart = function(event) {
+  window.addCurrentProductToCart = function(event) {
     if (event) event.stopPropagation();
     if (!currentProduct) {
         customAlert("❌ خطأ في تحميل المنتج", 'error');
         return;
     }
-    
+
     const product = allProducts.find(p => p.id === currentProduct.id);
-    
+
     // ✅ الوزن إجباري
     const customerWeight = parseFloat(document.getElementById("customerWeight")?.value) || null;
-    if (!customerWeight) {
-        customAlert("⚠️ يرجى إدخال الوزن أولاً", 'warning');
+    if (!customerWeight || customerWeight < 20 || customerWeight > 250) {
+        customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
         const weightEl = document.getElementById("customerWeight");
         if (weightEl) {
             weightEl.focus();
             weightEl.style.borderColor = "#e74c3c";
-            setTimeout(() => weightEl.style.borderColor = "#D4AF37", 2000);
+            weightEl.style.boxShadow = "0 0 0 4px rgba(231,76,60,0.15)";
+            setTimeout(() => {
+                weightEl.style.borderColor = "#D4AF37";
+                weightEl.style.boxShadow = "0 3px 14px rgba(212,160,23,0.15)";
+            }, 2000);
         }
         return;
     }
-    
+
     // ✅ الطول اختياري
     const customerLength = parseFloat(document.getElementById("customerLength")?.value) || null;
-    
-    // ✅ المقاس اختياري — إذا لم يُختَر نختار أول مقاس متاح تلقائياً
-    let size = document.getElementById("modalSize")?.value;
-    if (!size && product && product.stockBySize) {
+
+    // ✅ المقاس: يُحدد تلقائياً من أول مقاس متاح (سيتم تعديله من المختص)
+    let size = "";
+    if (product && product.stockBySize) {
         const availableSizes = Object.entries(product.stockBySize)
             .filter(([s, q]) => q === null || q === undefined || q > 0)
             .map(([s]) => s);
         if (availableSizes.length > 0) {
-            size = availableSizes[0]; // اختيار أول مقاس متاح
+            size = availableSizes[0];
         }
     }
     if (!size) size = "غير محدد";
-    
-    // ✅ التحقق من المخزون (فقط لو المقاس محدد فعلًا وموجود في stockBySize)
+
+    // ✅ التحقق من المخزون
     if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
         const stockForSize = product.stockBySize[size];
         if (stockForSize === 0) {
-            customAlert(`❌ عذراً، مقاس ${size} غير متوفر حالياً.`, 'error');
+            customAlert(`❌ عذراً، المنتج غير متوفر حالياً`, 'error');
             return;
         }
         if (stockForSize !== null && stockForSize !== undefined && stockForSize > 0) {
-            const inCart = cart.reduce((sum, item) => 
-                (item.name === currentProduct.name && item.size === size) ? sum + item.qty : sum, 0);
+            const inCart = cart.reduce((sum, item) =>
+                (item.name === currentProduct.name) ? sum + item.qty : sum, 0);
             if (inCart + 1 > stockForSize) {
-                customAlert(`❌ الكمية المتاحة لمقاس ${size} هي ${stockForSize} قطعة فقط.`, 'error');
+                customAlert(`❌ الكمية المتاحة هي ${stockForSize} قطعة فقط.`, 'error');
                 return;
             }
         }
     }
-    
+
     const comparePrice = currentProduct.comparePrice || null;
     const sku = product?.sku || null;
-    
+
     const addResult = window.addToCart(
-        currentProduct.name, 
-        Number(currentProduct.price), 
-        size, 
-        currentProduct.image, 
-        comparePrice, 
-        currentProduct.id, 
+        currentProduct.name,
+        Number(currentProduct.price),
+        size,
+        currentProduct.image,
+        comparePrice,
+        currentProduct.id,
         sku,
         customerWeight,
         customerLength
     );
-    
+
     if (addResult !== false) {
         updateCart();
-        
+
         const modal = document.getElementById("productModal");
         modal.classList.remove("active");
         document.body.classList.remove("modal-open");
         disableSwipe();
-        
+
         const overlay = document.getElementById("overlay");
         overlay.style.transition = 'none';
         overlay.classList.remove("active");
         void overlay.offsetHeight;
         overlay.style.transition = '';
-        
+
         setTimeout(() => {
             window.openCart();
         }, 100);
@@ -7062,7 +7095,8 @@ if (typeof updateCart === 'function') updateCart();
         return `<div class="cart-item">
             <div class="cart-item-details">
                 <strong>${item.name}</strong>
-                <small>المقاس: ${item.size}</small>
+                <small>${item.customerWeight ? `⚖️ الوزن: ${item.customerWeight} كجم` : '⚖️ سيتم تحديد المقاس'}</small>
+${item.customerLength ? `<small style="display:block;color:#999;font-size:11px;">📐 الطول: ${item.customerLength} سم</small>` : ''}
             </div>
             <div class="qty-controls">
                 <button class="qty-btn" onclick="window.changeQty(${index},-1)">−</button>
