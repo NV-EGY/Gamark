@@ -1719,23 +1719,21 @@ async function addProduct() {
         }
 
         const productData = {
-            sku: finalSKU,
-            name,
-            price,
-            image,
-            additionalImages,
-            category,
-            categoryLabel: rawCategory,
-            description,
-            sizes: CORSET_SIZES,           // مقاسات ثابتة
-            weight: weight,
-            length: length,
-            comparePrice,
-            stockBySize,
-            costPrice,
-            updatedAt: serverTimestamp(),
-            discountable
-        };
+    sku: finalSKU,
+    name,
+    price,
+    image,
+    additionalImages,
+    category,
+    categoryLabel: rawCategory,
+    description,
+    sizes: CORSET_SIZES,
+    comparePrice,
+    stockBySize,
+    costPrice,
+    updatedAt: serverTimestamp(),
+    discountable
+};
 
         if (editingProductId) {
             await updateDoc(doc(db, "products", editingProductId), productData);
