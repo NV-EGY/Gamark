@@ -3310,6 +3310,339 @@ body {
   .measure-field label { font-size: 9.5px; }
 }
 
+/* ========== زر بيانات المقاس على الكارت ========== */
+.size-data-btn {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 8px 0 6px;
+  background: linear-gradient(135deg, #faf8fb 0%, #f5edf8 100%);
+  border: 1.5px solid #e8dff0;
+  border-radius: 12px;
+  color: #5D3A7A;
+  font-family: 'Cairo', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+}
+.size-data-btn:hover {
+  background: linear-gradient(135deg, #f5edf8, #ebdff2);
+  border-color: #7B4B8A;
+  transform: translateY(-1px);
+}
+.size-data-btn.filled {
+  background: linear-gradient(135deg, #e8f5e9, #d5f0d8);
+  border-color: #27ae60;
+  color: #1e8449;
+}
+.size-data-btn.filled::after {
+  content: '✓';
+  position: absolute;
+  top: -6px;
+  left: -6px;
+  background: #27ae60;
+  color: #fff;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(39,174,96,0.4);
+}
+
+/* ========== مودال بيانات المقاس ========== */
+.size-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 999999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.size-modal-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.size-modal-box {
+  background: #fff;
+  border-radius: 24px;
+  width: 92%;
+  max-width: 400px;
+  padding: 24px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+  transform: scale(0.9);
+  transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+  direction: rtl;
+}
+.size-modal-overlay.active .size-modal-box {
+  transform: scale(1);
+}
+.size-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px dashed #e8dff0;
+}
+.size-modal-header h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #5D3A7A;
+  font-weight: 800;
+}
+.size-modal-close {
+  background: #f5f5f5;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  color: #888;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+.size-modal-close:hover {
+  background: #e74c3c;
+  color: #fff;
+}
+.size-modal-product-name {
+  background: #faf8fb;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #5D3A7A;
+  text-align: center;
+  border-right: 3px solid #D4A017;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.size-modal-field { margin-bottom: 14px; }
+.size-modal-field label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13px;
+  color: #333;
+  margin-bottom: 8px;
+}
+.size-modal-field label .badge {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+.size-modal-field.optional label .badge {
+  background: #f0e6f5;
+  color: #7B4B8A;
+}
+.size-modal-field .input-wrap { position: relative; }
+.size-modal-field input {
+  width: 100%;
+  padding: 13px 60px 13px 16px;
+  border: 2px solid #D4A017;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: 'Cairo', sans-serif;
+  background: #fffdf5;
+  color: #2D2D2D;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+.size-modal-field input:focus {
+  border-color: #E8B923;
+  box-shadow: 0 0 0 4px rgba(232,185,35,0.15);
+}
+.size-modal-field.optional input {
+  border: 1.5px solid #e8dff0;
+  background: #fff;
+}
+.size-modal-field.optional input:focus {
+  border-color: #7B4B8A;
+  box-shadow: 0 0 0 4px rgba(123,75,138,0.1);
+}
+.size-modal-field .unit-tag {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 800;
+  color: #D4A017;
+  background: linear-gradient(135deg, #fff8e6, #fff4d9);
+  padding: 4px 10px;
+  border-radius: 8px;
+  pointer-events: none;
+}
+.size-modal-field.optional .unit-tag {
+  color: #7B4B8A;
+  background: #f0e6f5;
+}
+.size-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+}
+.size-modal-actions button {
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.size-modal-actions .save-btn {
+  background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+  color: #fff;
+  flex: 2;
+}
+.size-modal-actions .save-btn:hover {
+  background: linear-gradient(135deg, #D4A017, #E8B923);
+  color: #1A1A1A;
+}
+.size-modal-actions .cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+  flex: 1;
+}
+.size-modal-actions .cancel-btn:hover { background: #e0e0e0; }
+
+/* ========== إصلاح عرض المودال في الديسكتوب ========== */
+.dm-measurements {
+  background: linear-gradient(135deg, #faf8fb 0%, #f5edf8 100%);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  border: 1.5px solid #e8dff0;
+}
+.dm-measurements .dm-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #d4c7dd;
+}
+.dm-measurements .dm-header i {
+  color: #D4A017;
+  font-size: 15px;
+}
+.dm-measurements .dm-header .dm-title {
+  font-weight: 800;
+  font-size: 14px;
+  color: #5D3A7A;
+  flex: 1;
+}
+.dm-measurements .dm-header .dm-hint {
+  font-size: 11px;
+  color: #888;
+  font-weight: 500;
+}
+.dm-measurements .dm-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.dm-measurements .dm-field label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 6px;
+}
+.dm-measurements .dm-field.required label { color: #8B6914; }
+.dm-measurements .dm-field.optional label { color: #7B4B8A; }
+.dm-measurements .dm-field .dm-badge {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  font-size: 8px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 800;
+}
+.dm-measurements .dm-field.optional .dm-badge {
+  background: #f0e6f5;
+  color: #7B4B8A;
+}
+.dm-measurements .dm-input-wrap { position: relative; }
+.dm-measurements .dm-input-wrap input {
+  width: 100%;
+  padding: 10px 45px 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Cairo', sans-serif;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+.dm-measurements .dm-field.required input {
+  border: 1.5px solid #D4A017;
+  background: #fffdf5;
+}
+.dm-measurements .dm-field.required input:focus {
+  border-color: #E8B923;
+  box-shadow: 0 0 0 3px rgba(232,185,35,0.15);
+}
+.dm-measurements .dm-field.optional input {
+  border: 1.5px solid #e8dff0;
+  background: #fff;
+}
+.dm-measurements .dm-field.optional input:focus {
+  border-color: #7B4B8A;
+  box-shadow: 0 0 0 3px rgba(123,75,138,0.1);
+}
+.dm-measurements .dm-unit {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  color: #D4A017;
+  background: linear-gradient(135deg, #fff8e6, #fff4d9);
+  padding: 3px 7px;
+  border-radius: 6px;
+  pointer-events: none;
+}
+.dm-measurements .dm-field.optional .dm-unit {
+  color: #7B4B8A;
+  background: #f0e6f5;
+}
+
+@media (max-width: 500px) {
+  .dm-measurements .dm-grid { grid-template-columns: 1fr; }
+}
+
 </style>
 
 <!-- نهاية أنماط CSS -->
@@ -3611,8 +3944,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="modalStockInfo" style="margin: 10px 0; font-size:14px;"></div>
 
       <!-- المقاسات -->
-<!-- ⚖️ قسم بيانات القياس الاحترافي -->
-<div style="background: linear-gradient(135deg, #faf8fb 0%, #f5edf8 100%); border-radius: 20px; padding: 18px; margin-top: 15px; border: 1.5px solid #e8dff0; position: relative; overflow: hidden;">
+<!-- ⚖️ قسم بيانات القياس المُحسَّن للديسكتوب -->
+<div class="dm-measurements">
+  <div class="dm-header">
+    <i class="fas fa-ruler-combined"></i>
+    <span class="dm-title">بيانات المقاس</span>
+    <span class="dm-hint">ساعدينا لتحديد المقاس المثالي</span>
+  </div>
+  
+  <div class="dm-grid">
+    <!-- ⚖️ الوزن -->
+    <div class="dm-field required">
+      <label>
+        ⚖️ الوزن
+        <span class="dm-badge">مطلوب *</span>
+      </label>
+      <div class="dm-input-wrap">
+        <input type="number" id="customerWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" required>
+        <span class="dm-unit">كجم</span>
+      </div>
+    </div>
+    
+    <!-- 📐 الطول -->
+    <div class="dm-field optional">
+      <label>
+        📐 الطول
+        <span class="dm-badge">اختياري</span>
+      </label>
+      <div class="dm-input-wrap">
+        <input type="number" id="customerLength" placeholder="مثال: 165" step="0.1" inputmode="decimal">
+        <span class="dm-unit">سم</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Select مخفي للتوافق مع النظام -->
+<select id="modalSize" style="display: none !important; visibility: hidden; position: absolute; left: -9999px; width: 0; height: 0;">
+    <option value=""></option>
+</select>
     <!-- Header -->
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #d4c7dd;">
         <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 3px 12px rgba(93,58,122,0.3); flex-shrink: 0;">
@@ -4690,33 +5060,10 @@ function renderProducts() {
           <span class="currency">EGP</span>
         </div>
 
-        <div class="measurements-wrapper" onclick="event.stopPropagation()">
-  <!-- ⚖️ الوزن (مطلوب) -->
-  <div class="measure-field required">
-    <label>
-      <span>⚖️ الوزن</span>
-      <span class="badge">مطلوب *</span>
-    </label>
-    <div class="input-wrap">
-      <input type="number" class="weight-input" data-product-id="${p.id}" 
-             placeholder="مثال: 65" step="0.1" inputmode="decimal" min="20" max="250">
-      <span class="unit-tag">كجم</span>
-    </div>
-  </div>
-  
-  <!-- 📐 الطول (اختياري) -->
-  <div class="measure-field optional">
-    <label>
-      <span>📐 الطول</span>
-      <span class="badge">اختياري</span>
-    </label>
-    <div class="input-wrap">
-      <input type="number" class="length-input" data-product-id="${p.id}" 
-             placeholder="اختياري" step="0.1" inputmode="decimal">
-      <span class="unit-tag">سم</span>
-    </div>
-  </div>
-</div>
+      <button type="button" class="size-data-btn" data-product-id="${p.id}" 
+        onclick="event.stopPropagation(); openSizeDataModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')">
+  📏 بيانات المقاس
+</button>
 
         ${stockHtml}
         <button class="btn-primary add-cart-btn" ${addBtnDisabled} onclick="event.stopPropagation(); window.addToCartFromCard('${p.id}', '${p.name.replace(/'/g, "\\'")}', ${Number(p.price)}, '${p.image}')">
@@ -5425,26 +5772,18 @@ function fallbackCopy(text) {
 // ============================================================
 window.addToCartFromCard = function(productId, name, price, image) {
   const product = window.allProducts.find(p => p.id === productId);
+  const cached = window._sizeDataCache[productId] || {};
+  const customerWeight = cached.weight || null;
+  const customerLength = cached.length || null;
   
-  // ✅ قراءة الوزن (مطلوب)
-  const weightInput = document.querySelector(`.weight-input[data-product-id="${productId}"]`);
-  const customerWeight = parseFloat(weightInput?.value) || null;
-  
+  // ✅ التحقق من الوزن
   if (!customerWeight || customerWeight < 20 || customerWeight > 250) {
-    customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
-    if (weightInput) {
-      weightInput.focus();
-      weightInput.style.borderColor = "#e74c3c";
-      setTimeout(() => weightInput.style.borderColor = "#D4A017", 2000);
-    }
+    customAlert("⚠️ يرجى إدخال بيانات المقاس أولاً", 'warning');
+    openSizeDataModal(productId, name);
     return false;
   }
   
-  // ✅ قراءة الطول (اختياري)
-  const lengthInput = document.querySelector(`.length-input[data-product-id="${productId}"]`);
-  const customerLength = parseFloat(lengthInput?.value) || null;
-  
-  // ✅ تحديد المقاس تلقائياً (أول مقاس متاح)
+  // ✅ تحديد المقاس تلقائياً
   let size = "";
   if (product && product.stockBySize) {
     const availableSizes = Object.entries(product.stockBySize)
@@ -5480,16 +5819,79 @@ window.addToCartFromCard = function(productId, name, price, image) {
   );
   
   if (addResult !== false) {
-    // ✅ تفريغ الحقول بعد النجاح
-    if (weightInput) weightInput.value = "";
-    if (lengthInput) lengthInput.value = "";
+    // مسح البيانات المخزنة مؤقتًا بعد الإضافة
+    delete window._sizeDataCache[productId];
+    const btn = document.querySelector(`.size-data-btn[data-product-id="${productId}"]`);
+    if (btn) {
+      btn.classList.remove('filled');
+      btn.innerHTML = '📏 بيانات المقاس';
+    }
     
     updateCart();
-    setTimeout(() => {
-      window.openCart();
-    }, 50);
+    setTimeout(() => window.openCart(), 50);
   }
   return true;
+};
+
+// ========== نظام بيانات المقاس المنبثق ==========
+window._sizeDataCache = window._sizeDataCache || {};
+let _currentSizeDataProductId = null;
+
+window.openSizeDataModal = function(productId, productName) {
+  _currentSizeDataProductId = productId;
+  
+  const modal = document.getElementById('sizeDataModal');
+  const nameEl = document.getElementById('sizeModalProductName');
+  const weightEl = document.getElementById('sizeModalWeight');
+  const lengthEl = document.getElementById('sizeModalLength');
+  
+  nameEl.textContent = '📦 ' + (productName || 'المنتج');
+  
+  const cached = window._sizeDataCache[productId] || {};
+  weightEl.value = cached.weight || '';
+  lengthEl.value = cached.length || '';
+  weightEl.style.borderColor = '#D4A017';
+  
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  
+  setTimeout(() => weightEl.focus(), 250);
+};
+
+window.closeSizeDataModal = function() {
+  const modal = document.getElementById('sizeDataModal');
+  if (!modal) return;
+  modal.classList.remove('active');
+  document.body.style.overflow = '';
+  _currentSizeDataProductId = null;
+};
+
+window.saveSizeData = function() {
+  if (!_currentSizeDataProductId) return;
+  
+  const weightEl = document.getElementById('sizeModalWeight');
+  const lengthEl = document.getElementById('sizeModalLength');
+  const weight = parseFloat(weightEl.value);
+  const length = parseFloat(lengthEl.value) || null;
+  
+  if (!weight || weight < 20 || weight > 250) {
+    customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
+    weightEl.focus();
+    weightEl.style.borderColor = '#e74c3c';
+    setTimeout(() => weightEl.style.borderColor = '#D4A017', 2000);
+    return;
+  }
+  
+  window._sizeDataCache[_currentSizeDataProductId] = { weight, length };
+  
+  const btn = document.querySelector(`.size-data-btn[data-product-id="${_currentSizeDataProductId}"]`);
+  if (btn) {
+    btn.classList.add('filled');
+    btn.innerHTML = `📏 <span>${weight} كجم${length ? ' · ' + length + ' سم' : ''}</span>`;
+  }
+  
+  customAlert('✅ تم حفظ بيانات المقاس', 'success');
+  closeSizeDataModal();
 };
 
 // ============================================================
@@ -7219,6 +7621,44 @@ if (typeof window.openInfoModal !== 'function') {
     };
 }
 </script>
+
+<!-- مودال بيانات المقاس المنبثق -->
+<div id="sizeDataModal" class="size-modal-overlay" onclick="if(event.target===this) closeSizeDataModal()">
+  <div class="size-modal-box">
+    <div class="size-modal-header">
+      <h3>📏 بيانات المقاس</h3>
+      <button class="size-modal-close" onclick="closeSizeDataModal()">✕</button>
+    </div>
+    <div class="size-modal-product-name" id="sizeModalProductName">📦 المنتج</div>
+    
+    <div class="size-modal-field">
+      <label>
+        ⚖️ الوزن
+        <span class="badge">مطلوب *</span>
+      </label>
+      <div class="input-wrap">
+        <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="20" max="250">
+        <span class="unit-tag">كجم</span>
+      </div>
+    </div>
+    
+    <div class="size-modal-field optional">
+      <label>
+        📐 الطول
+        <span class="badge">اختياري</span>
+      </label>
+      <div class="input-wrap">
+        <input type="number" id="sizeModalLength" placeholder="مثال: 165" step="0.1" inputmode="decimal">
+        <span class="unit-tag">سم</span>
+      </div>
+    </div>
+    
+    <div class="size-modal-actions">
+      <button class="save-btn" onclick="saveSizeData()">💾 حفظ البيانات</button>
+      <button class="cancel-btn" onclick="closeSizeDataModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
