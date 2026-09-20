@@ -5210,9 +5210,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <div id="modalStockInfo" style="text-align:center; margin:10px 0; font-size:14px;"></div>
             <div class="modal-size">
-                <label>اختر المقاس</label>
-                <select id="modalSize"></select>
-            </div>
+    <label>اختر المقاس</label>
+    <select id="modalSize"></select>
+</div>
+<!-- ✅ حقول الوزن والطول (بيانات العميل) -->
+<div style="display: flex; gap: 10px; margin-top: 12px;">
+    <div style="flex: 1;">
+        <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block;">⚖️ الوزن (كجم)</label>
+        <input type="number" id="customerWeight" placeholder="مثال: 65" step="0.1"
+               style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
+    </div>
+    <div style="flex: 1;">
+        <label style="font-weight:700; font-size:14px; margin-bottom:6px; display:block;">📐 الطول (سم)</label>
+        <input type="number" id="customerLength" placeholder="مثال: 165" step="0.1"
+               style="width:100%; padding:12px; border:1.5px solid #e8e8e8; border-radius:12px; font-size:14px; font-family:'Cairo',sans-serif;">
+    </div>
+</div>
+<div style="text-align:center; margin-top:8px; font-size:12px; color:#B8860B; font-weight:600;">
+    💡 أدخل وزنك وطولك لمساعدتنا في تحديد المقاس المناسب
+</div>
             <!-- تم إزالة زر الإضافة من هنا -->
             
            <!-- نجوم التقييم -->
@@ -6151,40 +6167,43 @@ if (loadMoreContainer) {
         // ======== عرض شريط الكمية ========
         let stockHtml = '';
         
-        if (isUnlimited) {
-            stockHtml = `
-            <div style="margin: 10px 0; padding: 8px 12px; background: rgba(128, 0, 128, 0.1); border-radius: 20px; font-size: 12px; color: #800080; font-weight: 700; text-align: center; border: 1px solid rgba(128, 0, 128, 0.3);">
-                <i class="fas fa-infinity"></i> متوفر دائماً
-            </div>`;
-        } else if (!hasStockInfo || Object.keys(stockBySize).length === 0) {
-            stockHtml = `
-            <div style="margin: 10px 0; padding: 8px 12px; background: rgba(212,175,55,0.1); border-radius: 20px; font-size: 12px; color: #B8860B; font-weight: 600; text-align: center;">
-                <i class="fas fa-boxes"></i> كمية غير محددة
-            </div>`;
-        } else if (totalStock > 20) {
-            stockHtml = `
-            <div style="margin: 10px 0; padding: 8px 12px; background: rgba(46, 204, 113, 0.1); border-radius: 20px; font-size: 12px; color: #27ae60; font-weight: 600; text-align: center;">
-                <i class="fas fa-check-circle"></i> متوفر: ${totalStock} قطعة
-            </div>`;
-        } else if (totalStock > 0) {
-            const percent = Math.min(100, Math.round((totalStock / 20) * 100));
-            const barColor = percent > 50 ? '#f39c12' : '#e74c3c';
-            stockHtml = `
-            <div style="margin: 10px 0;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#555; margin-bottom:4px;">
-                    <span><i class="fas fa-cubes"></i> متبقي: ${totalStock} قطعة</span>
-                    <span style="font-weight:700; color:${barColor};">${percent}%</span>
-                </div>
-                <div style="width:100%; height:6px; background:#eee; border-radius:10px; overflow:hidden;">
-                    <div style="width:${percent}%; height:100%; background:${barColor}; border-radius:10px; transition: width 0.4s;"></div>
-                </div>
-            </div>`;
-        } else {
-            stockHtml = `
-            <div style="margin: 10px 0; padding: 8px 12px; background: rgba(231,76,60,0.1); border-radius: 20px; font-size: 12px; color: #c0392b; font-weight: 700; text-align: center;">
-                <i class="fas fa-times-circle"></i> 🚫 نفذت الكمية
-            </div>`;
-        }
+       if (isUnlimited) {
+    // ✅ غير محدود = "متوفر" أخضر فقط
+    stockHtml = `
+    <div style="margin: 10px 0; padding: 8px 12px; background: rgba(46, 204, 113, 0.1); border-radius: 20px; font-size: 12px; color: #27ae60; font-weight: 700; text-align: center;">
+        <i class="fas fa-check-circle"></i> متوفر
+    </div>`;
+} else if (!hasStockInfo || Object.keys(stockBySize).length === 0) {
+    stockHtml = `
+    <div style="margin: 10px 0; padding: 8px 12px; background: rgba(212,175,55,0.1); border-radius: 20px; font-size: 12px; color: #B8860B; font-weight: 600; text-align: center;">
+        <i class="fas fa-boxes"></i> كمية غير محددة
+    </div>`;
+} else if (totalStock > 20) {
+    // ✅ فوق 20 = "متوفر" أخضر فقط بدون رقم
+    stockHtml = `
+    <div style="margin: 10px 0; padding: 8px 12px; background: rgba(46, 204, 113, 0.1); border-radius: 20px; font-size: 12px; color: #27ae60; font-weight: 700; text-align: center;">
+        <i class="fas fa-check-circle"></i> متوفر
+    </div>`;
+} else if (totalStock > 0) {
+    // الأقل من 20 = زي ما هو (مع العدد والشريط)
+    const percent = Math.min(100, Math.round((totalStock / 20) * 100));
+    const barColor = percent > 50 ? '#f39c12' : '#e74c3c';
+    stockHtml = `
+    <div style="margin: 10px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; color:#555; margin-bottom:4px;">
+            <span><i class="fas fa-cubes"></i> متبقي: ${totalStock} قطعة</span>
+            <span style="font-weight:700; color:${barColor};">${percent}%</span>
+        </div>
+        <div style="width:100%; height:6px; background:#eee; border-radius:10px; overflow:hidden;">
+            <div style="width:${percent}%; height:100%; background:${barColor}; border-radius:10px; transition: width 0.4s;"></div>
+        </div>
+    </div>`;
+} else {
+    stockHtml = `
+    <div style="margin: 10px 0; padding: 8px 12px; background: rgba(231,76,60,0.1); border-radius: 20px; font-size: 12px; color: #c0392b; font-weight: 700; text-align: center;">
+        <i class="fas fa-times-circle"></i> 🚫 نفذت الكمية
+    </div>`;
+}
 
         // ===== ✅ الجزء المعدل: إنشاء قائمة المقاسات =====
         const availableSizes = sizes.filter(s => {
@@ -6829,6 +6848,10 @@ document.head.appendChild(style);
         return;
     }
     
+    // ✅ قراءة الوزن والطول
+    const customerWeight = parseFloat(document.getElementById("customerWeight")?.value) || null;
+    const customerLength = parseFloat(document.getElementById("customerLength")?.value) || null;
+    
     const product = allProducts.find(p => p.id === currentProduct.id);
     
     if (product && product.stockBySize) {
@@ -6848,25 +6871,35 @@ document.head.appendChild(style);
     }
     
     const comparePrice = currentProduct.comparePrice || null;
-    const addResult = window.addToCart(currentProduct.name, Number(currentProduct.price), size, currentProduct.image, comparePrice);
+    const sku = product?.sku || null;
+    
+    // ✅ تمرير الوزن والطول لدالة addToCart
+    const addResult = window.addToCart(
+        currentProduct.name, 
+        Number(currentProduct.price), 
+        size, 
+        currentProduct.image, 
+        comparePrice, 
+        currentProduct.id, 
+        sku,
+        customerWeight,
+        customerLength
+    );
     
     if (addResult !== false) {
         updateCart();
         
-        // إغلاق المودال
         const modal = document.getElementById("productModal");
         modal.classList.remove("active");
         document.body.classList.remove("modal-open");
         disableSwipe();
         
-        // إعادة ضبط الـ overlay
         const overlay = document.getElementById("overlay");
         overlay.style.transition = 'none';
         overlay.classList.remove("active");
         void overlay.offsetHeight;
         overlay.style.transition = '';
         
-        // ✅ تأخير ثم فتح السلة
         setTimeout(() => {
             window.openCart();
         }, 100);
@@ -6876,9 +6909,8 @@ document.head.appendChild(style);
     // ========== السلة ==========
     let cart = JSON.parse(localStorage.getItem('vante_cart') || '[]');
 if (typeof updateCart === 'function') updateCart();
-    window.addToCart = function(name, price, size, image, comparePrice = null, productId = null, sku = null) {
+   window.addToCart = function(name, price, size, image, comparePrice = null, productId = null, sku = null, customerWeight = null, customerLength = null) {
     const product = allProducts.find(p => p.id === productId);
-    // إذا لم يتم تمرير SKU، نجربه من المنتج الموجود
     if (!sku && product) sku = product.sku;
     
     let stockValue = -1;
@@ -6905,23 +6937,29 @@ if (typeof updateCart === 'function') updateCart();
     
     const existing = cart.find(item => item.name === name && item.size === size);
     const productComparePrice = comparePrice !== null ? comparePrice : (allProducts.find(p => p.id === productId)?.comparePrice || null);
-    
     const finalProductId = productId || (allProducts.find(p => p.name === name)?.id || null);
     
     if (existing) {
         existing.qty += 1;
+        // ✅ تحديث الوزن والطول لو اتغيروا
+        if (customerWeight) existing.customerWeight = customerWeight;
+        if (customerLength) existing.customerLength = customerLength;
         customAlert(`✅ تم زيادة الكمية لـ ${name} - مقاس ${size}`, 'success');
     } else {
-        // ✅ إضافة SKU إلى العنصر
-        cart.push({ name, price, size, image, comparePrice: productComparePrice, qty: 1, productId: finalProductId, sku: sku });
+        cart.push({ 
+            name, price, size, image, 
+            comparePrice: productComparePrice, 
+            qty: 1, productId: finalProductId, sku: sku,
+            customerWeight: customerWeight,
+            customerLength: customerLength
+        });
         customAlert(`✅ تم إضافة ${name} - مقاس ${size} إلى السلة`, 'success');
-      // الكود الجديد الصحيح
-fbq('track', 'AddToCart', {
-    content_ids: [sku], // <--- التعديل: نرسل SKU وليس productId
-    content_type: 'product',
-    value: price,
-    currency: 'EGP'
-});
+        fbq('track', 'AddToCart', {
+            content_ids: [sku],
+            content_type: 'product',
+            value: price,
+            currency: 'EGP'
+        });
     }
     
     updateCart();
@@ -7245,17 +7283,19 @@ async function executeCheckout() {
         const orderID = `${customerCode}-${dateStr}${customerOrderCount}${String(dailyOrderCount).padStart(3, '0')}`;
         
         // ========== 6. تجهيز تفاصيل الطلب ==========
-        const orderDetails = cart.map(item => {
+       const orderDetails = cart.map(item => {
     const product = allProducts.find(p => p.id === item.productId);
     return {
         productId: item.productId,
-        sku: item.sku || product?.sku || null,   // ✅ إضافة SKU
+        sku: item.sku || product?.sku || null,
         name: item.name,
         size: item.size || "",
         qty: item.qty,
         price: item.price,
         image: item.image || "",
-        costPrice: product?.costPrice || 0
+        costPrice: product?.costPrice || 0,
+        customerWeight: item.customerWeight || null,
+        customerLength: item.customerLength || null
     };
 });
 
@@ -7273,10 +7313,12 @@ async function executeCheckout() {
         message += `🏙️ المدينة: ${city}\n`;
         message += `🏠 العنوان: ${address}\n\n`;
 
-        cart.forEach(item => {
+    cart.forEach(item => {
     message += `• ${item.name}\n`;
     if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
     message += `المقاس: ${item.size}\n`;
+    if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
+    if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
@@ -8297,6 +8339,11 @@ if (fullHeight > collapsedHeight + 50) {
         
         updateModalStockDisplay();
         sizeSelect.onchange = updateModalStockDisplay;
+
+        const cwEl = document.getElementById("customerWeight");
+const clEl = document.getElementById("customerLength");
+if (cwEl) cwEl.value = "";
+if (clEl) clEl.value = "";
         
         document.getElementById("reviewText").value = "";
         document.getElementById("reviewText").style.display = "none";
@@ -8513,6 +8560,12 @@ window.confirmAndSubmitReview = async function() {
         // إعادة تعيين الحقول
         // بعد نجاح الإرسال
 document.getElementById("reviewText").value = "";
+
+const cwEl = document.getElementById("customerWeight");
+const clEl = document.getElementById("customerLength");
+if (cwEl) cwEl.value = "";
+if (clEl) clEl.value = "";
+
 hideReviewInput(); // ✅ إخفاء خانة الكتابة وزر الإرسال
 window.selectedRating = 0;
 document.querySelectorAll(".rating-stars span").forEach(star => star.classList.remove("active"));
