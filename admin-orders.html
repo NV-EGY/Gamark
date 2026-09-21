@@ -6,8 +6,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="طلبات VANTÉ">
-<meta name="application-name" content="طلبات VANTÉ">
+<meta name="apple-mobile-web-app-title" content="طلبات GAMARK">
+<meta name="application-name" content="طلبات GAMARK">
 <meta name="theme-color" content="#D4AF37">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
@@ -804,7 +804,7 @@
 <div class="header-top">
     <div style="display: flex; align-items: center; justify-content: center; width: 100%; gap: 12px; flex-wrap: wrap;">
         <!-- العنوان -->
-        <h2 style="margin:0; flex-shrink: 0; font-size: 22px;">📦 VANTÉ Dashboard</h2>
+        <h2 style="margin:0; flex-shrink: 0; font-size: 22px;">📦 GAMARK Dashboard</h2>
         
         <!-- صندوق البحث -->
         <input type="text" id="search" class="search-box" placeholder="🔍 بحث بالاسم، الهاتف، رقم الطلب" style="flex: 1; max-width: 380px; min-width: 160px; padding: 10px 18px; border-radius: 50px; border: 2px solid #e0e0e0; background: #fff; font-size: 15px; text-align: center; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
@@ -1244,7 +1244,7 @@ window.printOldExcelSheet = function() {
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>طباعة الشيت - طلبات VANTÉ</title>
+<title>طباعة الشيت - طلبات GAMARK</title>
 <style>
     @page { size: A4 landscape; margin: 6mm; }
     body {
@@ -2589,7 +2589,7 @@ window.sendWhatsAppLinks = function(orderId) {
     message += `طلبك رقم: ${o.orderID}\n\n`;
     message += `✅ لتأكيد استلام الطلب، اضغط على الرابط:\n${confirmLink}\n\n`;
     message += `❌ لرفض الطلب، اضغط على الرابط:\n${rejectLink}\n\n`;
-    message += `شكراً لتسوقك مع VANTÉ ✨`;
+    message += `شكراً لتسوقك مع GAMARK ✨`;
 
     const encoded = encodeURIComponent(message);
     const waUrl = `https://wa.me/2${o.phone}?text=${encoded}`;
@@ -2619,7 +2619,7 @@ window.copyOrderConfirmation = function(orderId) {
     message += `طلبك رقم: ${o.orderID}\n\n`;
     message += `✅ لتأكيد استلام الطلب، اضغط على الرابط:\n${confirmLink}\n\n`;
     message += `❌ لرفض الطلب، اضغط على الرابط:\n${rejectLink}\n\n`;
-    message += `شكراً لتسوقك مع VANTÉ ✨`;
+    message += `شكراً لتسوقك مع GAMARK ✨`;
 
     navigator.clipboard.writeText(message).then(() => {
         customAlert('✅ تم نسخ رسالة التأكيد بنجاح!', 'success');
@@ -3013,6 +3013,29 @@ function updateBulkBar() {
   }
 }
 
+function updateBulkBar() {
+    let checked = document.querySelectorAll(".selectOrder:checked");
+    let count = checked.length;
+    let bar = document.getElementById("bulkActionsBar");
+    document.getElementById("bulkSelectedInfo").innerHTML = count;
+    if (count > 0) bar.classList.add("show");
+    else bar.classList.remove("show");
+    
+    const iconBtn = document.getElementById('selectAllIconBtn');
+    const allOrders = document.querySelectorAll(".selectOrder");
+    const allSelected = allOrders.length > 0 && allOrders.length === checked.length;
+    
+    if (iconBtn) {
+        if (allSelected) iconBtn.classList.add('active');
+        else iconBtn.classList.remove('active');
+    }
+    
+    // ✅ جديد: مزامنة checkboxes الأيام
+    if (typeof syncDaySelectCheckboxes === 'function') {
+        syncDaySelectCheckboxes();
+    }
+}
+
 window.clearAllSelections = () => {
   document.querySelectorAll(".selectOrder").forEach(cb => { cb.checked = false; cb.closest(".card").style.background = "#fff"; });
   updateBulkBar();
@@ -3127,12 +3150,13 @@ function render() {
         const groupId = `group-${groupIndex++}`;
         const isGroupOpen = openDayGroups[groupId] !== undefined ? openDayGroups[groupId] : isToday;
 
-        html += `
-            <div class="day-group" data-group="${groupId}">
-                <div class="day-header" onclick="toggleDayGroup('${groupId}')" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px 0; padding: 5px 12px; background: #f5f7fa; border-radius: 30px; cursor: pointer;">
-                    <span style="font-size: 14px; font-weight: 700; color: #0F7B65;">${dateHeader}</span>
-                    <i id="icon-${groupId}" class="fas fa-chevron-down" style="transition: transform 0.3s; color: #0F7B65; transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};"></i>
-                </div>
+       html += `
+    <div class="day-group" data-group="${groupId}">
+        <div class="day-header" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px 0; padding: 5px 12px; background: #f5f7fa; border-radius: 30px;">
+            <span onclick="toggleDayGroup('${groupId}')" style="font-size: 14px; font-weight: 700; color: #0F7B65; cursor: pointer; flex: 1;">${dateHeader}</span>
+            <input type="checkbox" class="daySelectAll" data-group="${groupId}" onchange="toggleDaySelection('${groupId}', this.checked)" title="تحديد كل طلبات اليوم" style="width: 20px; height: 20px; accent-color: #0F7B65; cursor: pointer; margin: 0 8px;">
+            <i id="icon-${groupId}" class="fas fa-chevron-down" onclick="toggleDayGroup('${groupId}')" style="transition: transform 0.3s; color: #0F7B65; transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}; cursor: pointer;"></i>
+        </div>
                 <div id="group-content-${groupId}" class="group-content" style="display: ${isGroupOpen ? 'block' : 'none'};">
         `;
 
@@ -3156,7 +3180,7 @@ function render() {
             }[status] || status;
 
             const detailsArray = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-let msg = `VANTÉ\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
+let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
 
             let couponHtml = '';
             if (o.coupon) {
@@ -3302,7 +3326,7 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
   let html = `<html><head><meta charset="UTF-8"><style>body{font-family:Arial;} .page{width:210mm;height:297mm;display:grid;grid-template-columns:1fr 1fr;}.invoice{border:1px solid #000;padding:12px;margin:5px;}</style></head><body><div class="page">`;
   selected.forEach(el => {
     let o = JSON.parse(decodeURIComponent(escape(atob(el.value))));
-    html += `<div class="invoice"><div><b>VANTÉ</b> | ${o.createdAt?.toDate?.().toLocaleString('en-US') || ''}</div><hr><div><b>Order:</b> ${o.orderID}<br><b>Name:</b> ${o.customerName}<br><b>Phone:</b> ${o.phone}<br><b>Address:</b> ${o.gov} - ${o.city}<br>${o.address}</div><div style="text-align:center;margin-top:20px;">Thank you 💛</div></div>`;
+    html += `<div class="invoice"><div><b>GAMARK</b> | ${o.createdAt?.toDate?.().toLocaleString('en-US') || ''}</div><hr><div><b>Order:</b> ${o.orderID}<br><b>Name:</b> ${o.customerName}<br><b>Phone:</b> ${o.phone}<br><b>Address:</b> ${o.gov} - ${o.city}<br>${o.address}</div><div style="text-align:center;margin-top:20px;">Thank you 💛</div></div>`;
   });
   html += `</div><script>window.onload=function(){window.print();};<\/script></body></html>`;
   win.document.write(html); win.document.close();
@@ -4383,7 +4407,12 @@ window.exportOldExcel = async function() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'التسجيل');
 
-    const fileName = `GAMARK ${String(day).padStart(2,'0')}-${String(month).padStart(2,'0')}-${year} (${selectedOrders.length} طلب).xls`;
+    // ✅ اسم الملف بتاريخ التصدير (اليوم اللي بتصدر فيه)
+const nowExport = new Date();
+const expDay   = String(nowExport.getDate()).padStart(2, '0');
+const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
+const expYear  = nowExport.getFullYear();
+const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xls`;
 
     try {
         XLSX.writeFile(wb, fileName, { bookType: 'xls' });
@@ -4527,6 +4556,37 @@ onAuthStateChanged(auth, (user) => {
         window.location.href = "login.html";
     }
 });
+
+ // ============================================================
+// ✅ تحديد كل طلبات اليوم
+// ============================================================
+window.toggleDaySelection = function(groupId, checked) {
+    const group = document.getElementById(`group-content-${groupId}`);
+    if (!group) return;
+    const checkboxes = group.querySelectorAll('.selectOrder');
+    checkboxes.forEach(cb => {
+        cb.checked = checked;
+        const card = cb.closest('.card');
+        if (card) card.style.background = checked ? '#e6fff2' : '#fff';
+    });
+    updateBulkBar();
+    syncDaySelectCheckboxes();
+};
+
+// مزامنة حالة checkbox اليوم مع الطلبات الفردية
+window.syncDaySelectCheckboxes = function() {
+    document.querySelectorAll('.daySelectAll').forEach(dayCb => {
+        const groupId = dayCb.getAttribute('data-group');
+        const group = document.getElementById(`group-content-${groupId}`);
+        if (!group) return;
+        const checkboxes = group.querySelectorAll('.selectOrder');
+        if (checkboxes.length === 0) return;
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        dayCb.checked = allChecked;
+        dayCb.indeterminate = anyChecked && !allChecked;
+    });
+};
 
 window.forceRender = async function() {
     try {
