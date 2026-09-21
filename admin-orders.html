@@ -882,6 +882,17 @@
   
   
   <input type="date" id="dateFilter" style="display:none;">
+<!-- سليكت فلتر اليوم -->
+<div style="display: flex; justify-content: center; margin: 8px 0;">
+  <select id="dayFilterSelect" onchange="applyDayFilter(this.value)" 
+          style="padding: 8px 20px; border-radius: 30px; border: 2px solid #0F7B65; background: #fff; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 14px; color: #0F7B65; cursor: pointer; box-shadow: 0 2px 8px rgba(15,123,101,0.15); min-width: 200px; text-align: center;">
+    <option value="all">📅 كل الأيام</option>
+    <option value="today">📅 اليوم</option>
+    <option value="yesterday">📅 أمس</option>
+    <option value="last7">📅 آخر 7 أيام</option>
+    <option value="last30">📅 آخر 30 يوم</option>
+  </select>
+</div>
   <div style="display: flex; gap: 10px; margin: 5px 0; justify-content: center;">
     <button onclick="switchTab('orders')" id="tabOrdersBtn" style="background: #0F7B65; color: #fff; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">📦 الطلبات</button>
     <button onclick="switchTab('reviews')" id="tabReviewsBtn" style="background: #ccc; color: #333; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; position: relative;">⭐ التقييمات <span id="pendingReviewsBadge" style="background: #e74c3c; color: #fff; border-radius: 50%; padding: 2px 8px; font-size: 11px; margin-right: 5px; display: none;">0</span></button>
@@ -1551,13 +1562,15 @@ function parseOrderBlock(block) {
             const key = normalizeArabic(km[1]);
             const value = km[2].trim();
 
-            // لو كنا في وضع WL، نحلل الـ buffer الأول
-            if (wlBuffer !== null) {
-                const parsed = parseWeightLengthSmart(wlBuffer);
-                order.weight = parsed.weight;
-                order.length = parsed.length;
-                wlBuffer = null;
-            }
+           // لو كنا في وضع WL، نحلل الـ buffer الأول
+if (wlBuffer !== null) {
+    const wls = parseWeightsLengths(wlBuffer);
+    order.weights = wls;
+    order.weight = wls[0]?.weight || null;
+    order.weightMax = wls[0]?.weightMax || null;
+    order.length = wls[0]?.length || null;
+    wlBuffer = null;
+}
 
             if (key.includes('اسم') && key.includes('عميل')) {
                 order.customerName = value;
@@ -1774,7 +1787,17 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
             </div>
             <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'}</div>
             <div style="color:#555; margin-bottom:4px;">🛍️ ${productBadge}</div>
-            <div style="color:#555; margin-bottom:4px;">⚖️ الوزن: ${o.weight || '—'} كجم | 📐 الطول: ${o.length || '—'} سم</div>
+<div style="color:#555; margin-bottom:4px;">📦 المنتجات: ${
+    (o.products || []).map((p, idx) => `<b>م${idx+1}:</b> ${p.name}${p.price ? ` (${p.price}ج)` : ''}`).join(' • ') || '—'
+}</div>
+<div style="color:#555; margin-bottom:4px;">⚖️ الأوزان/الأطوال: ${
+    (o.weights || []).map((w, idx) => {
+        const range = w.weightMax && w.weightMax !== w.weight 
+            ? `من ${w.weight} إلى ${w.weightMax}` 
+            : (w.weight || '—');
+        return `م${idx+1}: ${range}${w.length ? ` / ${w.length}` : ''}`;
+    }).join(' • ') || '—'
+}</div>
             <div style="color:#0F7B65; font-weight:700;">💰 ${o.price || 0} + 🚚 ${o.shipping || 0} = ${(o.price || 0) + (o.shipping || 0)} جنيه</div>
         </div>`;
     });
@@ -2213,6 +2236,7 @@ const auth = getAuth(app);
 let orders = [];
 window.orders = orders;  // ✅ ربط window.orders
 let lastCount = 0, currentFilter = "all", messages = [];
+let currentDayFilter = "all"; // فلتر اليوم الافتراضي
 let openStates = {};
 let allReviews = [], currentReviewFilter = "all", reviewSearchTerm = "";
 let currentTab = "orders";
@@ -2336,6 +2360,51 @@ await updateDoc(doc(db, "orders", id), updateData);
         customAlert("❌ حدث خطأ أثناء الحفظ: " + e.message, 'error');
     }
 };
+
+// ============================================================
+// 📅 فلتر اليوم
+// ============================================================
+window.applyDayFilter = function(value) {
+    currentDayFilter = value;
+    render();
+};
+
+// دالة مساعدة: هل التاريخ داخل النطاق؟
+function isDateInRange(dateObj, filterValue) {
+    if (!dateObj || filterValue === 'all') return true;
+    
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    
+    const d = new Date(dateObj);
+    d.setHours(0, 0, 0, 0);
+    
+    if (filterValue === 'today') {
+        return d.getTime() === todayStart.getTime();
+    }
+    
+    if (filterValue === 'yesterday') {
+        const yStart = new Date(todayStart);
+        yStart.setDate(yStart.getDate() - 1);
+        return d.getTime() === yStart.getTime();
+    }
+    
+    if (filterValue === 'last7') {
+        const cutoff = new Date(todayStart);
+        cutoff.setDate(cutoff.getDate() - 6); // يشمل النهاردة + 6 أيام قبل
+        return d >= cutoff;
+    }
+    
+    if (filterValue === 'last30') {
+        const cutoff = new Date(todayStart);
+        cutoff.setDate(cutoff.getDate() - 29);
+        return d >= cutoff;
+    }
+    
+    return true;
+}
 
 // =================== دالة تحديث مجموعة (Bulk) - النسخة النهائية ===================
 window.applyBulkStatus = async (newStatus) => {
@@ -3004,17 +3073,24 @@ function render() {
     let date = document.getElementById("dateFilter").value;
     let search = document.getElementById("search").value.toLowerCase();
 
-    let filteredOrders = ordersData.filter(o => {
-        const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-        if (currentFilter !== "all" && o.status !== currentFilter) return false;
-        if (search && !o.customerName?.toLowerCase().includes(search) && 
-            !o.phone?.includes(search) && 
-            !o.orderID?.toLowerCase().includes(search) && 
-            !details.some(detail => detail.sku?.toLowerCase().includes(search))) return false;
-        let d = o.createdAt?.toDate?.();
-        if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
-        return true;
-    });
+   let filteredOrders = ordersData.filter(o => {
+    const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+    if (currentFilter !== "all" && o.status !== currentFilter) return false;
+    if (search && !o.customerName?.toLowerCase().includes(search) && 
+        !o.phone?.includes(search) && 
+        !o.orderID?.toLowerCase().includes(search) && 
+        !details.some(detail => detail.sku?.toLowerCase().includes(search))) return false;
+    
+    const d = o.createdAt?.toDate?.();
+    
+    // فلتر التاريخ المخصص (dateFilter)
+    if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
+    
+    // ✅ فلتر السليكت (اليوم/أمس/آخر 7 أيام/...)
+    if (!isDateInRange(d, currentDayFilter)) return false;
+    
+    return true;
+});
 
     filteredOrders.sort((a, b) => {
         let dateA = a.createdAt?.toDate?.() || new Date(0);
@@ -3103,7 +3179,7 @@ let msg = `VANTÉ\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
             let detailsHtml = details.map(item => `
     <div style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
         ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ الوزن: ${item.customerWeight}${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? ` إلى ${item.customerWeightMax}` : ''} كجم` : ''}${item.customerLength ? ` | 📐 الطول: ${item.customerLength} سم` : ''}</div>
+       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : `الوزن: ${item.customerWeight}`} كجم` : ''}${item.customerLength ? ` | 📐 ${item.customerLength} سم` : ''}</div>
     </div>
 `).join("");
 
@@ -4307,7 +4383,7 @@ window.exportOldExcel = async function() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'التسجيل');
 
-    const fileName = `طلبات_${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}.xls`;
+    const fileName = `GAMARK ${String(day).padStart(2,'0')}-${String(month).padStart(2,'0')}-${year} (${selectedOrders.length} طلب).xls`;
 
     try {
         XLSX.writeFile(wb, fileName, { bookType: 'xls' });
