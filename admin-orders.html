@@ -4283,6 +4283,11 @@ window.exportOldExcel = async function() {
         return;
     }
 
+    if (typeof XLSX === 'undefined') {
+        customAlert("⏳ جاري تحميل مكتبة Excel... انتظر لحظات", 'warning');
+        return;
+    }
+
     const dayName = document.getElementById('excelDayName').value;
     const day     = parseInt(document.getElementById('excelDay').value)   || 1;
     const month   = parseInt(document.getElementById('excelMonth').value) || 1;
@@ -4302,6 +4307,7 @@ window.exportOldExcel = async function() {
         return da - db;
     });
 
+    // ============ تنسيق نص الوزن/الطول ============
     function fmtWeightLength(item) {
         if (!item) return '';
         const w = item.customerWeight;
@@ -4323,6 +4329,7 @@ window.exportOldExcel = async function() {
         return txt.trim();
     }
 
+    // ============ 63 عمود ============
     const HEADERS = [
         'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
         'اليوم','7','','','معاد التسليم',
@@ -4340,7 +4347,8 @@ window.exportOldExcel = async function() {
     while (HEADERS.length < 63) HEADERS.push('');
     HEADERS.length = 63;
 
-    let rowsHtml = '';
+    // ============ بناء مصفوفة البيانات ============
+    const aoa = [HEADERS];
     let serial = 1;
     const exportedIds = [];
 
@@ -4348,10 +4356,11 @@ window.exportOldExcel = async function() {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        const phoneCell = o.phone || '';
+        // النصوص كنصوص صريحة (مع علامة `'` لمنع Excel من تحويلها لأرقام)
+        const phoneCell = o.phone ? `'${o.phone}` : '';
         const telCell = o.secondaryPhone 
-            ? o.secondaryPhone 
-            : '<span style="color:#FF0000;font-weight:bold;">ـــــــــــــــــــــــــــــــ</span>';
+            ? `'${o.secondaryPhone}` 
+            : 'ـــــــــــــــــــــــــــــــ';
 
         const row = [];
         row.push(serial++);
@@ -4392,117 +4401,69 @@ window.exportOldExcel = async function() {
         row.push('جمارك');
         for (let k = 0; k < 16; k++) row.push('');
 
-        rowsHtml += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
+        aoa.push(row);
         exportedIds.push(o.id);
     });
 
-    // ✅ بدون ARROW — الفلتر الحقيقي هو اللي هيطلع السهم
-   const theadHtml = '<tr>' + HEADERS.map(h => `<th>${h}</th>`).join('') + '</tr>';
-   
-    const tableHtml = `
-<html xmlns:o="urn:schemas-microsoft-com:office:office"
-      xmlns:x="urn:schemas-microsoft-com:office:excel"
-      xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta charset="UTF-8">
-<!--[if gte mso 9]>
-<xml>
-<x:ExcelWorkbook>
-<x:ExcelWorksheets>
-<x:ExcelWorksheet>
-<x:Name>التسجيل</x:Name>
-<x:WorksheetOptions>
-<x:DisplayRightToLeft/>
-<x:Selected/>
-<x:FreezePanes/>
-<x:FrozenNoSplit/>
-<x:SplitHorizontal>1</x:SplitHorizontal>
-<x:TopRowBottomPane>1</x:TopRowBottomPane>
-<x:ActivePane>2</x:ActivePane>
-</x:WorksheetOptions>
-<x:AutoFilter x:Range="R1C1:R1C63" xmlns="urn:schemas-microsoft-com:office:excel"/>
-</x:ExcelWorksheet>
-</x:ExcelWorksheets>
-</x:ExcelWorkbook>
-</xml>
-<![endif]-->
-<style>
-    table { 
-        border-collapse: collapse; 
-        direction: rtl;
-    }
-    td {
-        padding: 3px 6px;
-        font-family: 'Arial', 'Cairo', sans-serif;
-        font-weight: bold;
-        font-size: 11px;
-        text-align: center;
-        vertical-align: middle;
-        mso-number-format: "\\@";
-        white-space: nowrap;
-        border: none;
-        color: #000;
-    }
-    th {
-        padding: 3px 6px;
-        font-family: 'Arial', 'Cairo', sans-serif;
-        font-weight: bold;
-        font-size: 11px;
-        text-align: center;
-        vertical-align: middle;
-        white-space: nowrap;
-        border: none;
-        background: #D9D9D9;
-        color: #000;
-    }
-</style>
-</head>
-<body>
-<table>
-    <thead>${theadHtml}</thead>
-    <tbody>${rowsHtml}</tbody>
-</table>
-</body>
-</html>`;
-
-    const nowExport = new Date();
-    const expDay   = String(nowExport.getDate()).padStart(2, '0');
-    const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
-    const expYear  = nowExport.getFullYear();
-    const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xls`;
-
+    // ============ إنشاء ملف XLSX حقيقي ============
     try {
-        const blob = new Blob(['\ufeff' + tableHtml], { 
-            type: 'application/vnd.ms-excel;charset=utf-8' 
-        });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // ✅ الفلتر الحقيقي — يشتغل على كل الأعمدة من A لـ BK
+        ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
+
+        // عرض الأعمدة
+        ws['!cols'] = [
+            {wch:6},{wch:22},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12},{wch:14},
+            {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
+            {wch:28},{wch:8},{wch:8},{wch:8},
+            {wch:28},{wch:8},{wch:8},
+            {wch:28},{wch:8},{wch:8},
+            {wch:28},{wch:8},{wch:8},
+            {wch:28},{wch:8},{wch:8},
+            {wch:28},{wch:8},{wch:8},
+            {wch:8},{wch:12},{wch:10},{wch:10},{wch:12},{wch:8},{wch:12},
+            {wch:8},{wch:8},
+            {wch:10},{wch:12},{wch:8},{wch:12},
+            {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},
+            {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}
+        ];
+
+        const wb = XLSX.utils.book_new();
+
+        // ✅ اتجاه الورقة من اليمين للشمال
+        wb.Workbook = { Views: [{ RTL: true }] };
+
+        XLSX.utils.book_append_sheet(wb, ws, 'التسجيل');
+
+        const nowExport = new Date();
+        const expDay   = String(nowExport.getDate()).padStart(2, '0');
+        const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
+        const expYear  = nowExport.getFullYear();
+        const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xlsx`;
+
+        XLSX.writeFile(wb, fileName);
+
+        customAlert(`✅ تم تصدير ${exportedIds.length} طلب بنجاح إلى: ${fileName}`, 'success');
+        sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب`);
+
+        // علامة على الطلبات المُصدَّرة
+        for (const id of exportedIds) {
+            try {
+                await updateDoc(doc(db, "orders", id), {
+                    exportedToOldExcel: true,
+                    exportedAt: serverTimestamp()
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        closeOldExcelModal();
+        clearAllSelections();
+        render();
     } catch (e) {
         console.error('Excel export error:', e);
         customAlert("❌ فشل إنشاء ملف Excel: " + e.message, 'error');
-        return;
     }
-
-    for (const id of exportedIds) {
-        try {
-            await updateDoc(doc(db, "orders", id), {
-                exportedToOldExcel: true,
-                exportedAt: serverTimestamp()
-            });
-        } catch (e) { console.error(e); }
-    }
-
-    customAlert(`✅ تم تصدير ${exportedIds.length} طلب بنجاح إلى: ${fileName}`, 'success');
-    sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب`);
-    closeOldExcelModal();
-    clearAllSelections();
-    render();
 };
 
 
