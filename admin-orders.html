@@ -796,6 +796,33 @@
     box-shadow: 0 2px 6px rgba(33,115,70,0.4);
 }
 
+<style>
+    table { 
+        border-collapse: collapse; 
+        direction: rtl; 
+        border: 1px solid #000;
+    }
+    td, th {
+        padding: 3px 5px;
+        font-family: 'Arial', 'Cairo', sans-serif;
+        font-weight: bold;
+        font-size: 11px;
+        text-align: center;
+        vertical-align: middle;
+        mso-number-format: "\\@";
+        white-space: nowrap;
+        border: none;
+    }
+    th {
+        background: #D9D9D9;
+        font-size: 11px;
+        font-weight: bold;
+        color: #000;
+        border-bottom: 1px solid #000;
+    }
+    td { color: #000; }
+</style>
+
   </style>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
@@ -1198,8 +1225,10 @@ window.printOldExcelSheet = function() {
         const cells = [];
         cells.push(idx + 1);
         cells.push(o.customerName || '');
-        cells.push(`<span class="phone-red">${o.phone || ''}</span>`);
-        cells.push(o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ');
+        cells.push(o.phone || '');
+cells.push(o.secondaryPhone 
+    ? o.secondaryPhone 
+    : '<span style="color:#FF0000;font-weight:900;">ـــــــــــــــــــــــــــــــ</span>');
         cells.push(o.gov || '');
         cells.push(o.city || '');
         cells.push(o.gov || '');
@@ -1263,24 +1292,25 @@ window.printOldExcelSheet = function() {
         font-weight: bold;
         table-layout: fixed;
     }
-    th, td {
-        border: 1px solid #222;
-        padding: 2px 3px;
-        text-align: center;
-        vertical-align: middle;
-        font-weight: bold;
-        word-wrap: break-word;
-        overflow: hidden;
-    }
-    th {
-        background: #e8e8e8;
-        font-size: 9.5px;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    td { font-size: 8.5px; }
-    .phone-red { color: #d00000; font-weight: 900; font-size: 10px; }
-    .addr { font-size: 8px; text-align: right; display: block; direction: rtl; }
+    table { border: 1px solid #222; }
+th, td {
+    border: none;
+    padding: 3px 4px;
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+    word-wrap: break-word;
+    overflow: hidden;
+}
+th {
+    background: #e8e8e8;
+    font-size: 9.5px;
+    border-bottom: 1px solid #222;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+}
+td { font-size: 8.5px; }
+.addr { font-size: 8px; text-align: right; display: block; direction: rtl; }
     @media print {
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
@@ -4312,13 +4342,11 @@ window.exportOldExcel = async function() {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        // 🔴 رقم المحمول: أحمر لو موجود، شرطات لو مفيش
-        const phoneCell = o.phone 
-            ? `<span style="color:#FF0000;font-weight:bold;">${o.phone}</span>` 
-            : '';
-        const telCell = o.secondaryPhone 
-            ? `<span style="color:#FF0000;font-weight:bold;">${o.secondaryPhone}</span>` 
-            : 'ـــــــــــــــــــــــــــــــ';
+        // ✅ المحمول والتليفون بالأ**سود** — الشرطات لو مفيش رقم ثاني بالأ**حمر**
+const phoneCell = o.phone || '';
+const telCell = o.secondaryPhone 
+    ? o.secondaryPhone 
+    : '<span style="color:#FF0000;font-weight:bold;">ـــــــــــــــــــــــــــــــ</span>';
 
         const row = [];
         row.push(serial++);
