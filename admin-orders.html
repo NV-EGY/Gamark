@@ -799,11 +799,10 @@
 <style>
     table { 
         border-collapse: collapse; 
-        direction: rtl; 
-        border: 1px solid #000;
+        direction: rtl;
     }
-    td, th {
-        padding: 3px 5px;
+    td {
+        padding: 3px 6px;
         font-family: 'Arial', 'Cairo', sans-serif;
         font-weight: bold;
         font-size: 11px;
@@ -812,15 +811,20 @@
         mso-number-format: "\\@";
         white-space: nowrap;
         border: none;
+        color: #000;
     }
     th {
-        background: #D9D9D9;
-        font-size: 11px;
+        padding: 3px 6px;
+        font-family: 'Arial', 'Cairo', sans-serif;
         font-weight: bold;
+        font-size: 11px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        border: none;
+        background: #D9D9D9;
         color: #000;
-        border-bottom: 1px solid #000;
     }
-    td { color: #000; }
 </style>
 
   </style>
@@ -1267,7 +1271,7 @@ cells.push(o.secondaryPhone
         rowsHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
     });
 
-    const theadHtml = '<tr>' + HEAD.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    const theadHtml = '<tr>' + HEADERS.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
     const html = `<!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -4320,9 +4324,6 @@ window.exportOldExcel = async function() {
         return txt.trim();
     }
 
-    // ============ السهم الثابت ▼ (شكلي فقط - بدون فلتر) ============
-    const ARROW = ' \u2193';
-
     // ============ 63 عمود بالظبط (A → BK) ============
     const HEADERS = [
         // A-J
@@ -4436,6 +4437,7 @@ window.exportOldExcel = async function() {
 <head>
 <meta charset="UTF-8">
 <!--[if gte mso 9]>
+<!--[if gte mso 9]>
 <xml>
 <x:ExcelWorkbook>
 <x:ExcelWorksheets>
@@ -4450,6 +4452,7 @@ window.exportOldExcel = async function() {
 <x:TopRowBottomPane>1</x:TopRowBottomPane>
 <x:ActivePane>2</x:ActivePane>
 </x:WorksheetOptions>
+<x:AutoFilter x:Range="R1C1:R1C63" xmlns="urn:schemas-microsoft-com:office:excel"/>
 </x:ExcelWorksheet>
 </x:ExcelWorksheets>
 </x:ExcelWorkbook>
