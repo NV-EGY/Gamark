@@ -4400,6 +4400,7 @@ const telCell = o.secondaryPhone
 <head>
 <meta charset="UTF-8">
 <!--[if gte mso 9]>
+<!--[if gte mso 9]>
 <xml>
 <x:ExcelWorkbook>
 <x:ExcelWorksheets>
@@ -4413,7 +4414,7 @@ const telCell = o.secondaryPhone
 <x:SplitHorizontal>1</x:SplitHorizontal>
 <x:TopRowBottomPane>1</x:TopRowBottomPane>
 <x:ActivePane>2</x:ActivePane>
-<x:AutoFilter x:Range="R1C1:R1C47"/>
+<x:AutoFilter x:Range="R1C1:R1C47" xmlns="urn:schemas-microsoft-com:office:excel"/>
 </x:WorksheetOptions>
 </x:ExcelWorksheet>
 </x:ExcelWorksheets>
@@ -4421,10 +4422,12 @@ const telCell = o.secondaryPhone
 </xml>
 <![endif]-->
 <style>
-    table { border-collapse: collapse; direction: rtl; }
+    table { 
+        border-collapse: collapse; 
+        direction: rtl;
+    }
     td, th {
-        border: 1px solid #000;
-        padding: 2px 4px;
+        padding: 3px 6px;
         font-family: 'Arial', 'Cairo', sans-serif;
         font-weight: bold;
         font-size: 11px;
@@ -4432,14 +4435,15 @@ const telCell = o.secondaryPhone
         vertical-align: middle;
         mso-number-format: "\\@";
         white-space: nowrap;
+        border: none;
     }
     th {
         background: #D9D9D9;
-        font-size: 11px;
-        font-weight: bold;
         color: #000;
     }
-    td { color: #000; }
+    td { 
+        color: #000; 
+    }
 </style>
 </head>
 <body>
