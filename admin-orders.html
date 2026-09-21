@@ -1126,6 +1126,171 @@ async function registerSW() {
 }
 
 // ============================================================
+// 🖨️ طباعة الشيت بنفس شكل Excel القديم
+// ============================================================
+window.printOldExcelSheet = function() {
+    const selected = document.querySelectorAll(".selectOrder:checked");
+    if (selected.length === 0) {
+        customAlert("⚠️ يرجى تحديد طلب واحد على الأقل للطباعة", 'warning');
+        return;
+    }
+
+    const dayName = document.getElementById('excelDayName').value;
+    const day     = parseInt(document.getElementById('excelDay').value)   || 1;
+    const month   = parseInt(document.getElementById('excelMonth').value) || 1;
+    const year    = parseInt(document.getElementById('excelYear').value)  || 2026;
+
+    const selectedOrders = [];
+    selected.forEach(cb => {
+        const card = cb.closest('.card');
+        const orderId = card.querySelector('.order-id')?.getAttribute('data-id');
+        const o = orders.find(x => x.id === orderId);
+        if (o) selectedOrders.push(o);
+    });
+
+    selectedOrders.sort((a, b) => {
+        const da = a.createdAt?.toDate?.() || new Date(0);
+        const db = b.createdAt?.toDate?.() || new Date(0);
+        return da - db;
+    });
+
+    function fmtProductCell(item) {
+        if (!item || !item.name) return '';
+        let txt = item.name;
+        const w = item.customerWeight;
+        const wMax = item.customerWeightMax;
+        const l = item.customerLength;
+        if (w && wMax && wMax !== w) txt += ` من ${w} إلى ${wMax}`;
+        else if (w) txt += ` ${w}`;
+        if (l) txt += ` / ${l}`;
+        return txt.trim();
+    }
+
+    const HEAD = [
+        'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
+        'اليوم','7','','','معاد التسليم',
+        'منتج 1','كمية 1','سعر1','الشحن',
+        'منتج 2','كمية 2','سعر 2',
+        'منتج 3','كمية 3','سعر 3',
+        'منتج 4','كمية 4','سعر 4',
+        'منتج 5','كمية 5','سعر 5',
+        'منتج 6','كمية 6','سعر 6',
+        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
+        'الشركة','التليفون','الصفر','اسم المول'
+    ];
+
+    let rowsHtml = '';
+    selectedOrders.forEach((o, idx) => {
+        const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+        const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
+
+        const cells = [];
+        cells.push(idx + 1);
+        cells.push(o.customerName || '');
+        cells.push(`<span class="phone-red">${o.phone || ''}</span>`);
+        cells.push(o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ');
+        cells.push(o.gov || '');
+        cells.push(o.city || '');
+        cells.push(o.gov || '');
+        cells.push(o.city || '');
+        cells.push(`<span class="addr">${addressText}</span>`);
+        cells.push('الاتصال قبل الوصول بساعة');
+        cells.push(dayName);
+        cells.push(day);
+        cells.push(month);
+        cells.push(year);
+        cells.push('خلال يومين');
+
+        // 6 منتجات
+        for (let i = 0; i < 6; i++) {
+            const it = items[i];
+            cells.push(it ? fmtProductCell(it) : '');
+            cells.push(it ? 1 : '');
+            cells.push(it ? (it.price || 0) : '');
+            if (i === 0) cells.push(o.shipping || 0); // الشحن بعد السعر الأول
+        }
+
+        cells.push(0);
+        cells.push('الشركة');
+        cells.push('');
+        cells.push(0);
+        cells.push('جمارك');
+        cells.push('');
+        cells.push('');
+        cells.push('');
+        cells.push('');
+        cells.push('الشركة');
+        cells.push('');
+        cells.push(0);
+        cells.push('جمارك');
+
+        rowsHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
+    });
+
+    const theadHtml = '<tr>' + HEAD.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+    const html = `<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>طباعة الشيت - طلبات VANTÉ</title>
+<style>
+    @page { size: A4 landscape; margin: 6mm; }
+    body {
+        font-family: 'Arial', 'Cairo', sans-serif;
+        direction: rtl;
+        font-weight: bold;
+        margin: 0;
+        padding: 8px;
+        background: #fff;
+    }
+    h2 { text-align: center; margin: 4px 0 10px 0; font-size: 16px; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9px;
+        font-weight: bold;
+        table-layout: fixed;
+    }
+    th, td {
+        border: 1px solid #222;
+        padding: 2px 3px;
+        text-align: center;
+        vertical-align: middle;
+        font-weight: bold;
+        word-wrap: break-word;
+        overflow: hidden;
+    }
+    th {
+        background: #e8e8e8;
+        font-size: 9.5px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    td { font-size: 8.5px; }
+    .phone-red { color: #d00000; font-weight: 900; font-size: 10px; }
+    .addr { font-size: 8px; text-align: right; display: block; direction: rtl; }
+    @media print {
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+</style>
+</head>
+<body>
+<h2>📋 قائمة الطلبات — ${dayName} ${day}/${month}/${year}</h2>
+<table>
+    <thead>${theadHtml}</thead>
+    <tbody>${rowsHtml}</tbody>
+</table>
+<script>window.onload = function(){ setTimeout(function(){ window.print(); }, 400); };<\/script>
+</body>
+</html>`;
+
+    const win = window.open('', '', 'width=1400,height=900');
+    win.document.write(html);
+    win.document.close();
+};
+
+// ============================================================
 // 🧠 نظام لصق الطلبات الذكي
 // ============================================================
 
@@ -1236,32 +1401,102 @@ function matchCity(raw) {
     return null;
 }
 
-// ===== تحليل ذكي للوزن/الطول =====
+// ===== تحليل ذكي للوزن/الطول (يدعم النطاقات) =====
 function parseWeightLengthSmart(text) {
     const cleaned = toEnglishDigits(text || '');
+
+    // ⭐ النطاق: "من 80 الى 95 / 165"
+    const rangeFull = cleaned.match(/من\s*(\d+(?:\.\d+)?)\s*(?:الى|إلى|إلي|الي|to)\s*(\d+(?:\.\d+)?)\s*[\/\\]\s*(\d+(?:\.\d+)?)/);
+    if (rangeFull) {
+        return {
+            weight: parseFloat(rangeFull[1]),
+            weightMax: parseFloat(rangeFull[2]),
+            length: parseFloat(rangeFull[3])
+        };
+    }
+
+    // ⭐ النطاق بالشرطة: "80-95 / 165"
+    const rangeDash = cleaned.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*[\/\\]\s*(\d+(?:\.\d+)?)/);
+    if (rangeDash && !/من/.test(cleaned)) {
+        return {
+            weight: parseFloat(rangeDash[1]),
+            weightMax: parseFloat(rangeDash[2]),
+            length: parseFloat(rangeDash[3])
+        };
+    }
+
+    // ⭐ نطاق وزن فقط بدون طول
+    const rangeWOnly = cleaned.match(/من\s*(\d+(?:\.\d+)?)\s*(?:الى|إلى|إلي|الي|to)\s*(\d+(?:\.\d+)?)/);
+    if (rangeWOnly) {
+        return {
+            weight: parseFloat(rangeWOnly[1]),
+            weightMax: parseFloat(rangeWOnly[2]),
+            length: null
+        };
+    }
 
     // تسميات صريحة
     const wm = cleaned.match(/الوزن\s*[:：]?\s*(\d+(?:\.\d+)?)/);
     const lm = cleaned.match(/الطول\s*[:：]?\s*(\d+(?:\.\d+)?)/);
     if (wm && lm) {
-        return { weight: parseFloat(wm[1]), length: parseFloat(lm[1]) };
+        return { weight: parseFloat(wm[1]), weightMax: null, length: parseFloat(lm[1]) };
     }
 
     const nums = extractNumbers(cleaned);
-    if (nums.length === 0) return { weight: null, length: null };
+    if (nums.length === 0) return { weight: null, weightMax: null, length: null };
     if (nums.length === 1) {
         const n = nums[0];
-        if (wm) return { weight: n, length: null };
-        if (lm) return { weight: null, length: n };
-        return n < 110 ? { weight: n, length: null } : { weight: null, length: n };
+        if (wm) return { weight: n, weightMax: null, length: null };
+        if (lm) return { weight: null, weightMax: null, length: n };
+        return n < 110
+            ? { weight: n, weightMax: null, length: null }
+            : { weight: null, weightMax: null, length: n };
     }
 
-    // ⭐ قاعدة المستخدم: الأعلى = الطول، الأقل = الوزن
     const sorted = [...nums].sort((a, b) => a - b);
     return {
         weight: sorted[0],
+        weightMax: null,
         length: sorted[sorted.length - 1]
     };
+}
+
+// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) =====
+function parseProductLine(value) {
+    if (!value) return [];
+    const products = [];
+
+    // لو فيه "(السعر X)" → التنسيق الجديد
+    if (/السعر/.test(value)) {
+        const parts = value.split(/\s+-\s+/);
+        for (const part of parts) {
+            const priceMatch = part.match(/\(السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)/);
+            const price = priceMatch ? parseFloat(priceMatch[1]) : null;
+            let name = part.replace(/\(السعر\s*[:：]?\s*\d+(?:\.\d+)?\s*\)/g, '').trim();
+            name = name.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
+            if (name) products.push({ name, price });
+        }
+        return products;
+    }
+
+    // لو فيه " - " → منتجات متعددة بدون أسعار
+    const parts = value.split(/\s+-\s+/);
+    if (parts.length > 1) {
+        for (const p of parts) {
+            const trimmed = p.trim();
+            if (trimmed) products.push({ name: trimmed, price: null });
+        }
+        return products;
+    }
+
+    return [{ name: value.trim(), price: null }];
+}
+
+// ===== تحليل سطر الأوزان/الأطوال (متعدد) =====
+function parseWeightsLengths(value) {
+    if (!value) return [];
+    const parts = value.split(/\s+-\s+/);
+    return parts.map(p => parseWeightLengthSmart(p));
 }
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
@@ -1344,9 +1579,12 @@ function parseOrderBlock(block) {
                 order.address = value;
                 lastKey = 'addr';
             } else if (key.includes('منتج')) {
-                order.productName = value;
-                lastKey = 'product';
-            } else if (key.includes('وزن') || key.includes('طول')) {
+    order.productsRaw = value;
+    order.products = parseProductLine(value);
+    order.productName = order.products[0]?.name || value;
+    lastKey = 'product';
+      }
+ else if (key.includes('وزن') || key.includes('طول')) {
                 if (lastKey === 'wl' && wlBuffer !== null) {
                     wlBuffer += ' ' + line; // نضيف السطر كامل
                 } else {
@@ -1374,11 +1612,20 @@ function parseOrderBlock(block) {
         // أي سطر تاني بدون مفتاح → نطنشه (زي تواريخ WhatsApp)
     }
 
-    // معالجة الـ buffer الأخير
+        // معالجة الـ buffer الأخير
     if (wlBuffer !== null) {
-        const parsed = parseWeightLengthSmart(wlBuffer);
-        order.weight = parsed.weight;
-        order.length = parsed.length;
+        const wls = parseWeightsLengths(wlBuffer);
+        order.weights = wls;
+        order.weight = wls[0]?.weight || null;
+        order.weightMax = wls[0]?.weightMax || null;
+        order.length = wls[0]?.length || null;
+    } else {
+        order.weights = [];
+    }
+
+    // لو مفيش منتجات، استخدم الاسم القديم
+    if (!order.products || order.products.length === 0) {
+        order.products = order.productName ? [{ name: order.productName, price: order.price }] : [];
     }
 
     return order;
@@ -1799,25 +2046,41 @@ async function addPastedOrderToFirestore(order) {
         }
     }
 
-    const size = usedSize || 'غير محدد';
+       // === 4. تفاصيل الطلب (متعدد المنتجات) ===
+    const products = (order.products && order.products.length > 0)
+        ? order.products
+        : [{ name: order.productName, price: order.price }];
 
-    // === 4. تفاصيل الطلب ===
-    const orderDetails = [{
-        productId: product?.id || null,
-        sku: product?.sku || null,
-        name: order.productName,
-        size: size,
-        qty: 1,
-        price: order.price,
-        image: product?.image || "",
-        costPrice: product?.costPrice || 0,
-        customerWeight: order.weight,
-        customerLength: order.length
-    }];
+    const weights = (order.weights && order.weights.length > 0)
+        ? order.weights
+        : [{ weight: order.weight, weightMax: order.weightMax, length: order.length }];
 
-    const totalCost = (product?.costPrice || 0) * 1;
+    const allProducts = window.allProducts || [];
+    const orderDetails = [];
+    let totalCost = 0;
+
+    for (let i = 0; i < products.length; i++) {
+        const p = products[i];
+        const wl = weights[i] || weights[0] || { weight: null, length: null };
+        const matched = findProductByName(p.name, allProducts);
+
+        orderDetails.push({
+            productId: matched?.id || null,
+            sku: matched?.sku || null,
+            name: p.name,
+            size: usedSize || 'غير محدد',
+            qty: 1,
+            price: p.price || order.price,
+            image: matched?.image || "",
+            costPrice: matched?.costPrice || 0,
+            customerWeight: wl.weight || null,
+            customerWeightMax: wl.weightMax || null,
+            customerLength: wl.length || null
+        });
+        totalCost += (matched?.costPrice || 0);
+    }
+
     const finalTotal = order.price + order.shipping;
-
     const orderData = {
         orderID,
         customerName: order.customerName,
@@ -1846,11 +2109,14 @@ async function addPastedOrderToFirestore(order) {
 
     await addDoc(collection(db, "orders"), orderData);
 
-    // === 5. تحديث المخزون والمبيعات ===
-    if (product) {
-        const updates = { salesCount: increment(1) };
-        if (newStockBySize) updates.stockBySize = newStockBySize;
-        await updateDoc(doc(db, "products", product.id), updates);
+       // === 5. تحديث المخزون والمبيعات لكل منتج ===
+    for (const item of orderDetails) {
+        if (!item.productId) continue;
+        try {
+            const updates = { salesCount: increment(1) };
+            if (newStockBySize) updates.stockBySize = newStockBySize;
+            await updateDoc(doc(db, "products", item.productId), updates);
+        } catch (e) { console.warn('stock update failed', e); }
     }
 
     return true;
@@ -2837,7 +3103,7 @@ let msg = `VANTÉ\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
             let detailsHtml = details.map(item => `
     <div style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
         ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ الوزن: ${item.customerWeight} كجم` : ''}${item.customerLength ? ` | 📐 الطول: ${item.customerLength} سم` : ''}</div>
+       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ الوزن: ${item.customerWeight}${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? ` إلى ${item.customerWeightMax}` : ''} كجم` : ''}${item.customerLength ? ` | 📐 الطول: ${item.customerLength} سم` : ''}</div>
     </div>
 `).join("");
 
@@ -3905,10 +4171,8 @@ window.exportOldExcel = async function() {
         return;
     }
 
-    // التأكد من تحميل مكتبة SheetJS
     if (typeof XLSX === 'undefined') {
         customAlert("⏳ جاري تحميل مكتبة Excel... انتظر لحظات ثم أعد المحاولة", 'info');
-        // محاولة تحميل المكتبة ديناميكياً
         const s = document.createElement('script');
         s.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
         s.onload = () => customAlert("✅ تم تحميل المكتبة، اضغط التصدير مرة أخرى", 'success');
@@ -3921,7 +4185,6 @@ window.exportOldExcel = async function() {
     const month   = parseInt(document.getElementById('excelMonth').value) || 1;
     const year    = parseInt(document.getElementById('excelYear').value)  || 2026;
 
-    // جمع الطلبات المحددة
     const selectedOrders = [];
     selected.forEach(cb => {
         const card = cb.closest('.card');
@@ -3930,7 +4193,6 @@ window.exportOldExcel = async function() {
         if (o) selectedOrders.push(o);
     });
 
-    // ترتيب حسب الأقدم أولاً
     selectedOrders.sort((a, b) => {
         const da = a.createdAt?.toDate?.() || new Date(0);
         const db = b.createdAt?.toDate?.() || new Date(0);
@@ -3941,69 +4203,105 @@ window.exportOldExcel = async function() {
     let serial = 1;
     const exportedIds = [];
 
-    selectedOrders.forEach(o => {
-        const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-        const firstItem = details[0] || {};
-
-        // العمود P: "منتج 1" = اسم المنتج + الوزن / الطول
-        let productText = firstItem.name || '';
-        const w = firstItem.customerWeight;
-        const l = firstItem.customerLength;
-        if (w || l) {
-            productText += ' ' + (w || '') + ' / ' + (l || '');
+    // ⭐ دالة مساعدة: تنسيق نص الوزن/الطول
+    function fmtWeightLength(item) {
+        if (!item) return '';
+        const w = item.customerWeight;
+        const wMax = item.customerWeightMax;
+        const l = item.customerLength;
+        if (!w && !l) return '';
+        let s = '';
+        if (w && wMax && wMax !== w) {
+            s = `من ${w} إلى ${wMax}`;
+        } else if (w) {
+            s = `${w}`;
         }
-        productText = productText.trim();
+        if (l) s += (s ? ' / ' : '') + `${l}`;
+        return s;
+    }
 
-        // العمود I: العنوان (مع الملاحظة قبل العنوان لو موجودة)
+    // ⭐ دالة مساعدة: تنسيق اسم منتج + وزن/طول
+    function fmtProductCell(item) {
+        if (!item || !item.name) return '';
+        let txt = item.name;
+        const wl = fmtWeightLength(item);
+        if (wl) txt += ' ' + wl;
+        return txt.trim();
+    }
+
+    selectedOrders.forEach(o => {
+        const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        // بناء الصف بـ 47 عمود بالترتيب الصحيح
         const row = new Array(47).fill('');
-        row[0]  = serial++;                                     // A - رقم
-        row[1]  = o.customerName || '';                         // B - اسم العميل
-        row[2]  = o.phone || '';                                // C - المحمول
-        row[3]  = o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ'; // D - التليفون (الثانوي)
-        row[4]  = o.gov || '';                                  // E - المحافظة
-        row[5]  = o.city || '';                                 // F - المنطقة
-        row[6]  = o.gov || '';                                  // G - ثابت: المحافظة
-        row[7]  = o.city || '';                                 // H - ثابت: المنطقة
-        row[8]  = addressText;                                  // I - العنوان
-        row[9]  = 'الاتصال قبل الوصول بساعة';                    // J - البيان (ثابت)
-        row[10] = dayName;                                      // K - اليوم (اسم)
-        row[11] = day;                                          // L - اليوم (رقم)
-        row[12] = month;                                        // M - الشهر
-        row[13] = year;                                         // N - السنة
-        row[14] = 'خلال يومين';                                 // O - معاد التسليم (ثابت)
-        row[15] = productText;                                  // P - منتج 1
-        row[16] = 1;                                            // Q - كمية 1
-        row[17] = firstItem.price || o.price || 0;              // R - سعر 1
-        row[18] = o.shipping || 0;                              // S - الشحن
-        // T - AE = منتج 2-6 (تترك فارغة - 12 خانة)
-        row[34] = 0;                                            // AI - سنتر
-        row[35] = 'الشركة';                                     // AJ - المندوب
-        row[36] = '';                                           // AK - الحساب
-        row[37] = 0;                                            // AL - الشركة
-        row[38] = 'جمارك';                                      // AM - التليفون
-        row[39] = '';                                           // AN - الصفر
-        row[40] = '';                                           // AO - اسم المول
-        row[41] = '';                                           // AP
-        row[42] = '';                                           // AQ
-        row[43] = 'الشركة';                                     // AR
-        row[44] = '';                                           // AS - التليفون
-        row[45] = 0;                                            // AT - الصفر
-        row[46] = 'جمارك';                                      // AU - اسم المول
+        row[0]  = serial++;
+        row[1]  = o.customerName || '';
+        row[2]  = o.phone || '';
+        row[3]  = o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ';
+        row[4]  = o.gov || '';
+        row[5]  = o.city || '';
+        row[6]  = o.gov || '';
+        row[7]  = o.city || '';
+        row[8]  = addressText;
+        row[9]  = 'الاتصال قبل الوصول بساعة';
+        row[10] = dayName;
+        row[11] = day;
+        row[12] = month;
+        row[13] = year;
+        row[14] = 'خلال يومين';
+
+        // ⭐ 6 منتجات في 6 مجموعات (منتج/كمية/سعر)
+        for (let i = 0; i < 6; i++) {
+            const it = items[i];
+            const baseCol = 15 + (i * 4); // منتج 1 عند 15، منتج 2 عند 19... إلخ — لكن الحقيقة: منتج، كمية، سعر = 3 خانات لكل منتج. لكن رأس الجدول الأصلي عند منتج 1 في 15، كمية 1 في 16، سعر 1 في 17، الشحن في 18. ثم منتج 2 عند 19، كمية 2 عند 20، سعر 2 عند 21.
+            const productCol = 15 + (i === 0 ? 0 : (i * 3 + 1)); // 15, 19, 22, 25, 28, 31
+            const qtyCol = productCol + 1;
+            const priceCol = productCol + 2;
+
+            if (it) {
+                row[productCol] = fmtProductCell(it);
+                row[qtyCol] = 1;
+                row[priceCol] = it.price || 0;
+            } else {
+                row[productCol] = '';
+                row[qtyCol] = '';
+                row[priceCol] = '';
+            }
+        }
+
+        // الشحن في السطر بعد أول 3 خانات منتج
+        row[18] = o.shipping || 0;
+
+        // بيانات ثابتة في آخر الجدول
+        row[34] = 0;
+        row[35] = 'الشركة';
+        row[36] = '';
+        row[37] = 0;
+        row[38] = 'جمارك';
+        row[39] = '';
+        row[40] = '';
+        row[41] = '';
+        row[42] = '';
+        row[43] = 'الشركة';
+        row[44] = '';
+        row[45] = 0;
+        row[46] = 'جمارك';
 
         rows.push(row);
         exportedIds.push(o.id);
     });
 
-    // إنشاء ملف Excel
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    // ضبط عرض الأعمدة قليلاً لراحة العرض
     ws['!cols'] = [
         {wch:6},{wch:20},{wch:14},{wch:14},{wch:14},{wch:16},{wch:14},{wch:16},
         {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
-        {wch:28},{wch:8},{wch:8},{wch:8}
+        {wch:28},{wch:8},{wch:8},{wch:8},
+        {wch:28},{wch:8},{wch:8},
+        {wch:28},{wch:8},{wch:8},
+        {wch:28},{wch:8},{wch:8},
+        {wch:28},{wch:8},{wch:8},
+        {wch:28},{wch:8},{wch:8}
     ];
 
     const wb = XLSX.utils.book_new();
@@ -4019,22 +4317,17 @@ window.exportOldExcel = async function() {
         return;
     }
 
-    // تعليم الطلبات المُصدَّرة في Firestore
     for (const id of exportedIds) {
         try {
             await updateDoc(doc(db, "orders", id), {
                 exportedToOldExcel: true,
                 exportedAt: serverTimestamp()
             });
-        } catch (e) {
-            console.error('mark error for', id, e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    // إشعار نجاح
     customAlert(`✅ تم تصدير ${exportedIds.length} طلب بنجاح إلى: ${fileName}`, 'success');
-    sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب بصيغة Excel قديم`);
-
+    sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب`);
     closeOldExcelModal();
     clearAllSelections();
     render();
@@ -4297,9 +4590,10 @@ window.toggleShippingGroup = toggleShippingGroup;
       </div>
       <div id="oldExcelPreviewInfo" style="margin-top: 14px; background: #f0f7ff; padding: 10px; border-radius: 10px; font-size: 13px; text-align: center; color: #0F7B65; font-weight: 700;"></div>
     </div>
-    <div class="confirm-buttons">
-  <button id="oldExcelCancelBtn" onclick="closeOldExcelModal()" style="color: #e74c3c;">إلغاء</button>
-  <button id="oldExcelConfirmBtn" onclick="exportOldExcel()" style="color: #217346; font-weight: 800;">📥 تصدير Excel</button>
+    <div class="confirm-buttons" style="flex-wrap: wrap;">
+  <button id="oldExcelCancelBtn" onclick="closeOldExcelModal()" style="color: #e74c3c; flex: 1 1 100px;">إلغاء</button>
+  <button onclick="printOldExcelSheet()" style="color: #111; font-weight: 800; background: #f1f1f1; flex: 1 1 100px;">🖨️ طباعة الشيت</button>
+  <button id="oldExcelConfirmBtn" onclick="exportOldExcel()" style="color: #217346; font-weight: 800; flex: 1 1 120px;">📥 تصدير Excel</button>
 </div>
   </div>
 </div>
