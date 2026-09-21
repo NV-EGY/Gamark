@@ -2992,28 +2992,6 @@ window.saveEdit = async (id) => {
 };
 
 function updateBulkBar() {
-  let checked = document.querySelectorAll(".selectOrder:checked");
-  let count = checked.length;
-  let bar = document.getElementById("bulkActionsBar");
-  document.getElementById("bulkSelectedInfo").innerHTML = count;
-  if (count > 0) bar.classList.add("show");
-  else bar.classList.remove("show");
-  
-  // تحديث لون أيقونة Select All بناءً على التحديد
-  const iconBtn = document.getElementById('selectAllIconBtn');
-  const allOrders = document.querySelectorAll(".selectOrder");
-  const allSelected = allOrders.length > 0 && allOrders.length === checked.length;
-  
-  if (iconBtn) {
-    if (allSelected) {
-      iconBtn.classList.add('active');
-    } else {
-      iconBtn.classList.remove('active');
-    }
-  }
-}
-
-function updateBulkBar() {
     let checked = document.querySelectorAll(".selectOrder:checked");
     let count = checked.length;
     let bar = document.getElementById("bulkActionsBar");
@@ -4271,15 +4249,6 @@ window.exportOldExcel = async function() {
         return;
     }
 
-    if (typeof XLSX === 'undefined') {
-        customAlert("⏳ جاري تحميل مكتبة Excel... انتظر لحظات ثم أعد المحاولة", 'info');
-        const s = document.createElement('script');
-        s.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
-        s.onload = () => customAlert("✅ تم تحميل المكتبة، اضغط التصدير مرة أخرى", 'success');
-        document.head.appendChild(s);
-        return;
-    }
-
     const dayName = document.getElementById('excelDayName').value;
     const day     = parseInt(document.getElementById('excelDay').value)   || 1;
     const month   = parseInt(document.getElementById('excelMonth').value) || 1;
@@ -4299,11 +4268,7 @@ window.exportOldExcel = async function() {
         return da - db;
     });
 
-    const rows = [EXCEL_OLD_HEADERS];
-    let serial = 1;
-    const exportedIds = [];
-
-    // ⭐ دالة مساعدة: تنسيق نص الوزن/الطول
+    // ============ تنسيق نص الوزن/الطول ============
     function fmtWeightLength(item) {
         if (!item) return '';
         const w = item.customerWeight;
@@ -4311,16 +4276,12 @@ window.exportOldExcel = async function() {
         const l = item.customerLength;
         if (!w && !l) return '';
         let s = '';
-        if (w && wMax && wMax !== w) {
-            s = `من ${w} إلى ${wMax}`;
-        } else if (w) {
-            s = `${w}`;
-        }
+        if (w && wMax && wMax !== w) s = `من ${w} إلى ${wMax}`;
+        else if (w) s = `${w}`;
         if (l) s += (s ? ' / ' : '') + `${l}`;
         return s;
     }
 
-    // ⭐ دالة مساعدة: تنسيق اسم منتج + وزن/طول
     function fmtProductCell(item) {
         if (!item || !item.name) return '';
         let txt = item.name;
@@ -4329,99 +4290,169 @@ window.exportOldExcel = async function() {
         return txt.trim();
     }
 
+    // ============ بناء جدول HTML ============
+    const HEADERS = [
+        'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
+        'اليوم','7','','','معاد التسليم',
+        'منتج 1','كمية 1','سعر1','الشحن',
+        'منتج 2','كمية 2','سعر 2',
+        'منتج 3','كمية 3','سعر 3',
+        'منتج 4','كمية 4','سعر 4',
+        'منتج 5','كمية 5','سعر 5',
+        'منتج 6','كمية 6','سعر 6',
+        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
+        'الشركة','التليفون','الصفر','اسم المول'
+    ];
+
+    let rowsHtml = '';
+    let serial = 1;
+    const exportedIds = [];
+
     selectedOrders.forEach(o => {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        const row = new Array(47).fill('');
-        row[0]  = serial++;
-        row[1]  = o.customerName || '';
-        row[2]  = o.phone || '';
-        row[3]  = o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ';
-        row[4]  = o.gov || '';
-        row[5]  = o.city || '';
-        row[6]  = o.gov || '';
-        row[7]  = o.city || '';
-        row[8]  = addressText;
-        row[9]  = 'الاتصال قبل الوصول بساعة';
-        row[10] = dayName;
-        row[11] = day;
-        row[12] = month;
-        row[13] = year;
-        row[14] = 'خلال يومين';
+        // 🔴 رقم المحمول: أحمر لو موجود، شرطات لو مفيش
+        const phoneCell = o.phone 
+            ? `<span style="color:#FF0000;font-weight:bold;">${o.phone}</span>` 
+            : '';
+        const telCell = o.secondaryPhone 
+            ? `<span style="color:#FF0000;font-weight:bold;">${o.secondaryPhone}</span>` 
+            : 'ـــــــــــــــــــــــــــــــ';
 
-        // ⭐ 6 منتجات في 6 مجموعات (منتج/كمية/سعر)
+        const row = [];
+        row.push(serial++);
+        row.push(o.customerName || '');
+        row.push(phoneCell);
+        row.push(telCell);
+        row.push(o.gov || '');
+        row.push(o.city || '');
+        row.push(o.gov || '');
+        row.push(o.city || '');
+        row.push(addressText);
+        row.push('الاتصال قبل الوصول بساعة');
+        row.push(dayName);
+        row.push(day);
+        row.push(month);
+        row.push(year);
+        row.push('خلال يومين');
+
+        // 6 منتجات
         for (let i = 0; i < 6; i++) {
             const it = items[i];
-            const baseCol = 15 + (i * 4); // منتج 1 عند 15، منتج 2 عند 19... إلخ — لكن الحقيقة: منتج، كمية، سعر = 3 خانات لكل منتج. لكن رأس الجدول الأصلي عند منتج 1 في 15، كمية 1 في 16، سعر 1 في 17، الشحن في 18. ثم منتج 2 عند 19، كمية 2 عند 20، سعر 2 عند 21.
-            const productCol = 15 + (i === 0 ? 0 : (i * 3 + 1)); // 15, 19, 22, 25, 28, 31
-            const qtyCol = productCol + 1;
-            const priceCol = productCol + 2;
-
-            if (it) {
-                row[productCol] = fmtProductCell(it);
-                row[qtyCol] = 1;
-                row[priceCol] = it.price || 0;
-            } else {
-                row[productCol] = '';
-                row[qtyCol] = '';
-                row[priceCol] = '';
-            }
+            row.push(it ? fmtProductCell(it) : '');
+            row.push(it ? 1 : '');
+            row.push(it ? (it.price || 0) : '');
+            if (i === 0) row.push(o.shipping || 0); // الشحن بعد أول منتج
         }
 
-        // الشحن في السطر بعد أول 3 خانات منتج
-        row[18] = o.shipping || 0;
+        row.push(0);
+        row.push('الشركة');
+        row.push('');
+        row.push(0);
+        row.push('جمارك');
+        row.push('');
+        row.push('');
+        row.push('');
+        row.push('');
+        row.push('الشركة');
+        row.push('');
+        row.push(0);
+        row.push('جمارك');
 
-        // بيانات ثابتة في آخر الجدول
-        row[34] = 0;
-        row[35] = 'الشركة';
-        row[36] = '';
-        row[37] = 0;
-        row[38] = 'جمارك';
-        row[39] = '';
-        row[40] = '';
-        row[41] = '';
-        row[42] = '';
-        row[43] = 'الشركة';
-        row[44] = '';
-        row[45] = 0;
-        row[46] = 'جمارك';
-
-        rows.push(row);
+        rowsHtml += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
         exportedIds.push(o.id);
     });
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [
-        {wch:6},{wch:20},{wch:14},{wch:14},{wch:14},{wch:16},{wch:14},{wch:16},
-        {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
-        {wch:28},{wch:8},{wch:8},{wch:8},
-        {wch:28},{wch:8},{wch:8},
-        {wch:28},{wch:8},{wch:8},
-        {wch:28},{wch:8},{wch:8},
-        {wch:28},{wch:8},{wch:8},
-        {wch:28},{wch:8},{wch:8}
-    ];
+    // ============ HTML Excel with AutoFilter + RTL + Bold ============
+    const tableHtml = `
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:x="urn:schemas-microsoft-com:office:excel"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="UTF-8">
+<!--[if gte mso 9]>
+<xml>
+<x:ExcelWorkbook>
+<x:ExcelWorksheets>
+<x:ExcelWorksheet>
+<x:Name>التسجيل</x:Name>
+<x:WorksheetOptions>
+<x:DisplayRightToLeft/>
+<x:Selected/>
+<x:FreezePanes/>
+<x:FrozenNoSplit/>
+<x:SplitHorizontal>1</x:SplitHorizontal>
+<x:TopRowBottomPane>1</x:TopRowBottomPane>
+<x:ActivePane>2</x:ActivePane>
+<x:AutoFilter x:Range="R1C1:R1C47"/>
+</x:WorksheetOptions>
+</x:ExcelWorksheet>
+</x:ExcelWorksheets>
+</x:ExcelWorkbook>
+</xml>
+<![endif]-->
+<style>
+    table { border-collapse: collapse; direction: rtl; }
+    td, th {
+        border: 1px solid #000;
+        padding: 2px 4px;
+        font-family: 'Arial', 'Cairo', sans-serif;
+        font-weight: bold;
+        font-size: 11px;
+        text-align: center;
+        vertical-align: middle;
+        mso-number-format: "\\@";
+        white-space: nowrap;
+    }
+    th {
+        background: #D9D9D9;
+        font-size: 11px;
+        font-weight: bold;
+        color: #000;
+    }
+    td { color: #000; }
+</style>
+</head>
+<body>
+<table>
+    <thead>
+        <tr>${HEADERS.map(h => `<th>${h}</th>`).join('')}</tr>
+    </thead>
+    <tbody>
+        ${rowsHtml}
+    </tbody>
+</table>
+</body>
+</html>`;
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'التسجيل');
+    // ============ اسم الملف بتاريخ التصدير ============
+    const nowExport = new Date();
+    const expDay   = String(nowExport.getDate()).padStart(2, '0');
+    const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
+    const expYear  = nowExport.getFullYear();
+    const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xls`;
 
-    // ✅ اسم الملف بتاريخ التصدير (اليوم اللي بتصدر فيه)
-const nowExport = new Date();
-const expDay   = String(nowExport.getDate()).padStart(2, '0');
-const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
-const expYear  = nowExport.getFullYear();
-const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xls`;
-
+    // ============ تنزيل الملف ============
     try {
-        XLSX.writeFile(wb, fileName, { bookType: 'xls' });
+        const blob = new Blob(['\ufeff' + tableHtml], { 
+            type: 'application/vnd.ms-excel;charset=utf-8' 
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
-        console.error('Excel write error:', e);
+        console.error('Excel export error:', e);
         customAlert("❌ فشل إنشاء ملف Excel: " + e.message, 'error');
         return;
     }
 
+    // ============ تعليم الطلبات المُصدَّرة ============
     for (const id of exportedIds) {
         try {
             await updateDoc(doc(db, "orders", id), {
