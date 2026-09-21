@@ -4397,8 +4397,8 @@ window.exportOldExcel = async function() {
     });
 
     // ✅ بدون ARROW — الفلتر الحقيقي هو اللي هيطلع السهم
-    const theadHtml = '<tr>' + HEAD.map(h => `<th>${h}</th>`).join('') + '</tr>';
-
+   const theadHtml = '<tr>' + HEADERS.map(h => `<th>${h}</th>`).join('') + '</tr>';
+   
     const tableHtml = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:x="urn:schemas-microsoft-com:office:excel"
