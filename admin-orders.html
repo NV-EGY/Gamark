@@ -4040,13 +4040,14 @@ window.exportOldExcel = async function() {
     render();
 };
 
-// ربط أزرار المودال
-document.addEventListener('DOMContentLoaded', () => {
+
+// ✅ الحل الآمن: ربط فوري (بدون انتظار DOMContentLoaded)
+setTimeout(() => {
     const cancelBtn = document.getElementById('oldExcelCancelBtn');
     const confirmBtn = document.getElementById('oldExcelConfirmBtn');
-    if (cancelBtn) cancelBtn.addEventListener('click', closeOldExcelModal);
-    if (confirmBtn) confirmBtn.addEventListener('click', exportOldExcel);
-});
+    if (cancelBtn && !cancelBtn.onclick) cancelBtn.addEventListener('click', closeOldExcelModal);
+    if (confirmBtn && !confirmBtn.onclick) confirmBtn.addEventListener('click', exportOldExcel);
+}, 100);
 
 window.saveShippingDiscountSettings = async function() {
     const enabled = document.getElementById("shippingDiscountEnabled").value === "true";
@@ -4297,9 +4298,9 @@ window.toggleShippingGroup = toggleShippingGroup;
       <div id="oldExcelPreviewInfo" style="margin-top: 14px; background: #f0f7ff; padding: 10px; border-radius: 10px; font-size: 13px; text-align: center; color: #0F7B65; font-weight: 700;"></div>
     </div>
     <div class="confirm-buttons">
-      <button id="oldExcelCancelBtn" style="color: #e74c3c;">إلغاء</button>
-      <button id="oldExcelConfirmBtn" style="color: #217346; font-weight: 800;">📥 تصدير Excel</button>
-    </div>
+  <button id="oldExcelCancelBtn" onclick="closeOldExcelModal()" style="color: #e74c3c;">إلغاء</button>
+  <button id="oldExcelConfirmBtn" onclick="exportOldExcel()" style="color: #217346; font-weight: 800;">📥 تصدير Excel</button>
+</div>
   </div>
 </div>
 </body>
