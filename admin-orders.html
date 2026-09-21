@@ -777,7 +777,27 @@
 /* داخل <style> */
 .status.returned_confirmed { background: #2ecc71; color: #fff; }
 .status.returned_confirmed::before { content: "✅"; font-size: 11px; font-weight: normal; }
+/* علامة الطلبات المُصدَّرة إلى Excel قديم */
+.card.exported-old-excel {
+    border-right: 4px solid #217346;
+}
+.card.exported-old-excel::after {
+    content: "📊 Excel قديم";
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    background: #217346;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    z-index: 5;
+    box-shadow: 0 2px 6px rgba(33,115,70,0.4);
+}
+
   </style>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   
@@ -799,6 +819,13 @@
             <div class="icon-btn" onclick="openPasteOrdersModal()" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #0F7B65; color: #fff; cursor: pointer; transition: 0.2s;" title="لصق طلبات">
     📋
 </div>
+
+<div class="icon-btn" onclick="openOldExcelModal()" 
+     style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#217346;color:#fff;cursor:pointer;transition:0.2s;" 
+     title="Excel قديم (تصدير بالصيغة القديمة)">
+    <i class="fas fa-file-excel"></i>
+</div>
+
             <div class="icon-btn" onclick="printSelected()" style="width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #f1f1f1; cursor: pointer; transition: 0.2s;">
                 🖨️
             </div>
@@ -2402,9 +2429,13 @@ window.editOrder = (id) => {
                             <input id="editName" value="${o.customerName || ''}" placeholder="اسم العميل" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
                         </div>
                         <div>
-                            <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">📱 رقم الهاتف</label>
-                            <input id="editPhone" value="${o.phone || ''}" placeholder="رقم الهاتف" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
-                        </div>
+    <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">📱 رقم الهاتف الأساسي</label>
+    <input id="editPhone" value="${o.phone || ''}" placeholder="رقم الهاتف" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
+</div>
+<div>
+    <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">📱 الرقم الثاني (اختياري)</label>
+    <input id="editSecondaryPhone" value="${o.secondaryPhone || ''}" placeholder="رقم هاتف إضافي" style="width:100%; padding:8px 12px; border-radius:8px; border:1px solid #ddd; font-size:14px;">
+</div>
                     </div>
                 </div>
 
@@ -2562,8 +2593,9 @@ window.saveEdit = async (id) => {
     }
 
     const newData = {
-        customerName: document.getElementById("editName").value,
-        phone: document.getElementById("editPhone").value,
+    customerName: document.getElementById("editName").value,
+    phone: document.getElementById("editPhone").value,
+    secondaryPhone: document.getElementById("editSecondaryPhone")?.value?.trim() || null,
         gov: document.getElementById("editGov").value,
         city: document.getElementById("editCity").value,
         address: document.getElementById("editAddress").value,
@@ -2811,7 +2843,7 @@ let msg = `VANTÉ\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
 
             // ✅ داخل حلقة for (let o of ordersInDay)
 html += `
-    <div class="card ${status}" style="position:relative;">
+    <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''}" style="position:relative;">
         <div class="order-header">
             <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
             <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
@@ -2820,7 +2852,7 @@ html += `
         <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
             <div class="order-info">
                 👤 ${o.customerName}<br>
-                📞 ${o.phone}<br>
+📞 ${o.phone}${o.secondaryPhone ? `<br>📞 ${o.secondaryPhone}` : ''}<br>
                 📍 ${o.gov} - ${o.city}<br>
                 ${o.address}<br><br>
                 💎 تفاصيل الطلب:
@@ -3824,6 +3856,198 @@ async function loadShippingDiscountSettings() {
     }
 }
 
+// ============================================================
+// 🗂️ تصدير Excel قديم - نفس صيغة ملف "التسجيل"
+// ============================================================
+
+const EXCEL_OLD_HEADERS = [
+    'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
+    'اليوم','7','','','معاد التسليم',
+    'منتج 1','كمية 1','سعر1','الشحن',
+    'منتج 2','كمية 2','سعر 2',
+    'منتج 3','كمية 3','سعر 3',
+    'منتج 4','كمية 4','سعر 4',
+    'منتج 5','كمية 5','سعر 5',
+    'منتج 6','كمية 6','سعر 6',
+    'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
+    'الشركة','التليفون','الصفر','اسم المول'
+];
+
+window.openOldExcelModal = function() {
+    const selected = document.querySelectorAll(".selectOrder:checked");
+    if (selected.length === 0) {
+        customAlert("⚠️ يرجى تحديد طلب واحد على الأقل للتصدير", 'warning');
+        return;
+    }
+
+    // تعبئة القيم الافتراضية بتاريخ اليوم
+    const today = new Date();
+    const dayNames = ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+    document.getElementById('excelDayName').value = dayNames[today.getDay()];
+    document.getElementById('excelDay').value = today.getDate();
+    document.getElementById('excelMonth').value = today.getMonth() + 1;
+    document.getElementById('excelYear').value = today.getFullYear();
+
+    const info = document.getElementById('oldExcelPreviewInfo');
+    if (info) info.textContent = `📦 عدد الطلبات المحددة: ${selected.length}`;
+
+    document.getElementById('oldExcelModal').classList.add('active');
+};
+
+window.closeOldExcelModal = function() {
+    document.getElementById('oldExcelModal').classList.remove('active');
+};
+
+window.exportOldExcel = async function() {
+    const selected = document.querySelectorAll(".selectOrder:checked");
+    if (selected.length === 0) {
+        customAlert("⚠️ يرجى تحديد طلب واحد على الأقل", 'warning');
+        return;
+    }
+
+    // التأكد من تحميل مكتبة SheetJS
+    if (typeof XLSX === 'undefined') {
+        customAlert("⏳ جاري تحميل مكتبة Excel... انتظر لحظات ثم أعد المحاولة", 'info');
+        // محاولة تحميل المكتبة ديناميكياً
+        const s = document.createElement('script');
+        s.src = 'https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js';
+        s.onload = () => customAlert("✅ تم تحميل المكتبة، اضغط التصدير مرة أخرى", 'success');
+        document.head.appendChild(s);
+        return;
+    }
+
+    const dayName = document.getElementById('excelDayName').value;
+    const day     = parseInt(document.getElementById('excelDay').value)   || 1;
+    const month   = parseInt(document.getElementById('excelMonth').value) || 1;
+    const year    = parseInt(document.getElementById('excelYear').value)  || 2026;
+
+    // جمع الطلبات المحددة
+    const selectedOrders = [];
+    selected.forEach(cb => {
+        const card = cb.closest('.card');
+        const orderId = card.querySelector('.order-id')?.getAttribute('data-id');
+        const o = orders.find(x => x.id === orderId);
+        if (o) selectedOrders.push(o);
+    });
+
+    // ترتيب حسب الأقدم أولاً
+    selectedOrders.sort((a, b) => {
+        const da = a.createdAt?.toDate?.() || new Date(0);
+        const db = b.createdAt?.toDate?.() || new Date(0);
+        return da - db;
+    });
+
+    const rows = [EXCEL_OLD_HEADERS];
+    let serial = 1;
+    const exportedIds = [];
+
+    selectedOrders.forEach(o => {
+        const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+        const firstItem = details[0] || {};
+
+        // العمود P: "منتج 1" = اسم المنتج + الوزن / الطول
+        let productText = firstItem.name || '';
+        const w = firstItem.customerWeight;
+        const l = firstItem.customerLength;
+        if (w || l) {
+            productText += ' ' + (w || '') + ' / ' + (l || '');
+        }
+        productText = productText.trim();
+
+        // العمود I: العنوان (مع الملاحظة قبل العنوان لو موجودة)
+        const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
+
+        // بناء الصف بـ 47 عمود بالترتيب الصحيح
+        const row = new Array(47).fill('');
+        row[0]  = serial++;                                     // A - رقم
+        row[1]  = o.customerName || '';                         // B - اسم العميل
+        row[2]  = o.phone || '';                                // C - المحمول
+        row[3]  = o.secondaryPhone || 'ـــــــــــــــــــــــــــــــ'; // D - التليفون (الثانوي)
+        row[4]  = o.gov || '';                                  // E - المحافظة
+        row[5]  = o.city || '';                                 // F - المنطقة
+        row[6]  = o.gov || '';                                  // G - ثابت: المحافظة
+        row[7]  = o.city || '';                                 // H - ثابت: المنطقة
+        row[8]  = addressText;                                  // I - العنوان
+        row[9]  = 'الاتصال قبل الوصول بساعة';                    // J - البيان (ثابت)
+        row[10] = dayName;                                      // K - اليوم (اسم)
+        row[11] = day;                                          // L - اليوم (رقم)
+        row[12] = month;                                        // M - الشهر
+        row[13] = year;                                         // N - السنة
+        row[14] = 'خلال يومين';                                 // O - معاد التسليم (ثابت)
+        row[15] = productText;                                  // P - منتج 1
+        row[16] = 1;                                            // Q - كمية 1
+        row[17] = firstItem.price || o.price || 0;              // R - سعر 1
+        row[18] = o.shipping || 0;                              // S - الشحن
+        // T - AE = منتج 2-6 (تترك فارغة - 12 خانة)
+        row[34] = 0;                                            // AI - سنتر
+        row[35] = 'الشركة';                                     // AJ - المندوب
+        row[36] = '';                                           // AK - الحساب
+        row[37] = 0;                                            // AL - الشركة
+        row[38] = 'جمارك';                                      // AM - التليفون
+        row[39] = '';                                           // AN - الصفر
+        row[40] = '';                                           // AO - اسم المول
+        row[41] = '';                                           // AP
+        row[42] = '';                                           // AQ
+        row[43] = 'الشركة';                                     // AR
+        row[44] = '';                                           // AS - التليفون
+        row[45] = 0;                                            // AT - الصفر
+        row[46] = 'جمارك';                                      // AU - اسم المول
+
+        rows.push(row);
+        exportedIds.push(o.id);
+    });
+
+    // إنشاء ملف Excel
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // ضبط عرض الأعمدة قليلاً لراحة العرض
+    ws['!cols'] = [
+        {wch:6},{wch:20},{wch:14},{wch:14},{wch:14},{wch:16},{wch:14},{wch:16},
+        {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
+        {wch:28},{wch:8},{wch:8},{wch:8}
+    ];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'التسجيل');
+
+    const fileName = `طلبات_${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}.xls`;
+
+    try {
+        XLSX.writeFile(wb, fileName, { bookType: 'xls' });
+    } catch (e) {
+        console.error('Excel write error:', e);
+        customAlert("❌ فشل إنشاء ملف Excel: " + e.message, 'error');
+        return;
+    }
+
+    // تعليم الطلبات المُصدَّرة في Firestore
+    for (const id of exportedIds) {
+        try {
+            await updateDoc(doc(db, "orders", id), {
+                exportedToOldExcel: true,
+                exportedAt: serverTimestamp()
+            });
+        } catch (e) {
+            console.error('mark error for', id, e);
+        }
+    }
+
+    // إشعار نجاح
+    customAlert(`✅ تم تصدير ${exportedIds.length} طلب بنجاح إلى: ${fileName}`, 'success');
+    sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب بصيغة Excel قديم`);
+
+    closeOldExcelModal();
+    clearAllSelections();
+    render();
+};
+
+// ربط أزرار المودال
+document.addEventListener('DOMContentLoaded', () => {
+    const cancelBtn = document.getElementById('oldExcelCancelBtn');
+    const confirmBtn = document.getElementById('oldExcelConfirmBtn');
+    if (cancelBtn) cancelBtn.addEventListener('click', closeOldExcelModal);
+    if (confirmBtn) confirmBtn.addEventListener('click', exportOldExcel);
+});
+
 window.saveShippingDiscountSettings = async function() {
     const enabled = document.getElementById("shippingDiscountEnabled").value === "true";
     const threshold = Number(document.getElementById("shippingThreshold").value);
@@ -4030,6 +4254,51 @@ window.toggleShippingGroup = toggleShippingGroup;
     <div class="confirm-buttons">
       <button id="pasteConfirmNoBtn" style="color: #e74c3c;">إلغاء</button>
       <button id="pasteConfirmYesBtn" style="color: #0F7B65; font-weight: 800;">متابعة</button>
+    </div>
+  </div>
+</div>
+<!-- ===== مودال تصدير Excel قديم ===== -->
+<div id="oldExcelModal" class="custom-confirm-overlay" style="z-index: 10000002;">
+  <div class="custom-confirm-box" style="max-width: 440px;">
+    <div class="confirm-header" style="background: linear-gradient(135deg, #217346, #185c37);">
+      <i class="fas fa-file-excel" style="color: #fff;"></i>
+      <h3 style="color: #fff;">📊 تصدير Excel قديم</h3>
+    </div>
+    <div class="confirm-message" style="text-align: right; padding: 20px; direction: rtl;">
+      <p style="font-size: 13px; color: #666; margin-bottom: 12px; text-align: center;">
+        سيتم تصدير الطلبات المحددة بصيغة Excel القديمة (نفس ملف التسجيل)
+      </p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+          <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📅 اليوم (الاسم)</label>
+          <select id="excelDayName" class="form-control" style="width: 100%;">
+            <option>السبت</option>
+            <option>الأحد</option>
+            <option>الإثنين</option>
+            <option>الثلاثاء</option>
+            <option>الأربعاء</option>
+            <option>الخميس</option>
+            <option>الجمعة</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">🔢 اليوم (رقم)</label>
+          <input type="number" id="excelDay" class="form-control" style="width: 100%;" min="1" max="31">
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📆 الشهر</label>
+          <input type="number" id="excelMonth" class="form-control" style="width: 100%;" min="1" max="12">
+        </div>
+        <div>
+          <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">🗓️ السنة</label>
+          <input type="number" id="excelYear" class="form-control" style="width: 100%;" min="2020" max="2100">
+        </div>
+      </div>
+      <div id="oldExcelPreviewInfo" style="margin-top: 14px; background: #f0f7ff; padding: 10px; border-radius: 10px; font-size: 13px; text-align: center; color: #0F7B65; font-weight: 700;"></div>
+    </div>
+    <div class="confirm-buttons">
+      <button id="oldExcelCancelBtn" style="color: #e74c3c;">إلغاء</button>
+      <button id="oldExcelConfirmBtn" style="color: #217346; font-weight: 800;">📥 تصدير Excel</button>
     </div>
   </div>
 </div>
