@@ -4302,7 +4302,6 @@ window.exportOldExcel = async function() {
         return da - db;
     });
 
-    // ============ تنسيق نص الوزن/الطول ============
     function fmtWeightLength(item) {
         if (!item) return '';
         const w = item.customerWeight;
@@ -4324,36 +4323,20 @@ window.exportOldExcel = async function() {
         return txt.trim();
     }
 
-    // ============ 63 عمود بالظبط (A → BK) ============
     const HEADERS = [
-        // A-J
         'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
-        // K-O
         'اليوم','7','','','معاد التسليم',
-        // P-S (منتج 1)
         'منتج 1','كمية 1','سعر1','الشحن',
-        // T-V (منتج 2)
         'منتج 2','كمية 2','سعر 2',
-        // W-Y (منتج 3)
         'منتج 3','كمية 3','سعر 3',
-        // Z-AB (منتج 4)
         'منتج 4','كمية 4','سعر 4',
-        // AC-AE (منتج 5)
         'منتج 5','كمية 5','سعر 5',
-        // AF-AH (منتج 6)
         'منتج 6','كمية 6','سعر 6',
-        // AI-AN
-        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر',
-        // AO-AQ
-        'اسم المول','','',
-        // AR-AU
+        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
         'الشركة','التليفون','الصفر','اسم المول',
-        // AV-BK (16 عمود فاضي للأخر)
         '','','','','','','','',
         '','','','','','','',''
     ];
-
-    // تأكيد إن عدد الأعمدة 63
     while (HEADERS.length < 63) HEADERS.push('');
     HEADERS.length = 63;
 
@@ -4365,14 +4348,12 @@ window.exportOldExcel = async function() {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        // ✅ المحمول/التليفون أسود — الشرطات لو مفيش رقم ثاني بالأحمر
         const phoneCell = o.phone || '';
         const telCell = o.secondaryPhone 
             ? o.secondaryPhone 
             : '<span style="color:#FF0000;font-weight:bold;">ـــــــــــــــــــــــــــــــ</span>';
 
         const row = [];
-        // A-H
         row.push(serial++);
         row.push(o.customerName || '');
         row.push(phoneCell);
@@ -4381,62 +4362,49 @@ window.exportOldExcel = async function() {
         row.push(o.city || '');
         row.push(o.gov || '');
         row.push(o.city || '');
-        // I-N
         row.push(addressText);
         row.push('الاتصال قبل الوصول بساعة');
         row.push(dayName);
         row.push(day);
         row.push(month);
         row.push(year);
-        // O
         row.push('خلال يومين');
 
-        // P-S + T-V + W-Y + Z-AB + AC-AE + AF-AH (6 منتجات × 3 خانات + الشحن)
         for (let i = 0; i < 6; i++) {
             const it = items[i];
             row.push(it ? fmtProductCell(it) : '');
             row.push(it ? 1 : '');
             row.push(it ? (it.price || 0) : '');
-            if (i === 0) row.push(o.shipping || 0); // الشحن بعد أول منتج
+            if (i === 0) row.push(o.shipping || 0);
         }
 
-        // AI-AN
-        row.push(0);           // AI - سنتر
-        row.push('الشركة');    // AJ - المندوب
-        row.push('');          // AK - الحساب
-        row.push(0);           // AL - الشركة
-        row.push('جمارك');     // AM - التليفون
-        row.push('');          // AN - الصفر
-        // AO-AQ
-        row.push('');          // AO - اسم المول
+        row.push(0);
+        row.push('الشركة');
+        row.push('');
+        row.push(0);
+        row.push('جمارك');
         row.push('');
         row.push('');
-        // AR-AU
-        row.push('الشركة');    // AR - الشركة
-        row.push('');          // AS - التليفون
-        row.push(0);           // AT - الصفر
-        row.push('جمارك');     // AU - اسم المول
-        // AV-BK (16 عمود فاضي)
+        row.push('');
+        row.push('الشركة');
+        row.push('');
+        row.push(0);
+        row.push('جمارك');
         for (let k = 0; k < 16; k++) row.push('');
 
         rowsHtml += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
         exportedIds.push(o.id);
     });
 
-    // ============ الهيدر: نص + سهم ▼ ثابت ============
-    const theadHtml = '<tr>' + HEADERS.map(h => {
-        const isDataCol = h !== ''; // نخلي السهم بس في الأعمدة اللي فيها عنوان
-        return `<th>${h}${isDataCol ? ARROW : ''}</th>`;
-    }).join('') + '</tr>';
+    // ✅ بدون ARROW — الفلتر الحقيقي هو اللي هيطلع السهم
+    const theadHtml = '<tr>' + HEAD.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
-    // ============ HTML Excel (بدون AutoFilter + بدون حدود) ============
     const tableHtml = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:x="urn:schemas-microsoft-com:office:excel"
       xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="UTF-8">
-<!--[if gte mso 9]>
 <!--[if gte mso 9]>
 <xml>
 <x:ExcelWorkbook>
@@ -4463,7 +4431,7 @@ window.exportOldExcel = async function() {
         border-collapse: collapse; 
         direction: rtl;
     }
-    td, th {
+    td {
         padding: 3px 6px;
         font-family: 'Arial', 'Cairo', sans-serif;
         font-weight: bold;
@@ -4473,13 +4441,20 @@ window.exportOldExcel = async function() {
         mso-number-format: "\\@";
         white-space: nowrap;
         border: none;
+        color: #000;
     }
     th {
+        padding: 3px 6px;
+        font-family: 'Arial', 'Cairo', sans-serif;
+        font-weight: bold;
+        font-size: 11px;
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        border: none;
         background: #D9D9D9;
         color: #000;
-        font-size: 11px;
     }
-    td { color: #000; }
 </style>
 </head>
 <body>
@@ -4490,7 +4465,6 @@ window.exportOldExcel = async function() {
 </body>
 </html>`;
 
-    // ============ اسم الملف بتاريخ التصدير ============
     const nowExport = new Date();
     const expDay   = String(nowExport.getDate()).padStart(2, '0');
     const expMonth = String(nowExport.getMonth() + 1).padStart(2, '0');
