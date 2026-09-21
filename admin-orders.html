@@ -4320,19 +4320,41 @@ window.exportOldExcel = async function() {
         return txt.trim();
     }
 
-    // ============ بناء جدول HTML ============
+    // ============ السهم الثابت ▼ (شكلي فقط - بدون فلتر) ============
+    const ARROW = ' &#9660;'; // ▼
+
+    // ============ 63 عمود بالظبط (A → BK) ============
     const HEADERS = [
+        // A-J
         'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
+        // K-O
         'اليوم','7','','','معاد التسليم',
+        // P-S (منتج 1)
         'منتج 1','كمية 1','سعر1','الشحن',
+        // T-V (منتج 2)
         'منتج 2','كمية 2','سعر 2',
+        // W-Y (منتج 3)
         'منتج 3','كمية 3','سعر 3',
+        // Z-AB (منتج 4)
         'منتج 4','كمية 4','سعر 4',
+        // AC-AE (منتج 5)
         'منتج 5','كمية 5','سعر 5',
+        // AF-AH (منتج 6)
         'منتج 6','كمية 6','سعر 6',
-        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
-        'الشركة','التليفون','الصفر','اسم المول'
+        // AI-AN
+        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر',
+        // AO-AQ
+        'اسم المول','','',
+        // AR-AU
+        'الشركة','التليفون','الصفر','اسم المول',
+        // AV-BK (16 عمود فاضي للأخر)
+        '','','','','','','','',
+        '','','','','','','',''
     ];
+
+    // تأكيد إن عدد الأعمدة 63
+    while (HEADERS.length < 63) HEADERS.push('');
+    HEADERS.length = 63;
 
     let rowsHtml = '';
     let serial = 1;
@@ -4342,13 +4364,14 @@ window.exportOldExcel = async function() {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        // ✅ المحمول والتليفون بالأ**سود** — الشرطات لو مفيش رقم ثاني بالأ**حمر**
-const phoneCell = o.phone || '';
-const telCell = o.secondaryPhone 
-    ? o.secondaryPhone 
-    : '<span style="color:#FF0000;font-weight:bold;">ـــــــــــــــــــــــــــــــ</span>';
+        // ✅ المحمول/التليفون أسود — الشرطات لو مفيش رقم ثاني بالأحمر
+        const phoneCell = o.phone || '';
+        const telCell = o.secondaryPhone 
+            ? o.secondaryPhone 
+            : '<span style="color:#FF0000;font-weight:bold;">ـــــــــــــــــــــــــــــــ</span>';
 
         const row = [];
+        // A-H
         row.push(serial++);
         row.push(o.customerName || '');
         row.push(phoneCell);
@@ -4357,15 +4380,17 @@ const telCell = o.secondaryPhone
         row.push(o.city || '');
         row.push(o.gov || '');
         row.push(o.city || '');
+        // I-N
         row.push(addressText);
         row.push('الاتصال قبل الوصول بساعة');
         row.push(dayName);
         row.push(day);
         row.push(month);
         row.push(year);
+        // O
         row.push('خلال يومين');
 
-        // 6 منتجات
+        // P-S + T-V + W-Y + Z-AB + AC-AE + AF-AH (6 منتجات × 3 خانات + الشحن)
         for (let i = 0; i < 6; i++) {
             const it = items[i];
             row.push(it ? fmtProductCell(it) : '');
@@ -4374,32 +4399,42 @@ const telCell = o.secondaryPhone
             if (i === 0) row.push(o.shipping || 0); // الشحن بعد أول منتج
         }
 
-        row.push(0);
-        row.push('الشركة');
+        // AI-AN
+        row.push(0);           // AI - سنتر
+        row.push('الشركة');    // AJ - المندوب
+        row.push('');          // AK - الحساب
+        row.push(0);           // AL - الشركة
+        row.push('جمارك');     // AM - التليفون
+        row.push('');          // AN - الصفر
+        // AO-AQ
+        row.push('');          // AO - اسم المول
         row.push('');
-        row.push(0);
-        row.push('جمارك');
         row.push('');
-        row.push('');
-        row.push('');
-        row.push('');
-        row.push('الشركة');
-        row.push('');
-        row.push(0);
-        row.push('جمارك');
+        // AR-AU
+        row.push('الشركة');    // AR - الشركة
+        row.push('');          // AS - التليفون
+        row.push(0);           // AT - الصفر
+        row.push('جمارك');     // AU - اسم المول
+        // AV-BK (16 عمود فاضي)
+        for (let k = 0; k < 16; k++) row.push('');
 
         rowsHtml += '<tr>' + row.map(c => `<td>${c}</td>`).join('') + '</tr>';
         exportedIds.push(o.id);
     });
 
-    // ============ HTML Excel with AutoFilter + RTL + Bold ============
+    // ============ الهيدر: نص + سهم ▼ ثابت ============
+    const theadHtml = '<tr>' + HEADERS.map(h => {
+        const isDataCol = h !== ''; // نخلي السهم بس في الأعمدة اللي فيها عنوان
+        return `<th>${h}${isDataCol ? ARROW : ''}</th>`;
+    }).join('') + '</tr>';
+
+    // ============ HTML Excel (بدون AutoFilter + بدون حدود) ============
     const tableHtml = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office"
       xmlns:x="urn:schemas-microsoft-com:office:excel"
       xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="UTF-8">
-<!--[if gte mso 9]>
 <!--[if gte mso 9]>
 <xml>
 <x:ExcelWorkbook>
@@ -4414,7 +4449,6 @@ const telCell = o.secondaryPhone
 <x:SplitHorizontal>1</x:SplitHorizontal>
 <x:TopRowBottomPane>1</x:TopRowBottomPane>
 <x:ActivePane>2</x:ActivePane>
-<x:AutoFilter x:Range="R1C1:R1C47" xmlns="urn:schemas-microsoft-com:office:excel"/>
 </x:WorksheetOptions>
 </x:ExcelWorksheet>
 </x:ExcelWorksheets>
@@ -4440,20 +4474,15 @@ const telCell = o.secondaryPhone
     th {
         background: #D9D9D9;
         color: #000;
+        font-size: 11px;
     }
-    td { 
-        color: #000; 
-    }
+    td { color: #000; }
 </style>
 </head>
 <body>
 <table>
-    <thead>
-        <tr>${HEADERS.map(h => `<th>${h}</th>`).join('')}</tr>
-    </thead>
-    <tbody>
-        ${rowsHtml}
-    </tbody>
+    <thead>${theadHtml}</thead>
+    <tbody>${rowsHtml}</tbody>
 </table>
 </body>
 </html>`;
@@ -4465,7 +4494,6 @@ const telCell = o.secondaryPhone
     const expYear  = nowExport.getFullYear();
     const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xls`;
 
-    // ============ تنزيل الملف ============
     try {
         const blob = new Blob(['\ufeff' + tableHtml], { 
             type: 'application/vnd.ms-excel;charset=utf-8' 
@@ -4484,7 +4512,6 @@ const telCell = o.secondaryPhone
         return;
     }
 
-    // ============ تعليم الطلبات المُصدَّرة ============
     for (const id of exportedIds) {
         try {
             await updateDoc(doc(db, "orders", id), {
