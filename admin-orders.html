@@ -1197,16 +1197,20 @@ window.printOldExcelSheet = function() {
     });
 
     function fmtProductCell(item) {
-        if (!item || !item.name) return '';
-        let txt = item.name;
-        const w = item.customerWeight;
-        const wMax = item.customerWeightMax;
-        const l = item.customerLength;
-        if (w && wMax && wMax !== w) txt += ` من ${w} إلى ${wMax}`;
-        else if (w) txt += ` ${w}`;
-        if (l) txt += ` / ${l}`;
-        return txt.trim();
+    if (!item || !item.name) return '';
+    let txt = item.name;
+    const w = item.customerWeight;
+    const wMax = item.customerWeightMax;
+    const l = item.customerLength;
+    if (w && wMax && wMax !== w) txt += ` من ${w} إلى ${wMax}`;
+    else if (w) txt += ` ${w}`;
+    if (l) txt += ` / ${l}`;
+    // ✅ إضافة المقاس لو موجود
+    if (item.size && item.size !== 'غير محدد') {
+        txt += ` (${item.size})`;
     }
+    return txt.trim();
+}
 
     const HEAD = [
         'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
@@ -1544,6 +1548,13 @@ function parseWeightsLengths(value) {
     return parts.map(p => parseWeightLengthSmart(p));
 }
 
+// ===== تحليل سطر المقاسات (متعدد) =====
+function parseSizes(value) {
+    if (!value) return [];
+    const parts = value.split(/\s+-\s+/);
+    return parts.map(p => p.trim()).filter(Boolean);
+}
+
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
 function parseOrdersFromPaste(text) {
     const orders = [];
@@ -1567,21 +1578,23 @@ function parseOrdersFromPaste(text) {
 function parseOrderBlock(block) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
-    const order = {
-        rawPhone: '', phones: [],
-        customerName: '',
-        gov: '', govOriginal: '',
-        city: '', cityOriginal: '',
-        address: '',
-        productName: '',
-        weight: null, length: null,
-        price: 0, shipping: 0,
-        notes: '',
-        // نتائج
-        _errors: [], _warnings: [],
-        _product: null,
-        _duplicate: false, _duplicateOf: null
-    };
+   const order = {
+    rawPhone: '', phones: [],
+    customerName: '',
+    gov: '', govOriginal: '',
+    city: '', cityOriginal: '',
+    address: '',
+    productName: '',
+    products: [],          // 👈 تأكد من وجودها (لو مش موجودة)
+    sizeRaw: '',           // 👈 جديد
+    sizes: [],             // 👈 جديد
+    weight: null, length: null,
+    price: 0, shipping: 0,
+    notes: '',
+    _errors: [], _warnings: [],
+    _product: null,
+    _duplicate: false, _duplicateOf: null
+};
 
     let wlBuffer = null;
     let lastKey = null;
@@ -1625,13 +1638,21 @@ if (wlBuffer !== null) {
             } else if (key.includes('عنوان')) {
                 order.address = value;
                 lastKey = 'addr';
-            } else if (key.includes('منتج')) {
+           } else if (key.includes('منتج')) {
     order.productsRaw = value;
     order.products = parseProductLine(value);
     order.productName = order.products[0]?.name || value;
     lastKey = 'product';
-      }
- else if (key.includes('وزن') || key.includes('طول')) {
+}
+// 👇👇👇 أضف هذا الفرع
+else if (key.includes('مقاس') || key.includes('قياس')) {
+    order.sizeRaw = value;
+    order.sizes = parseSizes(value);
+    lastKey = 'size';
+}
+// 👆👆👆
+else if (key.includes('وزن') || key.includes('طول')) {
+
                 if (lastKey === 'wl' && wlBuffer !== null) {
                     wlBuffer += ' ' + line; // نضيف السطر كامل
                 } else {
@@ -1824,6 +1845,9 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
 <div style="color:#555; margin-bottom:4px;">📦 المنتجات: ${
     (o.products || []).map((p, idx) => `<b>م${idx+1}:</b> ${p.name}${p.price ? ` (${p.price}ج)` : ''}`).join(' • ') || '—'
 }</div>
+${(o.sizes && o.sizes.length > 0) ? 
+  `<div style="color:#555; margin-bottom:4px;">📏 المقاسات: ${o.sizes.join(' • ')}</div>` 
+  : ''}
 <div style="color:#555; margin-bottom:4px;">⚖️ الأوزان/الأطوال: ${
     (o.weights || []).map((w, idx) => {
         const range = w.weightMax && w.weightMax !== w.weight 
@@ -2074,34 +2098,60 @@ async function addPastedOrderToFirestore(order) {
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
 
-    // === 3. اختيار أول مقاس متاح وخصم المخزون ===
-    let usedSize = null;
-    let newStockBySize = null;
+    // === 3. اختيار المقاس (من الطلب لو موجود، وإلا من المخزون) ===
+const providedSizes = (order.sizes && order.sizes.length > 0) ? order.sizes : [];
+const firstProvidedSize = providedSizes[0] || null;
+let usedSize = null;
+let newStockBySize = null;
 
-    if (product && product.stockBySize) {
-        const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
-        const sb = { ...product.stockBySize };
+if (product && product.stockBySize) {
+    const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+    const sb = { ...product.stockBySize };
+    let targetSize = null;
 
-        // دور على مقاس فيه كمية ≥ 1
+    // ✅ لو المستخدم حدد مقاس في الطلب
+    if (firstProvidedSize) {
+        const provided = String(firstProvidedSize).trim();
+        // دوّر عليه في المخزون (بدون حساسية لحالة الأحرف)
+        for (const key of Object.keys(sb)) {
+            if (key.toUpperCase() === provided.toUpperCase()) {
+                targetSize = key;
+                break;
+            }
+        }
+        // لو مش موجود في المخزون، استخدمه زي ما هو
+        if (!targetSize) targetSize = provided;
+    }
+
+    // ✅ لو مفيش مقاس محدد، اختر أول مقاس متاح من المخزون
+    if (!targetSize) {
         for (const s of sizeOrder) {
             const qty = sb[s];
             if (qty !== undefined && qty !== null && qty >= 1) {
-                sb[s] = qty - 1;
-                usedSize = s;
-                newStockBySize = sb;
+                targetSize = s;
                 break;
             }
         }
         // لو مفيش، دوّر على مقاس غير محدود
-        if (!usedSize) {
+        if (!targetSize) {
             for (const s of sizeOrder) {
                 if (sb[s] === null || sb[s] === undefined) {
-                    usedSize = s;
+                    targetSize = s;
                     break;
                 }
             }
         }
     }
+
+    if (targetSize) {
+        usedSize = targetSize;
+        const qty = sb[targetSize];
+        if (qty !== undefined && qty !== null && qty >= 1) {
+            sb[targetSize] = qty - 1;
+            newStockBySize = sb;
+        }
+    }
+}
 
        // === 4. تفاصيل الطلب (متعدد المنتجات) ===
     const products = (order.products && order.products.length > 0)
@@ -2125,7 +2175,7 @@ async function addPastedOrderToFirestore(order) {
             productId: matched?.id || null,
             sku: matched?.sku || null,
             name: p.name,
-            size: usedSize || 'غير محدد',
+            size: providedSizes[i] || providedSizes[0] || usedSize || 'غير محدد',
             qty: 1,
             price: p.price || order.price,
             image: matched?.image || "",
@@ -4321,12 +4371,20 @@ window.exportOldExcel = async function() {
     }
 
     function fmtProductCell(item) {
-        if (!item || !item.name) return '';
-        let txt = item.name;
-        const wl = fmtWeightLength(item);
-        if (wl) txt += ' ' + wl;
-        return txt.trim();
+    if (!item || !item.name) return '';
+    let txt = item.name;
+    const w = item.customerWeight;
+    const wMax = item.customerWeightMax;
+    const l = item.customerLength;
+    if (w && wMax && wMax !== w) txt += ` من ${w} إلى ${wMax}`;
+    else if (w) txt += ` ${w}`;
+    if (l) txt += ` / ${l}`;
+    // ✅ إضافة المقاس لو موجود
+    if (item.size && item.size !== 'غير محدد') {
+        txt += ` (${item.size})`;
     }
+    return txt.trim();
+}
 
     const HEADERS = [
         'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
