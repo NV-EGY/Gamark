@@ -1233,9 +1233,9 @@ window.printOldExcelSheet = function() {
         const cells = [];
         cells.push(idx + 1);
         cells.push(o.customerName || '');
-        cells.push(o.phone || '');
+        cells.push(stripLeadingZero(o.phone) || '');
 cells.push(o.secondaryPhone 
-    ? o.secondaryPhone 
+    ? stripLeadingZero(o.secondaryPhone)
     : '<span style="color:#FF0000;font-weight:900;">ـــــــــــــــــــــــــــــــ</span>');
         cells.push(o.gov || '');
         cells.push(o.city || '');
@@ -4357,6 +4357,14 @@ window.exportOldExcel = async function() {
         return da - db;
     });
 
+    // ✅ دالة لحذف الصفر من بداية رقم الهاتف
+function stripLeadingZero(phone) {
+    if (phone === null || phone === undefined) return '';
+    let s = String(phone).trim();
+    if (s.startsWith('0')) s = s.substring(1);
+    return s;
+}
+
     function fmtWeightLength(item) {
         if (!item) return '';
         const w = item.customerWeight;
@@ -4415,8 +4423,8 @@ window.exportOldExcel = async function() {
         const row = [];
         row.push(serial++);
         row.push(o.customerName || '');
-        row.push(o.phone || '');
-        row.push(o.secondaryPhone || DASH);
+        row.push(stripLeadingZero(o.phone));
+row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push(o.gov || '');
         row.push(o.city || '');
         row.push(o.gov || '');
