@@ -1258,19 +1258,20 @@ cells.push(o.secondaryPhone
             if (i === 0) cells.push(o.shipping || 0); // الشحن بعد السعر الأول
         }
 
-        cells.push(0);
-        cells.push('الشركة');
-        cells.push('');
-        cells.push(0);
-        cells.push('جمارك');
-        cells.push('');
-        cells.push('');
-        cells.push('');
-        cells.push('');
-        cells.push('الشركة');
-        cells.push('');
-        cells.push(0);
-        cells.push('جمارك');
+              // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
+        cells.push('');       // AI: سنتر
+        cells.push('');       // AJ: المندوب
+        cells.push(0);        // AK: الحساب
+        cells.push('الشركة'); // AL: الشركة
+        cells.push('');       // AM: التليفون
+        cells.push(0);        // AN: الصفر
+        cells.push('جمارك');  // AO: اسم المول
+        cells.push('');       // AP: فارغ
+        cells.push('');       // AQ: فارغ
+        cells.push('الشركة'); // AR: الشركة
+        cells.push('');       // AS: التليفون
+        cells.push(0);        // AT: الصفر
+        cells.push('جمارك');  // AU: اسم المول
 
         rowsHtml += '<tr>' + cells.map(c => `<td>${c}</td>`).join('') + '</tr>';
     });
@@ -1585,11 +1586,12 @@ function parseOrderBlock(block) {
     city: '', cityOriginal: '',
     address: '',
     productName: '',
-    products: [],          // 👈 تأكد من وجودها (لو مش موجودة)
-    sizeRaw: '',           // 👈 جديد
-    sizes: [],             // 👈 جديد
+    products: [],
+    sizeRaw: '',
+    sizes: [],
     weight: null, length: null,
     price: 0, shipping: 0,
+    _hasShipping: false,   // 👈 جديد
     notes: '',
     _errors: [], _warnings: [],
     _product: null,
@@ -1663,9 +1665,10 @@ else if (key.includes('وزن') || key.includes('طول')) {
                 order.price = parseFloat(toEnglishDigits(value)) || 0;
                 lastKey = 'price';
             } else if (key.includes('شحن')) {
-                order.shipping = parseFloat(toEnglishDigits(value)) || 0;
-                lastKey = 'ship';
-            } else if (key.includes('ملاحظ')) {
+    order.shipping = parseFloat(toEnglishDigits(value)) || 0;
+    order._hasShipping = true;   // 👈 جديد
+    lastKey = 'ship';
+    } else if (key.includes('ملاحظ')) {
                 order.notes = value;
                 lastKey = 'notes';
                 stopReading = true; // ⭐ نوقف عند ملاحظات
@@ -1889,27 +1892,34 @@ window.processPastedOrders = async function() {
         const allProducts = window.allProducts || [];
         const existingPhones = await buildExistingOrdersMap();
 
-        // ===== مرحلة 1: تحقق من كل طلب =====
+                // ===== مرحلة 1: تحقق شامل من كل طلب =====
         for (const o of parsedOrders) {
-            // الاسم
-            if (!o.customerName || o.customerName.length < 2) o._errors.push('اسم العميل غير صحيح');
+            // 1️⃣ الاسم
+            if (!o.customerName || o.customerName.trim().length < 2) {
+                o._errors.push('اسم العميل غير صحيح');
+            }
 
-            // الهاتف
+            // 2️⃣ الهاتف
             if (o.phones.length === 0) {
                 o._errors.push(`الهاتف غير مصري: ${o.rawPhone || '—'}`);
             }
 
-            // الوزن
-            if (o.weight === null || o.weight === undefined) {
-                o._warnings.push('الوزن غير محدد');
-            } else if (o.weight < 30 || o.weight > 200) {
-                o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم`);
+            // 3️⃣ المحافظة (مطلوب)
+            if (!o.govOriginal && !o.gov) {
+                o._errors.push('المحافظة غير محددة');
             }
 
-            // السعر
-            if (!o.price || o.price <= 0) o._errors.push('السعر غير صحيح');
+            // 4️⃣ المدينة (مطلوب)
+            if (!o.cityOriginal && !o.city) {
+                o._errors.push('المدينة غير محددة');
+            }
 
-            // المنتج
+            // 5️⃣ العنوان (مطلوب)
+            if (!o.address || o.address.trim().length < 2) {
+                o._errors.push('العنوان غير محدد');
+            }
+
+            // 6️⃣ المنتج (مطلوب)
             if (o.productName) {
                 const p = findProductByName(o.productName, allProducts);
                 if (p) {
@@ -1922,7 +1932,35 @@ window.processPastedOrders = async function() {
                 o._errors.push('المنتج غير محدد');
             }
 
-            // التكرار
+            // 7️⃣ الوزن/الطول أو المقاس (واحد منهم على الأقل إلزامي)
+            const hasWeightOrLength = 
+                (o.weight !== null && o.weight !== undefined && !isNaN(o.weight) && o.weight > 0) ||
+                (o.length !== null && o.length !== undefined && !isNaN(o.length) && o.length > 0) ||
+                (o.weightMax !== null && o.weightMax !== undefined && !isNaN(o.weightMax) && o.weightMax > 0);
+            const hasSize = o.sizes && o.sizes.length > 0 && o.sizes.some(s => s && String(s).trim());
+
+            if (!hasWeightOrLength && !hasSize) {
+                o._errors.push('يجب تحديد الوزن/الطول أو المقاس');
+            } else {
+                // تحذير الوزن غير المعتاد (فقط لو الوزن موجود)
+                if (hasWeightOrLength && o.weight !== null && o.weight !== undefined) {
+                    if (o.weight < 30 || o.weight > 200) {
+                        o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم`);
+                    }
+                }
+            }
+
+            // 8️⃣ السعر (مطلوب)
+            if (!o.price || o.price <= 0) {
+                o._errors.push('السعر غير صحيح');
+            }
+
+            // 9️⃣ الشحن (مطلوب — حتى لو 0 لازم يكون مكتوب صراحة)
+            if (!o._hasShipping) {
+                o._errors.push('الشحن غير محدد');
+            }
+
+            // 🔟 التكرار
             if (o.phones.length > 0) {
                 const dupOrder = existingPhones[o.phones[0]];
                 if (dupOrder) {
@@ -4445,18 +4483,20 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
             if (i === 0) row.push(o.shipping || 0);
         }
 
-        row.push(0);
-        row.push('الشركة');
-        row.push('');
-        row.push(0);
-        row.push('جمارك');
-        row.push('');
-        row.push('');
-        row.push('');
-        row.push('الشركة');
-        row.push('');
-        row.push(0);
-        row.push('جمارك');
+              // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
+        row.push('');       // AI: سنتر
+        row.push('');       // AJ: المندوب
+        row.push(0);        // AK: الحساب
+        row.push('الشركة'); // AL: الشركة
+        row.push('');       // AM: التليفون
+        row.push(0);        // AN: الصفر
+        row.push('جمارك');  // AO: اسم المول
+        row.push('');       // AP: فارغ
+        row.push('');       // AQ: فارغ
+        row.push('الشركة'); // AR: الشركة
+        row.push('');       // AS: التليفون
+        row.push(0);        // AT: الصفر
+        row.push('جمارك');  // AU: اسم المول
         for (let k = 0; k < 16; k++) row.push('');
 
         aoa.push(row);
