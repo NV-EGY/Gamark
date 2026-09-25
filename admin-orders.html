@@ -1584,6 +1584,7 @@ function parseOrderBlock(block) {
     customerName: '',
     gov: '', govOriginal: '',
     city: '', cityOriginal: '',
+    _cityUnrecognized: false,   // 👈 جديد
     address: '',
     productName: '',
     products: [],
@@ -1591,7 +1592,6 @@ function parseOrderBlock(block) {
     sizes: [],
     weight: null, length: null,
     price: 0, shipping: 0,
-    _hasShipping: false,   // 👈 جديد
     notes: '',
     _errors: [], _warnings: [],
     _product: null,
@@ -1632,12 +1632,13 @@ if (wlBuffer !== null) {
                 order.govOriginal = value;
                 order.gov = matchGovernorate(value) || value;
                 lastKey = 'gov';
-            } else if (key.includes('مدين')) {
-                order.cityOriginal = value;
-                const c = matchCity(value);
-                order.city = c ? c.city : value;
-                lastKey = 'city';
-            } else if (key.includes('عنوان')) {
+           } else if (key.includes('مدين')) {
+    order.cityOriginal = value;
+    const c = matchCity(value);
+    order.city = c ? c.city : value;
+    order._cityUnrecognized = !c;   // 👈 جديد
+    lastKey = 'city';
+} else if (key.includes('عنوان')) {
                 order.address = value;
                 lastKey = 'addr';
            } else if (key.includes('منتج')) {
@@ -1833,9 +1834,13 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
             ? `<span style="background:#27ae60; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">✓ ${phone}${secondPhone}</span>`
             : `<span style="background:#e74c3c; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير مصري: ${o.rawPhone || '—'}</span>`;
 
-        const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
+                const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
             ? `<span title="الأصل: ${o.govOriginal}" style="color:#8B6914;">📍 ${o.gov} (مصحّح)</span>`
             : `📍 ${o.gov || o.govOriginal || '—'}`;
+
+        const cityBadge = o._cityUnrecognized
+            ? `<span style="background:#f39c12; color:#fff; padding:1px 8px; border-radius:8px; font-size:9px; margin-right:4px;">⚠️ غير معروفة</span>`
+            : '';
 
         html += `
         <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:8px; border-right:3px solid ${phoneOk ? '#27ae60' : '#e74c3c'}; text-align:right; font-size:12px;">
@@ -1843,7 +1848,7 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
                 <span style="font-weight:800; color:#0F7B65;">${i + 1}. ${o.customerName}</span>
                 ${phoneBadge}
             </div>
-            <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'}</div>
+                        <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'} ${cityBadge}</div>
             <div style="color:#555; margin-bottom:4px;">🛍️ ${productBadge}</div>
 <div style="color:#555; margin-bottom:4px;">📦 المنتجات: ${
     (o.products || []).map((p, idx) => `<b>م${idx+1}:</b> ${p.name}${p.price ? ` (${p.price}ج)` : ''}`).join(' • ') || '—'
@@ -1912,6 +1917,11 @@ window.processPastedOrders = async function() {
             // 4️⃣ المدينة (مطلوب)
             if (!o.cityOriginal && !o.city) {
                 o._errors.push('المدينة غير محددة');
+            }
+
+                        // ✅ المدينة غير المعروفة (تحذير فقط، مش خطأ)
+            if (o._cityUnrecognized && o.cityOriginal) {
+                o._warnings.push(`⚠️ المدينة "${o.cityOriginal}" غير موجودة بقائمة المدن المعروفة — سيتم إضافتها كما هي، يرجى المراجعة`);
             }
 
             // 5️⃣ العنوان (مطلوب)
@@ -2841,14 +2851,14 @@ window.editOrder = (id) => {
                     <span style="font-weight:800; color:#0F7B65;">📦 المنتج ${idx + 1}</span>
                     <span style="font-size:11px; color:#888;">رقم المنتج: ${idx + 1}</span>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
                     <div>
                         <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">🏷️ اسم المنتج</label>
                         <input id="editDetailName_${idx}" value="${item.name || ''}" placeholder="اسم المنتج" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
                     </div>
                     <div>
-                        <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">📏 المقاس</label>
-                        <input id="editDetailSize_${idx}" value="${item.size || ''}" placeholder="المقاس" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                        <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">📏 المقاس (اتركه فارغ لو مش موجود)</label>
+                        <input id="editDetailSize_${idx}" value="${(item.size && item.size !== 'غير محدد') ? item.size : ''}" placeholder="مثال: L / XL / 2XL" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
                     </div>
                     <div>
                         <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">🔢 الكمية</label>
@@ -2857,6 +2867,20 @@ window.editOrder = (id) => {
                     <div>
                         <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">💰 سعر البيع</label>
                         <input id="editDetailPrice_${idx}" type="number" value="${item.price || 0}" step="0.01" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                    </div>
+                    <div style="grid-column: span 2; display:grid; grid-template-columns: 1fr 1fr 1fr; gap:8px; background:#fff8e1; padding:8px; border-radius:10px; border-right:3px solid #f39c12;">
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#8B6914; display:block; margin-bottom:2px;">⚖️ الوزن (كجم)</label>
+                            <input id="editDetailWeight_${idx}" type="number" step="0.1" value="${item.customerWeight || ''}" placeholder="اختياري" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#8B6914; display:block; margin-bottom:2px;">⚖️ أقصى وزن</label>
+                            <input id="editDetailWeightMax_${idx}" type="number" step="0.1" value="${item.customerWeightMax || ''}" placeholder="اختياري" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#8B6914; display:block; margin-bottom:2px;">📐 الطول (سم)</label>
+                            <input id="editDetailLength_${idx}" type="number" step="0.1" value="${item.customerLength || ''}" placeholder="اختياري" style="width:100%; padding:6px 10px; border-radius:8px; border:1px solid #ddd; font-size:13px;">
+                        </div>
                     </div>
                     <div style="grid-column: span 2;">
                         <label style="font-size:11px; font-weight:700; color:#555; display:block; margin-bottom:2px;">💲 سعر الجملة (التكلفة)</label>
@@ -3014,14 +3038,43 @@ window.saveEdit = async (id) => {
     const order = orders.find(x => x.id === id);
     const detailsCount = Array.isArray(order?.orderDetails) ? order.orderDetails.length : 0;
     
-    let orderDetails = [];
+        let orderDetails = [];
     for (let i = 0; i < detailsCount; i++) {
+        const oldDetail = oldOrder.orderDetails?.[i] || {};
+
         let name = document.getElementById(`editDetailName_${i}`)?.value || '';
-        let size = document.getElementById(`editDetailSize_${i}`)?.value || '';
+        let size = document.getElementById(`editDetailSize_${i}`)?.value?.trim() || '';
         let qty = parseInt(document.getElementById(`editDetailQty_${i}`)?.value) || 0;
         let price = parseFloat(document.getElementById(`editDetailPrice_${i}`)?.value) || 0;
         let costPrice = parseFloat(document.getElementById(`editDetailCost_${i}`)?.value) || 0;
-        if (name || qty > 0) orderDetails.push({ name, size, qty, price, costPrice });
+
+        // ✅ حقول الوزن/الطول (اختيارية)
+        const weightVal = document.getElementById(`editDetailWeight_${i}`)?.value;
+        const weightMaxVal = document.getElementById(`editDetailWeightMax_${i}`)?.value;
+        const lengthVal = document.getElementById(`editDetailLength_${i}`)?.value;
+
+        const customerWeight = (weightVal !== '' && weightVal !== null && weightVal !== undefined) ? parseFloat(weightVal) : null;
+        const customerWeightMax = (weightMaxVal !== '' && weightMaxVal !== null && weightMaxVal !== undefined) ? parseFloat(weightMaxVal) : null;
+        const customerLength = (lengthVal !== '' && lengthVal !== null && lengthVal !== undefined) ? parseFloat(lengthVal) : null;
+
+        if (name || qty > 0) {
+            orderDetails.push({
+                // ✅ الحفاظ على بيانات المنتج الأصلية
+                productId: oldDetail.productId || null,
+                sku: oldDetail.sku || null,
+                image: oldDetail.image || '',
+                // ✅ القيم القابلة للتعديل
+                name,
+                size: size || 'غير محدد',
+                qty,
+                price,
+                costPrice,
+                // ✅ الوزن/الطول (null لو مش موجود)
+                customerWeight: isNaN(customerWeight) ? null : customerWeight,
+                customerWeightMax: isNaN(customerWeightMax) ? null : customerWeightMax,
+                customerLength: isNaN(customerLength) ? null : customerLength
+            });
+        }
     }
 
     const finalTotal = parseFloat(document.getElementById("editTotal").value) || 0;
@@ -3300,12 +3353,28 @@ let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
 
             // ✅ التأكد من أن orderDetails مصفوفة
             const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-            let detailsHtml = details.map(item => `
-    <div style="display:flex; align-items:center; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
+                      let detailsHtml = details.map(item => {
+                const sizeText = (item.size && item.size !== 'غير محدد') 
+                    ? `<span style="display:inline-block; background:#0F7B65; color:#fff; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">📏 مقاس: ${item.size}</span>` 
+                    : '';
+                const weightText = item.customerWeight 
+                    ? `⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : item.customerWeight} كجم` 
+                    : '';
+                const lengthText = item.customerLength ? `📐 ${item.customerLength} سم` : '';
+                const wlText = [weightText, lengthText].filter(Boolean).join(' | ');
+                
+                return `
+    <div style="display:flex; align-items:flex-start; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
         ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-       <div><b>${item.name || 'بدون اسم'}</b><br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65;"><i class="fas fa-copy"></i> نسخ</button><br>العدد: ${item.qty || 1} | السعر: ${item.price} EGP${item.customerWeight ? `<br>⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : `الوزن: ${item.customerWeight}`} كجم` : ''}${item.customerLength ? ` | 📐 ${item.customerLength} سم` : ''}</div>
-    </div>
-`).join("");
+       <div style="flex:1; font-size:12px; line-height:1.7;">
+            <b style="color:#0F7B65; font-size:13px;">${item.name || 'بدون اسم'}</b>
+            ${sizeText ? `<br>${sizeText}` : ''}
+            <br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65; font-size:11px;"><i class="fas fa-copy"></i> نسخ</button>
+            <br>🔢 العدد: <b>${item.qty || 1}</b> | 💰 السعر: <b>${item.price} EGP</b>
+            ${wlText ? `<br>${wlText}` : ''}
+       </div>
+    </div>`;
+            }).join("");
 
             // ✅ داخل حلقة for (let o of ordersInDay)
 html += `
