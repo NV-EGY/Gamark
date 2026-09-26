@@ -4544,13 +4544,26 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push(year);
         row.push('خلال يومين');
 
-            for (let i = 0; i < 6; i++) {
+                   for (let i = 0; i < 6; i++) {
             const it = items[i];
             row.push(it ? fmtProductCell(it) : '');
-            // ✅ أرقام صريحة (Number) عشان Excel يحسبها صح
+            
+            // ✅ الكمية: رقم صريح
             row.push(it ? 1 : '');
-            row.push(it ? (Number(it.price) || 0) : '');
-            if (i === 0) row.push(Number(o.shipping) || 0);
+            
+            // ✅ السعر: تحويل لرقم صريح مع fallback لـ 0
+            if (it) {
+                const priceNum = Number(it.price);
+                row.push(Number.isFinite(priceNum) ? priceNum : 0);
+            } else {
+                row.push('');
+            }
+            
+            // ✅ الشحن: تحويل لرقم صريح (بعد السعر الأول فقط)
+            if (i === 0) {
+                const shipNum = Number(o.shipping);
+                row.push(Number.isFinite(shipNum) ? shipNum : 0);
+            }
         }
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
