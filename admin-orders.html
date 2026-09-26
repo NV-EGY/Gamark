@@ -4544,26 +4544,12 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push(year);
         row.push('خلال يومين');
 
-                   for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 6; i++) {
             const it = items[i];
             row.push(it ? fmtProductCell(it) : '');
-            
-            // ✅ الكمية: رقم صريح
             row.push(it ? 1 : '');
-            
-            // ✅ السعر: تحويل لرقم صريح مع fallback لـ 0
-            if (it) {
-                const priceNum = Number(it.price);
-                row.push(Number.isFinite(priceNum) ? priceNum : 0);
-            } else {
-                row.push('');
-            }
-            
-            // ✅ الشحن: تحويل لرقم صريح (بعد السعر الأول فقط)
-            if (i === 0) {
-                const shipNum = Number(o.shipping);
-                row.push(Number.isFinite(shipNum) ? shipNum : 0);
-            }
+            row.push(it ? (it.price || 0) : '');
+            if (i === 0) row.push(o.shipping || 0);
         }
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
@@ -4586,8 +4572,50 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         exportedIds.push(o.id);
     });
 
-    try {
+       try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // ================================================================
+        // ✅ إجبار الخلايا على تكون أرقام صريحة (type: 'n') 
+        // عشان Excel يقدر يجمعها في الفاتورة
+        // ================================================================
+        // فهارس الأعمدة الرقمية (0-indexed):
+        // الكميات:  Q(16), U(20), X(23), AA(26), AD(29), AG(32)
+        // الأسعار:  R(17), V(21), Y(24), AB(27), AE(30), AH(33)
+        // الشحن:    S(18)
+        // الأعمدة الأخيرة الرقمية: AK(36), AN(39), AT(45)
+        const numericCols = [
+            16, 17, 18,            // Q,R,S  (منتج 1)
+            20, 21,                 // U,V    (منتج 2)
+            23, 24,                 // X,Y    (منتج 3)
+            26, 27,                 // AA,AB  (منتج 4)
+            29, 30,                 // AD,AE  (منتج 5)
+            32, 33,                 // AG,AH  (منتج 6)
+            36, 39, 45              // AK, AN, AT  (الحساب/الصفر)
+        ];
+
+        for (let R = 1; R < aoa.length; R++) {
+            for (const C of numericCols) {
+                const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                if (!ws[addr]) continue;
+
+                const rawVal = ws[addr].v;
+                let numVal = 0;
+
+                if (rawVal !== '' && rawVal !== null && rawVal !== undefined) {
+                    const parsed = Number(rawVal);
+                    numVal = Number.isFinite(parsed) ? parsed : 0;
+                }
+
+                // ✅ إجبار الخلية تكون رقم
+                ws[addr].t = 'n';
+                ws[addr].v = numVal;
+                // نحذف أي تنسيق نصي قد يكون موجود
+                delete ws[addr].w;
+                delete ws[addr].z;
+            }
+        }
+        // ================================================================
 
         // ✅ سهم الفلتر على كل الأعمدة من A لـ BK
         ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
