@@ -4575,10 +4575,7 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-        // ✅ سهم الفلتر على كل الأعمدة من A لـ BK
-        ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
-
-        // عرض الأعمدة
+           // عرض الأعمدة
         ws['!cols'] = [
             {wch:6},{wch:22},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12},{wch:14},
             {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
