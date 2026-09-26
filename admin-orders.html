@@ -4545,12 +4545,22 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push('خلال يومين');
 
         for (let i = 0; i < 6; i++) {
-            const it = items[i];
-            row.push(it ? fmtProductCell(it) : '');
-            row.push(it ? 1 : '');
-            row.push(it ? (it.price || 0) : '');
-            if (i === 0) row.push(o.shipping || 0);
-        }
+    const it = items[i];
+    // اسم المنتج: نص عادي أو خلية فاضية فعلاً (null)
+    row.push(it && it.name ? String(fmtProductCell(it)) : null);
+    
+    // ✅ الكمية: رقم صريح أو null (مش '')
+    row.push(it ? 1 : null);
+    
+    // ✅ السعر: Number صريح أو null
+    row.push(it ? (Number(it.price) || 0) : null);
+    
+    // ✅ الشحن: Number صريح
+    if (i === 0) {
+        const shippingNum = Number(o.shipping);
+        row.push(isNaN(shippingNum) ? 0 : shippingNum);
+    }
+}
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
         row.push('');       // AI: سنتر
@@ -4574,6 +4584,57 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
 
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+        // ═══════════════════════════════════════════════════════════
+// ✅ فرض الأنواع الصحيحة على كل الخلايا
+// ═══════════════════════════════════════════════════════════
+(function forceCellTypes(sheet) {
+    if (!sheet || !sheet['!ref']) return;
+    const rng = XLSX.utils.decode_range(sheet['!ref']);
+    
+    // الأعمدة الرقمية: Q,R,S (كمية/سعر1/شحن) + U,V + X,Y + AA,AB + AD,AE + AG,AH
+    // ملاحظة: القيم النصية زي أسماء المنتجات لازم تفضل نصوص
+    for (let R = 1; R <= rng.e.r; R++) {
+        for (let C = 0; C <= rng.e.c; C++) {
+            const addr = XLSX.utils.encode_cell({ r: R, c: C });
+            const cell = sheet[addr];
+            if (!cell) continue;
+            
+            // لو الخلية من نوع نص
+            if (cell.t === 's') {
+                const v = cell.v;
+                
+                // نص فاضي → احذف الخلية تماماً (مش خلية نص فاضي)
+                if (v === '' || v === null || v === undefined) {
+                    delete sheet[addr];
+                    continue;
+                }
+                
+                // نص رقمي بحت (زي "300" أو "35") → حوّله لرقم
+                if (typeof v === 'string') {
+                    const trimmed = v.trim();
+                    // لازم يكون رقم صحيح أو عشري (مش فيه حروف)
+                    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+                        const num = Number(trimmed);
+                        if (!isNaN(num) && isFinite(num)) {
+                            cell.t = 'n';
+                            cell.v = num;
+                        }
+                    }
+                }
+            }
+        }
+    }
+})(ws);
+
+         // ✅ شيل أي خلايا نص فاضي (مش null) — بتمنع مشاكل #VALUE!
+Object.keys(ws).forEach(key => {
+    if (key.startsWith('!')) return; // تجاهل الميتاداتا
+    const cell = ws[key];
+    if (cell && cell.t === 's' && (cell.v === '' || cell.v === null)) {
+        delete ws[key];
+    }
+});
 
         // ✅ سهم الفلتر على كل الأعمدة من A لـ BK
         ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
