@@ -4527,7 +4527,7 @@ function stripLeadingZero(phone) {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-               const row = [];
+              const row = [];
         row.push(Number(serial++) || 0);
         row.push(o.customerName || '');
         row.push(String(stripLeadingZero(o.phone) || ''));
@@ -4573,6 +4573,7 @@ function stripLeadingZero(phone) {
 
         // ✅ باقي الأعمدة بـ null مش ''
         for (let k = 0; k < 16; k++) row.push(null);
+    });
 
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
