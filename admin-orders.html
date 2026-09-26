@@ -4527,11 +4527,11 @@ function stripLeadingZero(phone) {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        const row = [];
-        row.push(serial++);
+               const row = [];
+        row.push(Number(serial++) || 0);
         row.push(o.customerName || '');
-        row.push(stripLeadingZero(o.phone));
-row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
+        row.push(String(stripLeadingZero(o.phone) || ''));
+        row.push(o.secondaryPhone ? String(stripLeadingZero(o.secondaryPhone)) : DASH);
         row.push(o.gov || '');
         row.push(o.city || '');
         row.push(o.gov || '');
@@ -4539,38 +4539,40 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push(addressText);
         row.push('الاتصال قبل الوصول بساعة');
         row.push(dayName);
-        row.push(day);
-        row.push(month);
-        row.push(year);
+        row.push(Number(day) || 0);
+        row.push(Number(month) || 0);
+        row.push(Number(year) || 0);
         row.push('خلال يومين');
 
         for (let i = 0; i < 6; i++) {
             const it = items[i];
-            row.push(it ? fmtProductCell(it) : '');
-            row.push(it ? 1 : '');
-            row.push(it ? (it.price || 0) : '');
-            if (i === 0) row.push(o.shipping || 0);
+            // ✅ الاسم كنص
+            row.push(it ? fmtProductCell(it) : null);
+            // ✅ الكمية كرقم أو null
+            row.push(it ? 1 : null);
+            // ✅ السعر كرقم مضمون أو null
+            row.push(it ? (Number(it.price) || 0) : null);
+            // ✅ الشحن كرقم مضمون (بعد السعر الأول فقط)
+            if (i === 0) row.push(Number(o.shipping) || 0);
         }
 
-              // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
-        row.push('');       // AI: سنتر
-        row.push('');       // AJ: المندوب
-        row.push(0);        // AK: الحساب
-        row.push('الشركة'); // AL: الشركة
-        row.push('');       // AM: التليفون
-        row.push(0);        // AN: الصفر
-        row.push('جمارك');  // AO: اسم المول
-        row.push('');       // AP: فارغ
-        row.push('');       // AQ: فارغ
-        row.push('الشركة'); // AR: الشركة
-        row.push('');       // AS: التليفون
-        row.push(0);        // AT: الصفر
-        row.push('جمارك');  // AU: اسم المول
-        for (let k = 0; k < 16; k++) row.push('');
+        // ===== الأعمدة الأخيرة =====
+        row.push(null);                          // AI: سنتر
+        row.push(null);                          // AJ: المندوب
+        row.push(0);                             // AK: الحساب
+        row.push('الشركة');                      // AL: الشركة
+        row.push(null);                          // AM: التليفون
+        row.push(0);                             // AN: الصفر
+        row.push('جمارك');                       // AO: اسم المول
+        row.push(null);                          // AP: فارغ
+        row.push(null);                          // AQ: فارغ
+        row.push('الشركة');                      // AR: الشركة
+        row.push(null);                          // AS: التليفون
+        row.push(0);                             // AT: الصفر
+        row.push('جمارك');                       // AU: اسم المول
 
-        aoa.push(row);
-        exportedIds.push(o.id);
-    });
+        // ✅ باقي الأعمدة بـ null مش ''
+        for (let k = 0; k < 16; k++) row.push(null);
 
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
