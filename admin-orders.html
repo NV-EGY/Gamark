@@ -1251,12 +1251,12 @@ cells.push(o.secondaryPhone
 
         // 6 منتجات
         for (let i = 0; i < 6; i++) {
-    const it = items[i];
-    row.push(it ? fmtProductCell(it) : null);                       // اسم المنتج (نص عادي)
-    row.push(it ? Number(1) : null);                                // ✅ كمية رقمية أو خلية فاضية
-    row.push(it ? (Number(it.price) || 0) : null);                  // ✅ سعر رقمي أو خلية فاضية
-    if (i === 0) row.push(Number(o.shipping) || 0);                 // ✅ شحن رقمي
-}
+            const it = items[i];
+            cells.push(it ? fmtProductCell(it) : '');
+            cells.push(it ? 1 : '');
+            cells.push(it ? (it.price || 0) : '');
+            if (i === 0) cells.push(o.shipping || 0); // الشحن بعد السعر الأول
+        }
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
         cells.push('');       // AI: سنتر
@@ -4528,7 +4528,7 @@ function stripLeadingZero(phone) {
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
         const row = [];
-        row.push(Number(serial++));
+        row.push(serial++);
         row.push(o.customerName || '');
         row.push(stripLeadingZero(o.phone));
 row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
@@ -4539,42 +4539,32 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
         row.push(addressText);
         row.push('الاتصال قبل الوصول بساعة');
         row.push(dayName);
-        row.push(Number(day)); 
-        row.push(Number(month));       
-        row.push(Number(year)); 
+        row.push(day);
+        row.push(month);
+        row.push(year);
         row.push('خلال يومين');
 
-        for (let i = 0; i < 6; i++) {
+         for (let i = 0; i < 6; i++) {
     const it = items[i];
-    // اسم المنتج: نص عادي أو خلية فاضية فعلاً (null)
-    row.push(it && it.name ? String(fmtProductCell(it)) : null);
-    
-    // ✅ الكمية: رقم صريح أو null (مش '')
-    row.push(it ? 1 : null);
-    
-    // ✅ السعر: Number صريح أو null
-    row.push(it ? (Number(it.price) || 0) : null);
-    
-    // ✅ الشحن: Number صريح
-    if (i === 0) {
-        const shippingNum = Number(o.shipping);
-        row.push(isNaN(shippingNum) ? 0 : shippingNum);
-    }
+    row.push(it ? fmtProductCell(it) : null);                       // اسم المنتج (نص عادي)
+    row.push(it ? Number(1) : null);                                // ✅ كمية رقمية أو خلية فاضية
+    row.push(it ? (Number(it.price) || 0) : null);                  // ✅ سعر رقمي أو خلية فاضية
+    if (i === 0) row.push(Number(o.shipping) || 0);                 // ✅ شحن رقمي
 }
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
         row.push('');       // AI: سنتر
         row.push('');       // AJ: المندوب
-        row.push(Number(0));       // AK: الحساب
+        row.push(0);        // AK: الحساب
         row.push('الشركة'); // AL: الشركة
         row.push('');       // AM: التليفون
-        row.push(Number(0));        // AN: الصفر
+        row.push(0);        // AN: الصفر
         row.push('جمارك');  // AO: اسم المول
         row.push('');       // AP: فارغ
         row.push('');       // AQ: فارغ
         row.push('الشركة'); // AR: الشركة
         row.push('');       // AS: التليفون
-        row.push(Number(0));       // AT: الصفر
+        row.push(0);        // AT: الصفر
         row.push('جمارك');  // AU: اسم المول
         for (let k = 0; k < 16; k++) row.push('');
 
@@ -4584,57 +4574,6 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
 
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-        // ═══════════════════════════════════════════════════════════
-// ✅ فرض الأنواع الصحيحة على كل الخلايا
-// ═══════════════════════════════════════════════════════════
-(function forceCellTypes(sheet) {
-    if (!sheet || !sheet['!ref']) return;
-    const rng = XLSX.utils.decode_range(sheet['!ref']);
-    
-    // الأعمدة الرقمية: Q,R,S (كمية/سعر1/شحن) + U,V + X,Y + AA,AB + AD,AE + AG,AH
-    // ملاحظة: القيم النصية زي أسماء المنتجات لازم تفضل نصوص
-    for (let R = 1; R <= rng.e.r; R++) {
-        for (let C = 0; C <= rng.e.c; C++) {
-            const addr = XLSX.utils.encode_cell({ r: R, c: C });
-            const cell = sheet[addr];
-            if (!cell) continue;
-            
-            // لو الخلية من نوع نص
-            if (cell.t === 's') {
-                const v = cell.v;
-                
-                // نص فاضي → احذف الخلية تماماً (مش خلية نص فاضي)
-                if (v === '' || v === null || v === undefined) {
-                    delete sheet[addr];
-                    continue;
-                }
-                
-                // نص رقمي بحت (زي "300" أو "35") → حوّله لرقم
-                if (typeof v === 'string') {
-                    const trimmed = v.trim();
-                    // لازم يكون رقم صحيح أو عشري (مش فيه حروف)
-                    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
-                        const num = Number(trimmed);
-                        if (!isNaN(num) && isFinite(num)) {
-                            cell.t = 'n';
-                            cell.v = num;
-                        }
-                    }
-                }
-            }
-        }
-    }
-})(ws);
-
-         // ✅ شيل أي خلايا نص فاضي (مش null) — بتمنع مشاكل #VALUE!
-Object.keys(ws).forEach(key => {
-    if (key.startsWith('!')) return; // تجاهل الميتاداتا
-    const cell = ws[key];
-    if (cell && cell.t === 's' && (cell.v === '' || cell.v === null)) {
-        delete ws[key];
-    }
-});
 
         // ✅ سهم الفلتر على كل الأعمدة من A لـ BK
         ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
