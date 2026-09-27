@@ -830,65 +830,51 @@
     border-right: 4px solid #9b59b6;
 }
 /* ═══════════════════════════════════════════ */
-/* علامة الطلبات المُضافة من الكول سينتر */
+/* علامة الطلبات المُضافة من الكول سينتر (لون بس) */
 /* ═══════════════════════════════════════════ */
 .card.from-callcenter {
     border-right: 4px solid #9b59b6;
 }
-.card.from-callcenter::before {
-    content: "🎧 كول سينتر";
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    background: linear-gradient(135deg, #9b59b6, #8e44ad);
-    color: #fff;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
-    z-index: 5;
-    box-shadow: 0 2px 6px rgba(155,89,182,0.4);
-    letter-spacing: 0.3px;
+
+/* ✅ wrapper لرقم الطلب + الإيميل تحت بعض */
+.order-id-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    align-items: center;
 }
 
-/* علامة المصدر (الإيميل) - تظهر لكل الطلبات */
-.card .added-by-badge {
-    position: absolute;
-    top: 6px;
-    left: 6px;
-    padding: 2px 10px;
-    border-radius: 20px;
-    font-size: 9px;
+/* ✅ سطر الإيميل تحت رقم الطلب */
+.added-by-text {
+    font-size: 10px;
+    color: #8a9693;
     font-weight: 700;
-    z-index: 6;
-    border: 1px solid rgba(0,0,0,0.05);
-    max-width: 140px;
+    text-align: center;
+    direction: ltr;
+    font-family: 'Cairo', monospace;
+    letter-spacing: 0.3px;
+    max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    line-height: 1.2;
 }
 
-/* 🎧 كول سينتر - بنفسجي */
-.card .added-by-badge.badge-callcenter {
-    background: #6c3483;
-    color: #fff;
-}
-
-/* 📋 لصق طلبات - أخضر فاتح */
-.card .added-by-badge.badge-paste {
-    background: #d4f5e3;
+/* 📋 لصق طلبات - أخضر */
+.added-by-text.badge-paste {
     color: #0a5f4f;
 }
 
-/* 👤 إداري - رمادي */
-.card .added-by-badge.badge-admin {
-    background: #f0f2f5;
-    color: #555;
+/* 🎧 كول سينتر - بنفسجي */
+.added-by-text.badge-callcenter {
+    color: #6c3483;
 }
 
-/* لما الكارت يكون من الكول سينتر، نزحزح الـ badge شوية */
-.card.from-callcenter .added-by-badge {
-    left: 105px;
+/* 👤 إداري - رمادي */
+.added-by-text.badge-admin {
+    color: #888;
 }
 
 </style>
@@ -3496,33 +3482,38 @@ let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
 
             // ✅ داخل حلقة for (let o of ordersInDay)
  
-            const isFromCallCenter = o.source === 'callcenter';
+    const isFromCallCenter = o.source === 'callcenter';
 const isFromPaste      = o.source === 'paste';
 const addedByEmail = o.addedBy ? String(o.addedBy).split('@')[0] : '';
 const addedByFull  = o.addedBy || '';
 
-// ✅ لون مختلف لكل مصدر
-let sourceBadgeHtml = '';
+// ✅ تحديد الكلاس للون الإيميل بس
+let sourceClass = '';
+let sourceIcon = '';
 if (addedByEmail) {
     if (isFromCallCenter) {
-        sourceBadgeHtml = `<span class="added-by-badge badge-callcenter" title="أضيف بواسطة: ${addedByFull}">🎧 ${addedByEmail}</span>`;
+        sourceClass = 'badge-callcenter';
+        sourceIcon = '🎧';
     } else if (isFromPaste) {
-        sourceBadgeHtml = `<span class="added-by-badge badge-paste" title="أضيف بواسطة: ${addedByFull}">📋 ${addedByEmail}</span>`;
+        sourceClass = 'badge-paste';
+        sourceIcon = '📋';
     } else {
-        sourceBadgeHtml = `<span class="added-by-badge badge-admin" title="أضيف بواسطة: ${addedByFull}">👤 ${addedByEmail}</span>`;
+        sourceClass = 'badge-admin';
+        sourceIcon = '👤';
     }
 }
             // ✅ داخل حلقة for (let o of ordersInDay)
             html += `
-                <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''} ${isFromCallCenter ? 'from-callcenter' : ''}" style="position:relative;">
-                    
-                   ${sourceBadgeHtml}
-
-                    <div class="order-header">
-                        <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
-                        <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
-                        <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
-                    </div>
+    <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''} ${isFromCallCenter ? 'from-callcenter' : ''}" style="position:relative;">
+        
+        <div class="order-header">
+            <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
+            <div class="order-id-wrap">
+                <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
+                ${addedByEmail ? `<div class="added-by-text ${sourceClass}" title="أضيف بواسطة: ${addedByFull}">${sourceIcon} ${addedByEmail}</div>` : ''}
+            </div>
+            <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
+        </div>
 
                     <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
                         <div class="order-info">
