@@ -347,12 +347,21 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
   <div class="header-row">
     <h1>🎧 GAMARK Call Center</h1>
     <div class="header-actions">
-      <input type="text" id="search" class="search-box" placeholder="🔍 بحث بالاسم أو الرقم">
-      <button class="icon-btn" onclick="goBack()" title="صفحة الطلبات"><i class="fas fa-shopping-bag"></i></button>
-      <button class="icon-btn" onclick="goProducts()" title="المنتجات"><i class="fas fa-boxes"></i></button>
-      <button class="icon-btn" onclick="exportLeads()" title="تصدير Excel"><i class="fas fa-file-excel"></i></button>
-      <button class="btn-primary" onclick="openNewLeadModal()"><i class="fas fa-plus"></i> ليد جديد</button>
-    </div>
+  <input type="text" id="search" class="search-box" placeholder="🔍 بحث بالاسم أو الرقم">
+  <button class="icon-btn" onclick="goBack()" title="صفحة الطلبات"><i class="fas fa-shopping-bag"></i></button>
+  <button class="icon-btn" onclick="goProducts()" title="المنتجات"><i class="fas fa-boxes"></i></button>
+  <button class="icon-btn" onclick="exportLeads()" title="تصدير Excel"><i class="fas fa-file-excel"></i></button>
+  <button class="btn-primary" onclick="openNewLeadModal()"><i class="fas fa-plus"></i> ليد جديد</button>
+  
+  <!-- ✅ بيانات المستخدم + تسجيل خروج -->
+  <div style="display:flex; align-items:center; gap:8px; padding:6px 8px 6px 14px; background:#f0f2f5; border-radius:50px;">
+    <span id="userEmailDisplay" style="font-size:12px; color:#555; font-weight:700;">⏳</span>
+    <button onclick="handleLogout()" title="تسجيل الخروج" 
+            style="background:#e74c3c; color:#fff; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:0.2s;"
+            onmouseover="this.style.background='#c0392b'; this.style.transform='scale(1.1)'"
+            onmouseout="this.style.background='#e74c3c'; this.style.transform='scale(1)'">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
   </div>
 </div>
 
@@ -628,7 +637,7 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs, where, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
@@ -888,6 +897,38 @@ function renderLeadCard(lead) {
   const lastNote = (lead.notes && lead.notes.length > 0) ? lead.notes[lead.notes.length - 1] : null;
   const reasonLabel = lead.reason ? REASON_LABELS[lead.reason] || '' : '';
 
+  // ✅ زراير سريعة حسب الحالة الحالية
+  let quickActions = '';
+  if (stage === 'no_answer') {
+    quickActions = `
+      <div style="display:flex; gap:4px; margin-top:8px;" onclick="event.stopPropagation();">
+        <button onclick="quickStageChange('${lead.id}', 'follow_up')" 
+                style="flex:1; padding:7px 4px; background:#3498db; color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; transition:0.2s;"
+                onmouseover="this.style.background='#2980b9'" onmouseout="this.style.background='#3498db'">
+          🔄 متابعة
+        </button>
+        <button onclick="quickStageChange('${lead.id}', 'not_interested')" 
+                style="flex:1; padding:7px 4px; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; transition:0.2s;"
+                onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'">
+          ❌ غير مهتم
+        </button>
+      </div>
+    `;
+  } else if (stage === 'follow_up') {
+    quickActions = `
+      <div style="display:flex; gap:4px; margin-top:8px;" onclick="event.stopPropagation();">
+        <button onclick="quickStageChange('${lead.id}', 'no_answer')" 
+                style="flex:1; padding:7px 4px; background:#f39c12; color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
+          📵 لم يرد
+        </button>
+        <button onclick="quickStageChange('${lead.id}', 'not_interested')" 
+                style="flex:1; padding:7px 4px; background:#e74c3c; color:#fff; border:none; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer;">
+          ❌ غير مهتم
+        </button>
+      </div>
+    `;
+  }
+
   return `
     <div class="lead-card ${isConverted ? 'converted' : ''}" data-stage="${stage}" onclick="openLeadDetails('${lead.id}')">
       ${isConverted ? '<span class="converted-badge">✅ تم الطلب</span>' : ''}
@@ -903,6 +944,7 @@ function renderLeadCard(lead) {
         <span>⏰ ${formatDate(lead.updatedAt)}</span>
         ${lead.addedBy ? `<span style="font-size:10px;">👤 ${escapeHtml(lead.addedBy.split('@')[0])}</span>` : ''}
       </div>
+      ${quickActions}
       <div class="lead-actions" onclick="event.stopPropagation();">
         <a href="tel:${lead.phone || ''}" class="btn-call"><i class="fas fa-phone"></i> اتصال</a>
         <a href="https://wa.me/2${lead.phone || ''}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i></a>
@@ -911,6 +953,45 @@ function renderLeadCard(lead) {
     </div>
   `;
 }
+
+// ================== Quick Stage Change (من الكارت مباشرة) ==================
+window.quickStageChange = async function(leadId, newStage) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead || lead.stage === newStage) return;
+
+  const stageLabels = {
+    no_answer: '📵 لم يرد',
+    follow_up: '🔄 متابعة',
+    not_interested: '❌ غير مهتم',
+    new_order: '✅ طلب جديد'
+  };
+
+  const confirmed = await customConfirm(`نقل "${lead.customerName}" إلى "${stageLabels[newStage]}"؟`);
+  if (!confirmed) return;
+
+  try {
+    const now = new Date();
+    const notes = [...(lead.notes || [])];
+    notes.push({
+      text: `🔄 نقل سريع من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
+      type: 'stage-change',
+      addedBy: currentUserEmail,
+      createdAt: now.toISOString()
+    });
+
+    await updateDoc(doc(db, 'callCenterLeads', leadId), {
+      stage: newStage,
+      notes,
+      updatedAt: serverTimestamp()
+    });
+
+    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
+    await refreshLeads();
+  } catch(e) {
+    console.error('❌ quickStageChange error:', e);
+    showToast('فشل النقل: ' + e.message, 'error');
+  }
+};
 
 // ================== Lead Details Modal ==================
 window.openLeadDetails = function(leadId) {
@@ -1264,6 +1345,20 @@ window.saveLead = async function() {
   }
 };
 
+// ================== Logout ==================
+window.handleLogout = async function() {
+  const confirmed = await customConfirm('هل تريد تسجيل الخروج من النظام؟');
+  if (!confirmed) return;
+  
+  try {
+    await signOut(auth);
+    window.location.href = 'login.html';
+  } catch(e) {
+    console.error('❌ logout error:', e);
+    showToast('فشل تسجيل الخروج: ' + e.message, 'error');
+  }
+};
+
 // ================== Delete Lead ==================
 window.deleteLead = async function(leadId) {
   const confirmed = await customConfirm('⚠️ حذف هذا الليد نهائياً؟ لا يمكن التراجع.');
@@ -1576,6 +1671,11 @@ onAuthStateChanged(auth, user => {
   if (user) {
     currentUserEmail = user.email || 'unknown';
     console.log('✅ Call Center user:', currentUserEmail);
+    
+    // ✅ اعرض الإيميل في الهيدر
+    const userEl = document.getElementById('userEmailDisplay');
+    if (userEl) userEl.textContent = '👤 ' + currentUserEmail.split('@')[0];
+    
     populateLeadGovs();
     loadProducts();
     loadLeads();
