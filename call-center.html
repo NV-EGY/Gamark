@@ -87,31 +87,128 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 
 /* ===== Kanban Board ===== */
 .board {
-  display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
-  padding:0 16px; max-width:1600px; margin:0 auto;
-  align-items:start;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  padding: 0 16px; max-width: 1600px; margin: 0 auto;
+  align-items: start;
 }
 .column {
-  background:#eef2f5; border-radius:20px; padding:12px;
-  min-height:200px; display:flex; flex-direction:column; gap:10px;
+  background: #eef2f5; border-radius: 20px; padding: 12px;
+  min-height: 200px; display: flex; flex-direction: column; gap: 10px;
+  transition: 0.3s;
 }
 .column-header {
-  padding:10px 14px; border-radius:14px; display:flex;
-  align-items:center; justify-content:space-between;
-  font-weight:800; font-size:14px;
+  padding: 10px 14px; border-radius: 14px; display: flex;
+  align-items: center; justify-content: space-between;
+  font-weight: 800; font-size: 14px;
+  cursor: pointer; user-select: none;
+  transition: 0.2s;
+  gap: 8px;
 }
-.column[data-stage="no_answer"] .column-header { background:#f39c12; color:#fff; }
-.column[data-stage="follow_up"] .column-header { background:#3498db; color:#fff; }
-.column[data-stage="new_order"] .column-header { background:#2ecc71; color:#fff; }
-.column[data-stage="not_interested"] .column-header { background:#e74c3c; color:#fff; }
+.column-header:hover { filter: brightness(1.08); }
+.column-header .header-left {
+  display: flex; align-items: center; gap: 8px;
+}
+.column-header .header-right {
+  display: flex; align-items: center; gap: 8px;
+}
+.column-header .toggle-icon {
+  font-size: 12px;
+  transition: transform 0.3s ease;
+}
+.column[data-stage="no_answer"] .column-header { background: #f39c12; color: #fff; }
+.column[data-stage="follow_up"] .column-header { background: #3498db; color: #fff; }
+.column[data-stage="new_order"] .column-header { background: #2ecc71; color: #fff; }
+.column[data-stage="not_interested"] .column-header { background: #e74c3c; color: #fff; }
 .column-header .count-badge {
-  background:rgba(255,255,255,0.25); padding:2px 10px;
-  border-radius:20px; font-size:12px;
+  background: rgba(255,255,255,0.25); padding: 2px 10px;
+  border-radius: 20px; font-size: 12px;
 }
-.column-body { display:flex; flex-direction:column; gap:10px; min-height:60px; }
+
+/* ✅ حالة الطي */
+.column.collapsed {
+  min-height: auto;
+  padding-bottom: 10px;
+}
+.column.collapsed .column-body { display: none !important; }
+.column.collapsed .toggle-icon { transform: rotate(-90deg); }
+
+.column-body {
+  display: flex; flex-direction: column; gap: 10px; min-height: 60px;
+  transition: 0.3s;
+}
 .column-empty {
-  text-align:center; padding:30px 10px; color:#999;
-  font-size:12px; background:rgba(255,255,255,0.5); border-radius:12px;
+  text-align: center; padding: 30px 10px; color: #999;
+  font-size: 12px; background: rgba(255,255,255,0.5); border-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════ */
+/* Responsive - Mobile: الخانات بالعرض مع تمرير */
+/* ═══════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .board {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding: 0 8px 16px;
+    overflow-x: auto;
+    overflow-y: visible;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    max-width: 100%;
+  }
+  .board::-webkit-scrollbar { height: 4px; }
+  .board::-webkit-scrollbar-thumb { background: #0F7B65; border-radius: 10px; }
+  
+  .column {
+    flex: 0 0 85vw;
+    max-width: 340px;
+    min-width: 260px;
+    min-height: auto;
+    scroll-snap-align: start;
+    padding: 10px;
+  }
+  .column-body {
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .column-body::-webkit-scrollbar { width: 3px; }
+  .column-body::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 10px; }
+  .column-header { font-size: 13px; padding: 9px 12px; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 520px) {
+
+  /* ✅ كروت مدمجة على الموبايل */
+.lead-card { 
+  padding: 9px 10px; 
+  border-radius: 12px; 
+  margin-bottom: 6px; 
+}
+.lead-name { font-size: 13px; gap: 5px; }
+.lead-name .attempts { font-size: 9px; padding: 1px 6px; }
+.lead-phone { font-size: 11px; margin-top: 3px; }
+.lead-interest { font-size: 10px; padding: 3px 7px; margin-top: 5px; }
+.lead-note-preview { font-size: 10px; padding: 5px 7px; margin-top: 5px; }
+.lead-meta { font-size: 10px; margin-top: 5px; gap: 6px; }
+.lead-actions { margin-top: 6px; padding-top: 6px; gap: 3px; }
+.lead-actions a, .lead-actions button { padding: 6px 4px; font-size: 11px; }
+.converted-badge { font-size: 8px; padding: 1px 6px; top: 6px; left: 6px; }
+  .header h1 { font-size: 15px; }
+  .stats-bar { 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 6px; padding: 8px 10px; 
+  }
+  .stat-card { padding: 8px 4px; border-radius: 12px; }
+  .stat-card .num { font-size: 16px; }
+  .stat-card .label { font-size: 9px; }
+  .column {
+    flex: 0 0 88vw;
+    min-width: 240px;
+    border-radius: 16px;
+  }
 }
 
 /* ===== Lead Card ===== */
@@ -394,30 +491,53 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 <!-- ===== Board ===== -->
 <div class="board" id="board">
   <div class="column" data-stage="no_answer">
-    <div class="column-header">
-      <span>📵 لم يرد (No Answer)</span>
-      <span class="count-badge" id="col-no_answer">0</span>
+    <div class="column-header" onclick="toggleColumn('no_answer')">
+      <div class="header-left">
+        <i class="fas fa-chevron-down toggle-icon"></i>
+        <span>📵 لم يرد</span>
+      </div>
+      <div class="header-right">
+        <span class="count-badge" id="col-no_answer">0</span>
+      </div>
     </div>
     <div class="column-body" id="body-no_answer"></div>
   </div>
+
   <div class="column" data-stage="follow_up">
-    <div class="column-header">
-      <span>🔄 متابعة (Follow Up)</span>
-      <span class="count-badge" id="col-follow_up">0</span>
+    <div class="column-header" onclick="toggleColumn('follow_up')">
+      <div class="header-left">
+        <i class="fas fa-chevron-down toggle-icon"></i>
+        <span>🔄 متابعة</span>
+      </div>
+      <div class="header-right">
+        <span class="count-badge" id="col-follow_up">0</span>
+      </div>
     </div>
     <div class="column-body" id="body-follow_up"></div>
   </div>
+
   <div class="column" data-stage="new_order">
-    <div class="column-header">
-      <span>✅ طلب جديد (New Order)</span>
-      <span class="count-badge" id="col-new_order">0</span>
+    <div class="column-header" onclick="toggleColumn('new_order')">
+      <div class="header-left">
+        <i class="fas fa-chevron-down toggle-icon"></i>
+        <span>✅ طلب جديد</span>
+      </div>
+      <div class="header-right">
+        <span class="count-badge" id="col-new_order">0</span>
+      </div>
     </div>
     <div class="column-body" id="body-new_order"></div>
   </div>
+
   <div class="column" data-stage="not_interested">
-    <div class="column-header">
-      <span>❌ غير مهتم (Not Interested)</span>
-      <span class="count-badge" id="col-not_interested">0</span>
+    <div class="column-header" onclick="toggleColumn('not_interested')">
+      <div class="header-left">
+        <i class="fas fa-chevron-down toggle-icon"></i>
+        <span>❌ غير مهتم</span>
+      </div>
+      <div class="header-right">
+        <span class="count-badge" id="col-not_interested">0</span>
+      </div>
     </div>
     <div class="column-body" id="body-not_interested"></div>
   </div>
@@ -880,11 +1000,13 @@ function renderBoard() {
     const list = filtered.filter(l => l.stage === stage);
     document.getElementById('col-' + stage).textContent = list.length;
     const body = document.getElementById('body-' + stage);
-    if (currentStageFilter !== 'all' && currentStageFilter !== stage) {
-      body.closest('.column').style.display = 'none';
-    } else {
-      body.closest('.column').style.display = 'flex';
-    }
+    const col = body.closest('.column');
+if (currentStageFilter !== 'all' && currentStageFilter !== stage) {
+  col.style.display = 'none';
+} else {
+  col.style.display = 'flex';
+  // متلمسش الـ collapsed - CSS بيتعامل معاه
+}
     if (list.length === 0) {
       body.innerHTML = `<div class="column-empty">📭 لا توجد ليدز هنا</div>`;
     } else {
@@ -1219,6 +1341,30 @@ window.setStageFilter = function(stage) {
   document.querySelector(`.stat-card[data-stage="${stage}"]`)?.classList.add('active');
   renderBoard();
 };
+
+// ================== Collapsible Columns ==================
+window.toggleColumn = function(stage) {
+  const col = document.querySelector(`.column[data-stage="${stage}"]`);
+  if (!col) return;
+  
+  col.classList.toggle('collapsed');
+  
+  // احفظ الحالة في localStorage
+  const states = JSON.parse(localStorage.getItem('collapsedColumns') || '{}');
+  states[stage] = col.classList.contains('collapsed');
+  localStorage.setItem('collapsedColumns', JSON.stringify(states));
+};
+
+// تطبيق الحالة المحفوظة عند التحميل
+function applyCollapsedStates() {
+  try {
+    const states = JSON.parse(localStorage.getItem('collapsedColumns') || '{}');
+    Object.entries(states).forEach(([stage, isCollapsed]) => {
+      const col = document.querySelector(`.column[data-stage="${stage}"]`);
+      if (col && isCollapsed) col.classList.add('collapsed');
+    });
+  } catch(e) { console.warn('Failed to load collapsed states:', e); }
+}
 
 // ================== Add Note ==================
 window.openAddNote = function(leadId) {
@@ -1790,6 +1936,10 @@ document.getElementById('search')?.addEventListener('input', e => {
   renderBoard();
   renderStats();
 });
+
+// ✅ تطبيق حالات الطي المحفوظة بعد ما الصفحة تحمّل
+document.addEventListener('DOMContentLoaded', applyCollapsedStates);
+window.addEventListener('load', applyCollapsedStates);
 
 // ================== Auth ==================
 onAuthStateChanged(auth, user => {
