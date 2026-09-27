@@ -3317,27 +3317,70 @@ function formatOrderTime(dateObj) {
     return `${hours}:${minutes.toString().padStart(2, '0')} ${ampm}`;
 }
 
+// ================== Search Helper ==================
+function normalizeSearch(str) {
+  if (!str) return '';
+  return String(str)
+    .toLowerCase()
+    .replace(/[أإآٱ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/ة/g, 'ه')
+    .replace(/[ًٌٍَُِّْـ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function orderMatchesSearch(o, searchRaw) {
+  if (!searchRaw) return true;
+  const search = normalizeSearch(searchRaw);
+  if (!search) return true;
+  
+  // 1️⃣ الاسم
+  if (normalizeSearch(o.customerName).includes(search)) return true;
+  
+  // 2️⃣ الهاتف (أساسي + ثانوي، مع/بدون صفر)
+  const phone = String(o.phone || '');
+  const phone2 = String(o.secondaryPhone || '');
+  const searchNoZero = search.replace(/^0/, '');
+  if (phone.includes(search) || phone.replace(/^0/, '').includes(searchNoZero)) return true;
+  if (phone2 && (phone2.includes(search) || phone2.replace(/^0/, '').includes(searchNoZero))) return true;
+  
+  // 3️⃣ رقم الطلب
+  if (normalizeSearch(o.orderID).includes(search)) return true;
+  
+  // 4️⃣ المحافظة/المدينة
+  if (normalizeSearch(o.gov).includes(search)) return true;
+  if (normalizeSearch(o.city).includes(search)) return true;
+  
+  // 5️⃣ المنتجات (اسم + SKU)
+  const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+  for (const d of details) {
+    if (normalizeSearch(d.name).includes(search)) return true;
+    if (normalizeSearch(d.sku).includes(search)) return true;
+  }
+  
+  return false;
+}
+
 function render() {
     // ✅ التأكد من أن ordersData مصفوفة دائماً
     const ordersData = Array.isArray(window.orders) ? window.orders : [];
     
     let date = document.getElementById("dateFilter").value;
-    let search = document.getElementById("search").value.toLowerCase();
-
+    let search = document.getElementById("search").value.trim();
    let filteredOrders = ordersData.filter(o => {
-    const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+    // 1️⃣ فلتر الحالة
     if (currentFilter !== "all" && o.status !== currentFilter) return false;
-    if (search && !o.customerName?.toLowerCase().includes(search) && 
-        !o.phone?.includes(search) && 
-        !o.orderID?.toLowerCase().includes(search) && 
-        !details.some(detail => detail.sku?.toLowerCase().includes(search))) return false;
+    
+    // 2️⃣ البحث الشامل (اسم / هاتف / رقم طلب / منتج / SKU / محافظة / مدينة)
+    if (search && !orderMatchesSearch(o, search)) return false;
     
     const d = o.createdAt?.toDate?.();
     
-    // فلتر التاريخ المخصص (dateFilter)
+    // 3️⃣ فلتر التاريخ المخصص (dateFilter)
     if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
     
-    // ✅ فلتر السليكت (اليوم/أمس/آخر 7 أيام/...)
+    // 4️⃣ فلتر السليكت (اليوم/أمس/آخر 7 أيام/...)
     if (!isDateInRange(d, currentDayFilter)) return false;
     
     return true;
