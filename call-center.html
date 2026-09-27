@@ -1105,6 +1105,7 @@ window.changeLeadStage = async function(leadId, newStage) {
     not_interested: '❌ غير مهتم'
   };
 
+  // لو "طلب جديد" → نفتح فورم الطلب فوراً
   if (newStage === 'new_order') {
     closeModal('leadDetailsModal');
     setTimeout(() => openNewOrderFromLead(leadId), 200);
@@ -1133,43 +1134,12 @@ window.changeLeadStage = async function(leadId, newStage) {
 
     showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
     closeModal('leadDetailsModal');
-    
+
     // ✅ refresh يدوي
     await refreshLeads();
-    
+
   } catch(e) {
     console.error('❌ changeLeadStage error:', e);
-    showToast('فشل النقل: ' + e.message, 'error');
-  }
-};
-
-  // ═══════════════════════════════════════════════
-  // باقي الخانات → تأكيد عادي
-  // ═══════════════════════════════════════════════
-  const confirmed = await customConfirm(`نقل الليد إلى "${stageLabels[newStage]}"؟`);
-  if (!confirmed) return;
-
-  try {
-    const now = new Date();
-    const notes = [...(lead.notes || [])];
-    notes.push({
-      text: `نقل من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
-      type: 'stage-change',
-      addedBy: currentUserEmail,
-      createdAt: now.toISOString()
-    });
-
-    await updateDoc(doc(db, 'callCenterLeads', leadId), {
-      stage: newStage,
-      notes,
-      updatedAt: serverTimestamp(),
-      ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
-    });
-
-    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
-    closeModal('leadDetailsModal');
-  } catch(e) {
-    console.error(e);
     showToast('فشل النقل: ' + e.message, 'error');
   }
 };
@@ -1500,13 +1470,20 @@ window.saveOrderFromLead = async function() {
       });
     }
 
-    showToast(`✅ تم تسجيل الطلب ${orderID}`, 'success');
+     showToast(`✅ تم تسجيل الطلب ${orderID}`, 'success');
     closeModal('newOrderModal');
-    
+
     // ✅ refresh يدوي
     await refreshLeads();
-    
+
   } catch(e) {
+    console.error('❌ saveOrderFromLead error:', e);
+    showToast('فشل التسجيل: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> تسجيل الطلب';
+  }
+};
 
 // ================== Export Excel ==================
 window.exportLeads = function() {
