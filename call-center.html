@@ -421,64 +421,49 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 
 <!-- ===== Modal: New/Edit Lead ===== -->
 <div class="modal-overlay" id="newLeadModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <h3 id="newLeadTitle">➕ ليد جديد</h3>
-      <button class="modal-close" onclick="closeModal('newLeadModal')">✕</button>
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-header" style="background:linear-gradient(135deg, #0F7B65, #0a5f4f);">
+      <h3 id="newLeadTitle" style="color:#fff;">➕ ليد جديد</h3>
+      <button class="modal-close" onclick="closeModal('newLeadModal')" style="background:rgba(255,255,255,0.2); color:#fff;">✕</button>
     </div>
     <div class="modal-body">
       <input type="hidden" id="leadId">
-      
-      <!-- التليفون - إجباري -->
+
+      <!-- 📞 التليفون — إجباري -->
       <div class="form-group">
-        <label>رقم الهاتف <span class="req">*</span></label>
+        <label style="font-size:14px;">📞 رقم الهاتف <span class="req">*</span></label>
         <input type="tel" id="leadPhone" class="form-control" 
                placeholder="01xxxxxxxxx" 
-               style="direction:ltr; text-align:right; font-size:16px; font-weight:700;" 
-               autofocus>
-        <small style="color:#888; font-size:11px;">الرقم فقط إجباري — باقي البيانات اختيارية</small>
+               style="direction:ltr; text-align:center; font-size:18px; font-weight:700; letter-spacing:1px; padding:14px;" 
+               autocomplete="tel">
+        <small style="color:#888; font-size:11px; display:block; margin-top:4px;">الرقم هو الحقل الوحيد الإجباري</small>
       </div>
-      
-      <!-- الاسم - اختياري -->
+
+      <!-- 👤 الاسم — اختياري -->
       <div class="form-group">
-        <label>اسم العميل <span style="color:#888; font-weight:400;">(اختياري - لو متاح)</span></label>
-        <input type="text" id="leadName" class="form-control" placeholder="اكتب الاسم لو معاك">
+        <label style="font-size:14px;">👤 اسم العميل <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
+        <input type="text" id="leadName" class="form-control" placeholder="اتركه فارغ لو مش متاح">
       </div>
-      
-      <!-- الرقم الثاني -->
+
+      <!-- 🏷️ الخانة -->
       <div class="form-group">
-        <label>رقم آخر (اختياري)</label>
-        <input type="tel" id="leadPhone2" class="form-control" 
-               placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
-      </div>
-      
-      <!-- الخانة - اختياري -->
-      <div class="form-group">
-        <label>الخانة الابتدائية</label>
-        <select id="leadStage" class="form-control">
-          <option value="no_answer">📵 لم يرد</option>
-          <option value="follow_up">🔄 متابعة</option>
-          <option value="not_interested">❌ غير مهتم</option>
+        <label style="font-size:14px;">🏷️ الخانة الابتدائية</label>
+        <select id="leadStage" class="form-control" style="font-weight:700;">
+          <option value="no_answer">📵 لم يرد (No Answer)</option>
+          <option value="follow_up">🔄 متابعة (Follow Up)</option>
+          <option value="not_interested">❌ غير مهتم (Not Interested)</option>
         </select>
       </div>
-      
-      <!-- ملاحظة -->
+
+      <!-- 📝 ملاحظة سريعة -->
       <div class="form-group">
-        <label>ملاحظة أولية (اختياري)</label>
-        <textarea id="leadNote" class="form-control" rows="2" placeholder="مثال: سأل عن عبايات / طلب معاودة اتصال بكرة"></textarea>
-      </div>
-      
-      <!-- حقول مخفية للتوافق -->
-      <div style="display:none;">
-        <input type="hidden" id="leadGov">
-        <input type="hidden" id="leadCity">
-        <input type="hidden" id="leadAddress">
-        <input type="hidden" id="leadInterest">
+        <label style="font-size:14px;">📝 ملاحظة سريعة <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
+        <textarea id="leadNote" class="form-control" rows="2" placeholder="مثال: سأل عن عبايات / اتصل بعدين"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('newLeadModal')">إلغاء</button>
-      <button class="btn-save" onclick="saveLead()"><i class="fas fa-save"></i> حفظ الليد</button>
+      <button class="btn-save" onclick="saveLead()"><i class="fas fa-save"></i> حفظ</button>
     </div>
   </div>
 </div>
@@ -1031,37 +1016,20 @@ window.changeLeadStage = async function(leadId, newStage) {
     not_interested: '❌ غير مهتم'
   };
 
-  // ✅ لو النقل لـ "طلب جديد" → نفتح نموذج الطلب فوراً
+  // ═══════════════════════════════════════════════
+  // 🛒 لو "طلب جديد" → نفتح فورم الطلب فوراً
+  //    (الحالة هتتغير تلقائياً بعد ما الطلب يتسجل)
+  // ═══════════════════════════════════════════════
   if (newStage === 'new_order') {
-    // نقفل مودال التفاصيل الأول
     closeModal('leadDetailsModal');
-    
-    // نحدّث الحالة في Firestore أولاً (في الخلفية)
-    try {
-      const now = new Date();
-      const notes = [...(lead.notes || [])];
-      notes.push({
-        text: `نقل إلى "طلب جديد" — جاري تسجيل الطلب`,
-        type: 'stage-change',
-        addedBy: currentUserEmail,
-        createdAt: now.toISOString()
-      });
-      await updateDoc(doc(db, 'callCenterLeads', leadId), {
-        stage: 'new_order',
-        notes,
-        updatedAt: serverTimestamp()
-      });
-    } catch(e) {
-      console.warn('فشل تحديث الحالة مبدئياً:', e);
-    }
-    
-    // نفتح نموذج الطلب مباشرة
-    openNewOrderFromLead(leadId);
+    setTimeout(() => openNewOrderFromLead(leadId), 200);
     return;
   }
 
-  // للباقي: تأكيد عادي
-  const confirmed = await customConfirm(`نقل الليد إلى خانة "${stageLabels[newStage]}"؟`);
+  // ═══════════════════════════════════════════════
+  // باقي الخانات → تأكيد عادي
+  // ═══════════════════════════════════════════════
+  const confirmed = await customConfirm(`نقل الليد إلى "${stageLabels[newStage]}"؟`);
   if (!confirmed) return;
 
   try {
@@ -1080,6 +1048,7 @@ window.changeLeadStage = async function(leadId, newStage) {
       updatedAt: serverTimestamp(),
       ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
     });
+
     showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
     closeModal('leadDetailsModal');
   } catch(e) {
@@ -1094,11 +1063,10 @@ window.openNewLeadModal = function() {
   document.getElementById('newLeadTitle').textContent = '➕ ليد جديد';
   document.getElementById('leadPhone').value = '';
   document.getElementById('leadName').value = '';
-  document.getElementById('leadPhone2').value = '';
   document.getElementById('leadStage').value = 'no_answer';
   document.getElementById('leadNote').value = '';
   document.getElementById('newLeadModal').classList.add('active');
-  setTimeout(() => document.getElementById('leadPhone').focus(), 200);
+  setTimeout(() => document.getElementById('leadPhone').focus(), 250);
 };
 
 window.editLead = function(leadId) {
@@ -1120,55 +1088,48 @@ window.editLead = function(leadId) {
 };
 
 window.saveLead = async function() {
-  const id = document.getElementById('leadId').value;
-  const phone = cleanPhone(document.getElementById('leadPhone').value.trim());
-  const phone2Raw = document.getElementById('leadPhone2').value.trim();
-  const phone2 = phone2Raw ? cleanPhone(phone2Raw) : null;
-  
-  // الاسم اختياري - لو مش موجود نستخدم "عميل - آخر 4 أرقام"
-  let name = document.getElementById('leadName').value.trim();
-  if (!name && phone) {
-    name = 'عميل ' + phone.slice(-4);
-  }
-  
-  const stage = document.getElementById('leadStage').value || 'no_answer';
-  const initialNote = document.getElementById('leadNote').value.trim();
+  const id       = document.getElementById('leadId').value;
+  const phone    = cleanPhone(document.getElementById('leadPhone').value.trim());
+  const nameRaw  = document.getElementById('leadName').value.trim();
+  const stage    = document.getElementById('leadStage').value || 'no_answer';
+  const note     = document.getElementById('leadNote').value.trim();
 
   // ✅ التحقق: التليفون فقط إجباري
-  if (!phone) { 
-    showToast('⚠️ رقم الهاتف مطلوب ولا بد أن يكون رقم مصري صحيح', 'warning'); 
-    return; 
+  if (!phone) {
+    showToast('⚠️ اكتب رقم هاتف مصري صحيح', 'warning');
+    document.getElementById('leadPhone').focus();
+    return;
   }
+
+  // ✅ لو الاسم فاضي → نستخدم آخر 4 أرقام
+  const name = nameRaw || `عميل ${phone.slice(-4)}`;
 
   try {
     const now = new Date();
+
     if (id) {
-      // تعديل
+      // ===== تعديل =====
       await updateDoc(doc(db, 'callCenterLeads', id), {
         customerName: name,
         phone,
-        phone2,
         stage,
         updatedAt: serverTimestamp(),
         updatedBy: currentUserEmail
       });
       showToast('✅ تم تحديث الليد', 'success');
     } else {
-      // جديد
-      const notes = [];
-      if (initialNote) {
-        notes.push({
-          text: initialNote,
-          type: 'note',
-          addedBy: currentUserEmail,
-          createdAt: now.toISOString()
-        });
-      }
-      
+      // ===== جديد =====
+      const notes = note ? [{
+        text: note,
+        type: 'note',
+        addedBy: currentUserEmail,
+        createdAt: now.toISOString()
+      }] : [];
+
       await addDoc(collection(db, 'callCenterLeads'), {
         customerName: name,
         phone,
-        phone2,
+        phone2: null,
         gov: '',
         city: '',
         address: '',
@@ -1180,8 +1141,19 @@ window.saveLead = async function() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+
+      // لو الخانة "لم يرد" → نسجل محاولة أولى تلقائياً
+      if (stage === 'no_answer') {
+        const docRef = await getDocs(query(
+          collection(db, 'callCenterLeads'),
+          where('phone', '==', phone)
+        ));
+        // (اختياري: مش لازم نعمل حاجة، اللوج هيتسجل لما يعمل محاولة)
+      }
+
       showToast('✅ تم إضافة الليد', 'success');
     }
+
     closeModal('newLeadModal');
   } catch(e) {
     console.error(e);
@@ -1206,7 +1178,7 @@ window.deleteLead = async function(leadId) {
 window.openNewOrderFromLead = function(leadId) {
   const lead = leads.find(l => l.id === leadId);
   if (!lead) return;
-  
+
   document.getElementById('orderLeadId').value = leadId;
   document.getElementById('orderName').value = lead.customerName || '';
   document.getElementById('orderPhone').value = lead.phone || '';
@@ -1222,9 +1194,15 @@ window.openNewOrderFromLead = function(leadId) {
   document.getElementById('orderShipping').value = '';
   document.getElementById('orderNotes').value = '';
   updateOrderTotal();
+
   closeModal('leadDetailsModal');
   document.getElementById('newOrderModal').classList.add('active');
-  setTimeout(() => document.getElementById('orderAddress').focus(), 300);
+
+  // ✅ الفوكس على العنوان (لو مفيش عنوان) أو على المنتج
+  setTimeout(() => {
+    if (!lead.address) document.getElementById('orderAddress').focus();
+    else document.getElementById('orderProduct').focus();
+  }, 300);
 };
 
 function updateOrderTotal() {
@@ -1254,24 +1232,26 @@ window.saveOrderFromLead = async function() {
   const shipping = parseFloat(document.getElementById('orderShipping').value) || 0;
   const notes = document.getElementById('orderNotes').value.trim();
 
-  // Validation
+  // ═══ Validation ═══
   if (!name) { showToast('اكتب اسم العميل', 'warning'); return; }
   if (!phone) { showToast('رقم الهاتف غير صحيح', 'warning'); return; }
-  if (!gov || !city) { showToast('اختر المحافظة والمدينة', 'warning'); return; }
+  if (!gov) { showToast('اختر المحافظة', 'warning'); return; }
+  if (!city) { showToast('اختر المدينة', 'warning'); return; }
   if (!address) { showToast('اكتب العنوان', 'warning'); return; }
   if (!product) { showToast('اكتب اسم المنتج', 'warning'); return; }
   if (!size && !weight && !length) {
-    showToast('لازم تدخل المقاس أو الوزن/الطول على الأقل', 'warning');
+    showToast('أدخل المقاس أو الوزن/الطول على الأقل', 'warning');
     return;
   }
   if (price <= 0) { showToast('السعر غير صحيح', 'warning'); return; }
+  if (shipping < 0) { showToast('الشحن غير صحيح', 'warning'); return; }
 
   const btn = event.target;
   btn.disabled = true;
   btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
 
   try {
-    // توليد رقم الطلب
+    // ═══ توليد رقم الطلب ═══
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -1282,10 +1262,11 @@ window.saveOrderFromLead = async function() {
     const todaySnap = await getDocs(qToday);
     const dailyCount = todaySnap.size + 1;
 
-    // كود العميل
+    // ═══ كود العميل ═══
     const customersRef = collection(db, 'customers');
     const qCust = query(customersRef, where('phone', '==', phone));
     const custSnap = await getDocs(qCust);
+
     let customerCode;
     if (!custSnap.empty) {
       customerCode = custSnap.docs[0].data().customerCode;
@@ -1297,16 +1278,13 @@ window.saveOrderFromLead = async function() {
       const newNumber = (await getDoc(counterRef)).data().value;
       customerCode = `V${newNumber}`;
       await setDoc(doc(db, 'customers', phone), {
-        phone,
-        name,
-        customerCode,
-        createdAt: serverTimestamp()
+        phone, name, customerCode, createdAt: serverTimestamp()
       });
     }
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
 
-    // مطابقة المنتج من القائمة
+    // ═══ مطابقة المنتج ═══
     const matched = allProducts.find(p =>
       (p.name || '').trim().toLowerCase() === product.toLowerCase()
     );
@@ -1351,14 +1329,14 @@ window.saveOrderFromLead = async function() {
       originalCreatedAt: serverTimestamp(),
       totalCost,
       profit: finalTotal - totalCost - shipping,
-      source: 'callcenter',           // ← مهم
-      addedBy: currentUserEmail,       // ← مهم
+      source: 'callcenter',
+      addedBy: currentUserEmail,
       callCenterLeadId: leadId
     };
 
     const orderRef = await addDoc(collection(db, 'orders'), orderData);
 
-    // خصم المخزون لو فيه مقاس
+    // ═══ خصم المخزون ═══
     if (matched?.id && size && matched.stockBySize?.[size] !== undefined) {
       const sb = { ...matched.stockBySize };
       if (sb[size] !== null && sb[size] !== undefined && sb[size] >= 1) {
@@ -1372,7 +1350,7 @@ window.saveOrderFromLead = async function() {
       }
     }
 
-    // تحديث الليد
+    // ═══ تحديث الليد ═══
     if (lead) {
       const now = new Date();
       const notesArr = [...(lead.notes || [])];
