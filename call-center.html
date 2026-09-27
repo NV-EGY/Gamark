@@ -49,26 +49,52 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 
 /* ===== Stats Bar ===== */
 .stats-bar {
-  display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
-  padding:12px 16px; max-width:1400px; margin:0 auto;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 10px 16px;
+  max-width: 900px;
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
+.stats-bar::-webkit-scrollbar { height: 3px; }
+.stats-bar::-webkit-scrollbar-thumb { background: #cfd8dc; border-radius: 10px; }
+
 .stat-card {
-  background:#fff; padding:14px; border-radius:16px; text-align:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer;
-  border-right:4px solid #ccc; transition:0.25s;
+  flex: 1 1 0;
+  min-width: 90px;
+  background: #fff;
+  padding: 10px 8px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  cursor: pointer;
+  border-right: 4px solid #ccc;
+  transition: 0.25s;
+  white-space: nowrap;
 }
-.stat-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.1); }
-.stat-card.active { box-shadow:0 6px 20px rgba(0,0,0,0.15); }
-.stat-card .num { font-size:24px; font-weight:800; margin-bottom:2px; }
-.stat-card .label { font-size:12px; color:#666; font-weight:700; }
-.stat-card[data-stage="no_answer"] { border-color:#f39c12; }
-.stat-card[data-stage="no_answer"] .num { color:#f39c12; }
-.stat-card[data-stage="follow_up"] { border-color:#3498db; }
-.stat-card[data-stage="follow_up"] .num { color:#3498db; }
-.stat-card[data-stage="new_order"] { border-color:#2ecc71; }
-.stat-card[data-stage="new_order"] .num { color:#2ecc71; }
-.stat-card[data-stage="not_interested"] { border-color:#e74c3c; }
-.stat-card[data-stage="not_interested"] .num { color:#e74c3c; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+.stat-card.active { box-shadow: 0 6px 16px rgba(0,0,0,0.15); transform: translateY(-1px); }
+.stat-card .num { font-size: 20px; font-weight: 800; margin-bottom: 1px; }
+.stat-card .label { font-size: 10px; color: #666; font-weight: 700; }
+
+.stat-card[data-stage="no_answer"] { border-color: #f39c12; }
+.stat-card[data-stage="no_answer"] .num { color: #f39c12; }
+.stat-card[data-stage="follow_up"] { border-color: #3498db; }
+.stat-card[data-stage="follow_up"] .num { color: #3498db; }
+.stat-card[data-stage="new_order"] { border-color: #2ecc71; }
+.stat-card[data-stage="new_order"] .num { color: #2ecc71; }
+.stat-card[data-stage="not_interested"] { border-color: #e74c3c; }
+.stat-card[data-stage="not_interested"] .num { color: #e74c3c; }
+
+/* ✅ على الموبايل: الفلاتر تبقى أفقي سكرول لكن مش تتحول لصفين */
+@media (max-width: 520px) {
+  .stats-bar { padding: 8px 10px; gap: 6px; }
+  .stat-card { min-width: 80px; padding: 8px 6px; }
+  .stat-card .num { font-size: 16px; }
+  .stat-card .label { font-size: 9px; }
+}
 
 /* ===== Filter Tabs ===== */
 .filter-tabs {
@@ -440,6 +466,25 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-5px); }
   75% { transform: translateX(5px); }
+}
+/* ✅ تاريخ الإنشاء على الكارت */
+.lead-created-at {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: #666;
+  background: #f5f7fa;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-weight: 700;
+  margin-top: 6px;
+  direction: rtl;
+  width: fit-content;
+}
+.lead-created-at i {
+  color: #0F7B65;
+  font-size: 10px;
 }
 </style>
 </head>
@@ -882,6 +927,19 @@ function formatDate(ts) {
   return d.toLocaleDateString('ar-EG', { day:'numeric', month:'short' });
 }
 
+function formatFullDate(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const hours = d.getHours();
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'م' : 'ص';
+  const h12 = hours % 12 || 12;
+  return `${day}/${month}/${year} · ${h12}:${minutes} ${ampm}`;
+}
+
 function cleanPhone(raw) {
   if (!raw) return null;
   let p = String(raw).replace(/[\s\-\(\)\.]/g, '').replace(/^\+/, '');
@@ -933,12 +991,12 @@ function loadLeads() {
     snap => {
       leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       
-      // ✅ ترتيب client-side
-      leads.sort((a, b) => {
-        const ta = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
-        const tb = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
-        return tb - ta;
-      });
+      // ✅ الترتيب حسب تاريخ الإنشاء (الأحدث أولاً)
+leads.sort((a, b) => {
+  const ta = a.createdAt?.toDate?.() || new Date(0);
+  const tb = b.createdAt?.toDate?.() || new Date(0);
+  return tb - ta;
+});
       
       console.log('📥 Leads updated:', leads.length);
       renderBoard();
@@ -958,11 +1016,12 @@ async function refreshLeads() {
   try {
     const snap = await getDocs(collection(db, 'callCenterLeads'));
     leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    leads.sort((a, b) => {
-      const ta = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
-      const tb = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
-      return tb - ta;
-    });
+   // ✅ الترتيب حسب تاريخ الإنشاء (الأحدث أولاً)
+leads.sort((a, b) => {
+  const ta = a.createdAt?.toDate?.() || new Date(0);
+  const tb = b.createdAt?.toDate?.() || new Date(0);
+  return tb - ta;
+});
     console.log('🔄 Leads refreshed manually:', leads.length);
     renderBoard();
     renderStats();
@@ -1068,10 +1127,14 @@ function renderLeadCard(lead) {
       ${lead.interest ? `<div class="lead-interest">🛍️ ${escapeHtml(lead.interest)}</div>` : ''}
       ${reasonLabel ? `<div style="font-size:11px; color:#8B6914; background:#fff8e1; padding:4px 8px; border-radius:8px; margin-top:6px; display:inline-block; font-weight:700;">${reasonLabel}</div>` : ''}
       ${lastNote && !reasonLabel ? `<div class="lead-note-preview">💬 ${escapeHtml(lastNote.text || '')}</div>` : ''}
-      <div class="lead-meta" style="margin-top:6px;">
-        <span>⏰ ${formatDate(lead.updatedAt)}</span>
-        ${lead.addedBy ? `<span style="font-size:10px;">👤 ${escapeHtml(lead.addedBy.split('@')[0])}</span>` : ''}
-      </div>
+      <div class="lead-meta" style="margin-top:6px; display:flex; flex-wrap:wrap; gap:6px;">
+  ${lead.createdAt ? `
+    <span class="lead-created-at" title="تاريخ الإنشاء">
+      <i class="fas fa-calendar-plus"></i> ${formatFullDate(lead.createdAt)}
+    </span>
+  ` : ''}
+  ${lead.addedBy ? `<span style="font-size:10px; color:#888;">👤 ${escapeHtml(lead.addedBy.split('@')[0])}</span>` : ''}
+</div>
       ${quickActions}
       <div class="lead-actions" onclick="event.stopPropagation();">
   <a href="tel:${lead.phone || ''}" class="btn-call" title="اتصال"><i class="fas fa-phone"></i></a>
