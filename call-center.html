@@ -783,30 +783,59 @@ async function loadProducts() {
 }
 
 // ================== Load Leads ==================
-let initialLeads = true;
+let leadsUnsubscribe = null;
+
 function loadLeads() {
-  // ✅ نشيل orderBy عشان نتجنب مشاكل الـ missing fields
+  // ✅ لو فيه listener قديم، نشيله الأول
+  if (leadsUnsubscribe) {
+    try { leadsUnsubscribe(); } catch(e) {}
+    leadsUnsubscribe = null;
+  }
+  
   const q = query(collection(db, 'callCenterLeads'));
   
-  onSnapshot(q, snap => {
+  leadsUnsubscribe = onSnapshot(q, 
+    snap => {
+      leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // ✅ ترتيب client-side
+      leads.sort((a, b) => {
+        const ta = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+        const tb = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+        return tb - ta;
+      });
+      
+      console.log('📥 Leads updated:', leads.length);
+      renderBoard();
+      renderStats();
+    }, 
+    err => {
+      console.error('❌ loadLeads error:', err);
+      showToast('⚠️ إعادة الاتصال بالليدز...', 'warning');
+      // ✅ إعادة المحاولة بعد 3 ثواني
+      setTimeout(() => loadLeads(), 3000);
+    }
+  );
+}
+
+// ✅ دالة refresh يدوي — نستدعيها بعد كل عملية
+async function refreshLeads() {
+  try {
+    const snap = await getDocs(collection(db, 'callCenterLeads'));
     leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    
-    // ✅ ترتيب client-side (الأحدث أولاً)
     leads.sort((a, b) => {
       const ta = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
       const tb = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
       return tb - ta;
     });
-    
-    console.log('📥 عدد الليدز المحملة:', leads.length);
+    console.log('🔄 Leads refreshed manually:', leads.length);
     renderBoard();
     renderStats();
-    if (initialLeads) initialLeads = false;
-  }, err => {
-    console.error('❌ loadLeads error:', err);
-    showToast('خطأ في تحميل الليدز: ' + err.message, 'error');
-  });
+  } catch(e) {
+    console.error('❌ refreshLeads failed:', e);
+  }
 }
+window.refreshLeads = refreshLeads;
 
 // ================== Render ==================
 function getFilteredLeads() {
@@ -1031,32 +1060,35 @@ window.saveNote = async function() {
       lastContactBy: currentUserEmail
     };
 
-    // إذا كانت محاولة "لم يرد" → زود العداد
     if (type === 'attempt' && lead.stage === 'no_answer') {
       const newCount = (lead.attemptCount || 0) + 1;
       updateData.attemptCount = newCount;
-      // لو وصل للحد الأقصى → انقل تلقائياً لـ not_interested
       if (newCount >= MAX_ATTEMPTS) {
         updateData.stage = 'not_interested';
         notes.push({
-          text: `🔄 انتقال تلقائي إلى "غير مهتم" بعد ${MAX_ATTEMPTS} محاولات بدون رد`,
+          text: `🔄 انتقال تلقائي إلى "غير مهتم" بعد ${MAX_ATTEMPTS} محاولات`,
           type: 'stage-change',
           addedBy: 'system',
           createdAt: now.toISOString()
         });
         updateData.notes = notes;
-        showToast(`تم نقل الليد تلقائياً إلى "غير مهتم" بعد ${MAX_ATTEMPTS} محاولات`, 'warning');
+        showToast(`تم نقل الليد تلقائياً إلى "غير مهتم"`, 'warning');
       } else {
         showToast(`تم تسجيل المحاولة ${newCount}/${MAX_ATTEMPTS}`, 'success');
       }
     } else {
-      showToast('تم حفظ الملاحظة', 'success');
+      showToast('✅ تم حفظ الملاحظة', 'success');
     }
 
     await updateDoc(doc(db, 'callCenterLeads', leadId), updateData);
     closeModal('addNoteModal');
+    
+    // ✅ refresh يدوي
+    await refreshLeads();
+    closeModal('leadDetailsModal');
+    
   } catch(e) {
-    console.error(e);
+    console.error('❌ saveNote error:', e);
     showToast('فشل الحفظ: ' + e.message, 'error');
   }
 };
@@ -1073,15 +1105,43 @@ window.changeLeadStage = async function(leadId, newStage) {
     not_interested: '❌ غير مهتم'
   };
 
-  // ═══════════════════════════════════════════════
-  // 🛒 لو "طلب جديد" → نفتح فورم الطلب فوراً
-  //    (الحالة هتتغير تلقائياً بعد ما الطلب يتسجل)
-  // ═══════════════════════════════════════════════
   if (newStage === 'new_order') {
     closeModal('leadDetailsModal');
     setTimeout(() => openNewOrderFromLead(leadId), 200);
     return;
   }
+
+  const confirmed = await customConfirm(`نقل الليد إلى "${stageLabels[newStage]}"؟`);
+  if (!confirmed) return;
+
+  try {
+    const now = new Date();
+    const notes = [...(lead.notes || [])];
+    notes.push({
+      text: `نقل من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
+      type: 'stage-change',
+      addedBy: currentUserEmail,
+      createdAt: now.toISOString()
+    });
+
+    await updateDoc(doc(db, 'callCenterLeads', leadId), {
+      stage: newStage,
+      notes,
+      updatedAt: serverTimestamp(),
+      ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
+    });
+
+    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
+    closeModal('leadDetailsModal');
+    
+    // ✅ refresh يدوي
+    await refreshLeads();
+    
+  } catch(e) {
+    console.error('❌ changeLeadStage error:', e);
+    showToast('فشل النقل: ' + e.message, 'error');
+  }
+};
 
   // ═══════════════════════════════════════════════
   // باقي الخانات → تأكيد عادي
@@ -1159,12 +1219,14 @@ window.saveLead = async function() {
   }
 
   const name = nameRaw || `عميل ${phone.slice(-4)}`;
+  const btn = document.querySelector('#newLeadModal .btn-save');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...'; }
 
   try {
     const now = new Date();
 
     if (id) {
-      // تعديل
+      // ═══ تعديل ═══
       await updateDoc(doc(db, 'callCenterLeads', id), {
         customerName: name,
         phone,
@@ -1176,24 +1238,11 @@ window.saveLead = async function() {
       });
       showToast('✅ تم تحديث الليد', 'success');
     } else {
-      // جديد
+      // ═══ جديد ═══
       const notes = [];
       if (reason) {
-        const reasonText = {
-          asked_price: '💰 سألت عن السعر',
-          sent_measurements: '📏 بعتت الطول والوزن',
-          incomplete_data: '📝 مكملتش بياناتها',
-          will_reply_later: '⏰ قالت هرد عليكم بعدين',
-          wants_callback: '📞 طلب معاودة الاتصال',
-          interested_shipping: '🚚 سألت عن الشحن',
-          comparing_prices: '🔍 بيقارن أسعار',
-          no_response_whatsapp: '💬 مردش على الواتساب',
-          thinking: '🤔 بيفكر / محتاج وقت',
-          other: '📌 أخرى'
-        }[reason] || reason;
-
         notes.push({
-          text: reasonText,
+          text: REASON_LABELS[reason] || reason,
           type: 'note',
           addedBy: currentUserEmail,
           createdAt: now.toISOString()
@@ -1208,7 +1257,7 @@ window.saveLead = async function() {
         });
       }
 
-      await addDoc(collection(db, 'callCenterLeads'), {
+      const docRef = await addDoc(collection(db, 'callCenterLeads'), {
         customerName: name,
         phone,
         phone2: null,
@@ -1224,13 +1273,21 @@ window.saveLead = async function() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
+      
+      console.log('✅ Lead added with ID:', docRef.id);
       showToast('✅ تم إضافة الليد', 'success');
     }
 
     closeModal('newLeadModal');
+
+    // ✅✅✅ الأهم: refresh يدوي بعد كل عملية
+    await refreshLeads();
+    
   } catch(e) {
-    console.error(e);
+    console.error('❌ saveLead error:', e);
     showToast('فشل الحفظ: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ'; }
   }
 };
 
@@ -1423,7 +1480,7 @@ window.saveOrderFromLead = async function() {
       }
     }
 
-    // ═══ تحديث الليد ═══
+       // ═══ تحديث الليد ═══
     if (lead) {
       const now = new Date();
       const notesArr = [...(lead.notes || [])];
@@ -1445,14 +1502,11 @@ window.saveOrderFromLead = async function() {
 
     showToast(`✅ تم تسجيل الطلب ${orderID}`, 'success');
     closeModal('newOrderModal');
+    
+    // ✅ refresh يدوي
+    await refreshLeads();
+    
   } catch(e) {
-    console.error(e);
-    showToast('فشل التسجيل: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fas fa-check"></i> تسجيل الطلب';
-  }
-};
 
 // ================== Export Excel ==================
 window.exportLeads = function() {
