@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - لوحة تحكم VANTÉ</title>
+    <title>GAMARK | تسجيل الدخول</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -12,179 +13,521 @@
             padding: 0;
             box-sizing: border-box;
         }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-            min-height: 100vh;
+            background: #0a0d0c;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-        }
-        .login-container {
-            width: 100%;
-            max-width: 440px;
-        }
-        .login-card {
-            background: #ffffff;
-            border-radius: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        .login-header {
-            background: #111;
-            padding: 30px 25px;
-            text-align: center;
-            border-bottom: 1px solid rgba(212,175,55,0.3);
-        }
-        .login-header h1 {
-            font-size: 28px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #D4AF37, #FFD700);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
-        }
-        .login-header p {
-            color: #aaa;
-            font-size: 14px;
-            margin-top: 8px;
-        }
-        .login-body {
-            padding: 35px 30px;
-        }
-        .input-group {
-            margin-bottom: 24px;
+            padding: 16px;
             position: relative;
         }
-        .input-group i {
+
+        /* ═══════════════════════════════════════════ */
+        /* خلفية متحركة أنيقة */
+        /* ═══════════════════════════════════════════ */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(circle at 15% 20%, rgba(212, 175, 55, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, rgba(15, 123, 101, 0.18) 0%, transparent 45%),
+                linear-gradient(135deg, #0a0d0c 0%, #111a18 50%, #0a0d0c 100%);
+            z-index: -3;
+        }
+
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(212, 175, 55, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(212, 175, 55, 0.04) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -2;
+            mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+        }
+
+        .bg-blur {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.35;
+            z-index: -1;
+            animation: floatBlob 18s ease-in-out infinite;
+        }
+        .bg-blur.gold {
+            background: #D4AF37;
+            top: -150px;
+            right: -150px;
+        }
+        .bg-blur.green {
+            background: #0F7B65;
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -9s;
+        }
+
+        @keyframes floatBlob {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(40px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 40px) scale(0.95); }
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* البطاقة الرئيسية */
+        /* ═══════════════════════════════════════════ */
+        .login-container {
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 1;
+            animation: cardEnter 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes cardEnter {
+            from { opacity: 0; transform: translateY(30px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .login-card {
+            background: linear-gradient(145deg, #ffffff, #fafafa);
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow:
+                0 0 0 1px rgba(212, 175, 55, 0.15),
+                0 30px 60px -15px rgba(0, 0, 0, 0.7),
+                0 0 100px -20px rgba(212, 175, 55, 0.25);
+            position: relative;
+        }
+
+        /* شريط ذهبي علوي */
+        .login-card::before {
+            content: '';
             position: absolute;
-            right: 15px;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #D4AF37, #0F7B65, #D4AF37);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+
+        @keyframes shimmer {
+            from { background-position: 0% 0%; }
+            to { background-position: 200% 0%; }
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* الهيدر - شعار GAMARK */
+        /* ═══════════════════════════════════════════ */
+        .login-header {
+            background: linear-gradient(145deg, #0a0d0c, #141a18);
+            padding: 40px 25px 32px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* زخرفة دائرية خفيفة */
+        .login-header::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 200px;
+            height: 200px;
+            border: 1px solid rgba(212, 175, 55, 0.15);
+            border-radius: 50%;
+        }
+        .login-header::after {
+            content: '';
+            position: absolute;
+            bottom: -100px;
+            left: -50px;
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(15, 123, 101, 0.2);
+            border-radius: 50%;
+        }
+
+        .logo-wrap {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #D4AF37, #B8860B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #000;
+            font-size: 26px;
+            font-weight: 900;
+            box-shadow:
+                0 8px 20px -5px rgba(212, 175, 55, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            position: relative;
+        }
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 19px;
+            background: linear-gradient(135deg, rgba(212,175,55,0.4), transparent);
+            z-index: -1;
+            filter: blur(8px);
+        }
+
+        .brand-name {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFE066 50%, #D4AF37 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: goldShine 3s linear infinite;
+            line-height: 1;
+        }
+
+        @keyframes goldShine {
+            to { background-position: 200% center; }
+        }
+
+        .brand-sub {
+            color: #7a8f8a;
+            font-size: 13px;
+            margin-top: 6px;
+            letter-spacing: 1px;
+            font-weight: 600;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-sub::before,
+        .brand-sub::after {
+            content: '·';
+            margin: 0 8px;
+            color: #D4AF37;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* جسم الفورم */
+        /* ═══════════════════════════════════════════ */
+        .login-body {
+            padding: 36px 32px 30px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .welcome h2 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111;
+            margin-bottom: 4px;
+        }
+        .welcome p {
+            font-size: 13px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .input-group i.field-icon {
+            position: absolute;
+            right: 16px;
             top: 50%;
             transform: translateY(-50%);
             color: #D4AF37;
-            font-size: 18px;
+            font-size: 16px;
             pointer-events: none;
+            transition: 0.3s;
         }
+
         .input-group input {
             width: 100%;
-            padding: 14px 45px 14px 15px;
-            border: 1.5px solid #e5e5e5;
-            border-radius: 16px;
-            font-size: 15px;
+            padding: 15px 46px 15px 15px;
+            border: 2px solid #e8e8e8;
+            border-radius: 14px;
+            font-size: 14px;
             font-family: 'Cairo', sans-serif;
-            transition: all 0.3s;
+            font-weight: 600;
+            transition: all 0.25s ease;
             outline: none;
-            background: #fff;
+            background: #fafbfb;
+            color: #111;
         }
+
+        .input-group input::placeholder {
+            color: #b0b8b5;
+            font-weight: 500;
+        }
+
         .input-group input:focus {
             border-color: #D4AF37;
-            box-shadow: 0 0 0 3px rgba(212,175,55,0.15);
+            background: #fff;
+            box-shadow:
+                0 0 0 4px rgba(212, 175, 55, 0.12),
+                0 4px 12px -3px rgba(212, 175, 55, 0.2);
         }
+
+        .input-group input:focus ~ i.field-icon {
+            color: #B8860B;
+            transform: translateY(-50%) scale(1.15);
+        }
+
+        /* زرار إظهار كلمة المرور */
+        .toggle-pass {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 15px;
+            padding: 4px;
+            transition: 0.2s;
+        }
+        .toggle-pass:hover {
+            color: #0F7B65;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* زر الدخول */
+        /* ═══════════════════════════════════════════ */
         .btn-login {
             width: 100%;
-            background: #111;
-            color: #fff;
+            background: linear-gradient(135deg, #D4AF37 0%, #B8860B 100%);
+            color: #000;
             border: none;
-            border-radius: 16px;
-            padding: 14px;
-            font-size: 16px;
+            border-radius: 14px;
+            padding: 15px;
+            font-size: 15px;
             font-weight: 800;
             font-family: 'Cairo', sans-serif;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
+            margin-top: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow:
+                0 8px 20px -5px rgba(212, 175, 55, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
         }
-        .btn-login:hover {
-            background: #D4AF37;
-            color: #000;
+
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-login:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .btn-login:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(212,175,55,0.4);
+            box-shadow:
+                0 12px 28px -5px rgba(212, 175, 55, 0.6),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
         }
+
+        .btn-login:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
         .btn-login:disabled {
-            opacity: 0.6;
+            opacity: 0.7;
             cursor: not-allowed;
-            transform: none;
         }
+
+        /* ═══════════════════════════════════════════ */
+        /* رسالة الخطأ */
+        /* ═══════════════════════════════════════════ */
         .error-msg {
-            background: #fff0f0;
+            background: linear-gradient(135deg, #fff0f0, #ffe6e6);
             color: #c0392b;
-            padding: 12px;
-            border-radius: 14px;
+            padding: 12px 16px;
+            border-radius: 12px;
             font-size: 13px;
+            font-weight: 700;
             text-align: center;
-            margin-top: 20px;
-            border-right: 3px solid #e74c3c;
+            margin-top: 18px;
+            border-right: 4px solid #e74c3c;
             display: none;
+            animation: shake 0.5s ease;
+            box-shadow: 0 4px 12px -3px rgba(231, 76, 60, 0.2);
         }
-        .footer-note {
+
+        .error-msg.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* الفوتر */
+        /* ═══════════════════════════════════════════ */
+        .login-footer {
             text-align: center;
-            margin-top: 25px;
-            color: #888;
-            font-size: 12px;
+            padding: 18px 20px 22px;
+            border-top: 1px solid #f0f2f1;
+            background: #fafbfb;
         }
+
+        .login-footer p {
+            font-size: 12px;
+            color: #8a9693;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .login-footer p i {
+            color: #D4AF37;
+            font-size: 11px;
+        }
+
+        /* ═══════════════════════════════════════════ */
+        /* السبينر */
+        /* ═══════════════════════════════════════════ */
         .spinner {
             display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255,255,255,0.3);
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #000;
             border-radius: 50%;
-            border-top-color: #fff;
             animation: spin 0.6s linear infinite;
         }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        /* ═══════════════════════════════════════════ */
+        /* Responsive */
+        /* ═══════════════════════════════════════════ */
         @media (max-width: 480px) {
-            .login-body { padding: 25px 20px; }
+            .login-header { padding: 32px 20px 26px; }
+            .login-body { padding: 28px 22px 24px; }
+            .brand-name { font-size: 28px; letter-spacing: 2px; }
+            .logo-icon { width: 48px; height: 48px; font-size: 22px; }
+            .welcome h2 { font-size: 18px; }
         }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <h1>VANTÉ</h1>
-            <p>لوحة تحكم المدير</p>
-        </div>
-        <div class="login-body">
-            <div class="input-group">
-                <i class="fas fa-envelope"></i>
-                <input type="email" id="email" placeholder="البريد الإلكتروني" autocomplete="email">
+
+    <!-- خلفيات متحركة -->
+    <div class="bg-gradient"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-blur gold"></div>
+    <div class="bg-blur green"></div>
+
+    <div class="login-container">
+        <div class="login-card">
+
+            <!-- ═══ الهيدر - شعار GAMARK ═══ -->
+            <div class="login-header">
+                <div class="logo-wrap">
+                    <div class="logo-icon">G</div>
+                    <div class="brand-name">GAMARK</div>
+                </div>
+                <div class="brand-sub">لوحة التحكم الإدارية</div>
             </div>
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+
+            <!-- ═══ الفورم ═══ -->
+            <div class="login-body">
+                <div class="welcome">
+                    <h2>👋 أهلاً بعودتك</h2>
+                    <p>سجّل دخولك للمتابعة إلى لوحة التحكم</p>
+                </div>
+
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="البريد الإلكتروني" autocomplete="email">
+                    <i class="fas fa-envelope field-icon"></i>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+                    <i class="fas fa-lock field-icon"></i>
+                    <button type="button" class="toggle-pass" onclick="togglePassword()" title="إظهار / إخفاء">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+
+                <button class="btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> <span>دخول للوحة التحكم</span>
+                </button>
+
+                <div id="errorMsg" class="error-msg"></div>
             </div>
-            <button class="btn-login" id="loginBtn">
-                <i class="fas fa-key"></i> <span>دخول</span>
-            </button>
-            <div id="errorMsg" class="error-msg"></div>
-        </div>
-        <div class="footer-note">
-            🔒 وصول مقيد للمسؤولين فقط
+
+            <!-- ═══ الفوتر ═══ -->
+            <div class="login-footer">
+                <p><i class="fas fa-shield-alt"></i> وصول آمن للمسؤولين فقط</p>
+            </div>
+
         </div>
     </div>
-</div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-    // ⚠️ استخدم نفس إعدادات Firebase الموجودة في admin-order.html
     const firebaseConfig = {
-  apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
-  authDomain: "gamark-d04ff.firebaseapp.com",
-  projectId: "gamark-d04ff",
-  storageBucket: "gamark-d04ff.firebasestorage.app",
-  messagingSenderId: "802246864333",
-  appId: "1:802246864333:web:23b5336c0c54280a736884",
-  measurementId: "G-DNSGDRCYST"
-};
+        apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
+        authDomain: "gamark-d04ff.firebaseapp.com",
+        projectId: "gamark-d04ff",
+        storageBucket: "gamark-d04ff.firebasestorage.app",
+        messagingSenderId: "802246864333",
+        appId: "1:802246864333:web:23b5336c0c54280a736884",
+        measurementId: "G-DNSGDRCYST"
+    };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -194,16 +537,34 @@
     const passwordInput = document.getElementById('password');
     const errorDiv = document.getElementById('errorMsg');
 
-    // دالة عرض الخطأ
+    // ✅ إظهار / إخفاء كلمة المرور
+    window.togglePassword = function() {
+        const eyeIcon = document.getElementById('eyeIcon');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    };
+
+    // ✅ عرض رسالة الخطأ مع أنيميشن
     function showError(message) {
         errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
+        errorDiv.classList.add('show');
+        // إعادة تشغيل الأنيميشن
+        errorDiv.style.animation = 'none';
+        void errorDiv.offsetWidth;
+        errorDiv.style.animation = 'shake 0.5s ease';
         setTimeout(() => {
-            errorDiv.style.display = 'none';
-        }, 4000);
+            errorDiv.classList.remove('show');
+        }, 5000);
     }
 
-    // دالة تسجيل الدخول
+    // ✅ تسجيل الدخول
     async function login() {
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
@@ -213,27 +574,21 @@
             return;
         }
 
-        // تعطيل الزر وإظهار حالة التحميل
         loginBtn.disabled = true;
         const originalHTML = loginBtn.innerHTML;
         loginBtn.innerHTML = '<div class="spinner"></div> جاري التحقق...';
 
         try {
-            // تأكيد بقاء الجلسة (مهم لتجنب طلب الدخول كل مرة)
             await setPersistence(auth, browserLocalPersistence);
-            
-            // محاولة تسجيل الدخول
             await signInWithEmailAndPassword(auth, email, password);
-            
-            // في حال النجاح، التوجيه إلى لوحة التحكم
             window.location.href = "admin-orders.html";
         } catch (error) {
             console.error("Login error:", error);
             let friendlyMessage = "❌ فشل تسجيل الدخول. تأكد من البريد وكلمة المرور.";
             if (error.code === 'auth/user-not-found') {
                 friendlyMessage = "❌ لا يوجد حساب بهذا البريد الإلكتروني.";
-            } else if (error.code === 'auth/wrong-password') {
-                friendlyMessage = "❌ كلمة المرور غير صحيحة.";
+            } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                friendlyMessage = "❌ البريد أو كلمة المرور غير صحيحة.";
             } else if (error.code === 'auth/invalid-email') {
                 friendlyMessage = "❌ صيغة البريد الإلكتروني غير صحيحة.";
             } else if (error.code === 'auth/too-many-requests') {
@@ -241,22 +596,22 @@
             }
             showError(friendlyMessage);
         } finally {
-            // إعادة تفعيل الزر
             loginBtn.disabled = false;
             loginBtn.innerHTML = originalHTML;
         }
     }
 
-    // ربط الحدث بالزر
-    document.getElementById('loginBtn').addEventListener('click', login);
-    
-    // السماح بالضغط على Enter
-    const inputs = [emailInput, passwordInput];
-    inputs.forEach(input => {
+    // ✅ ربط الأحداث
+    loginBtn.addEventListener('click', login);
+
+    [emailInput, passwordInput].forEach(input => {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') login();
         });
     });
+
+    // ✅ فوكس تلقائي على الإيميل
+    window.addEventListener('load', () => emailInput.focus());
 </script>
 </body>
 </html>
