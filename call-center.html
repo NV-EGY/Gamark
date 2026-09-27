@@ -785,15 +785,26 @@ async function loadProducts() {
 // ================== Load Leads ==================
 let initialLeads = true;
 function loadLeads() {
-  const q = query(collection(db, 'callCenterLeads'), orderBy('updatedAt', 'desc'));
+  // ✅ نشيل orderBy عشان نتجنب مشاكل الـ missing fields
+  const q = query(collection(db, 'callCenterLeads'));
+  
   onSnapshot(q, snap => {
     leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    // ✅ ترتيب client-side (الأحدث أولاً)
+    leads.sort((a, b) => {
+      const ta = a.updatedAt?.toDate?.() || a.createdAt?.toDate?.() || new Date(0);
+      const tb = b.updatedAt?.toDate?.() || b.createdAt?.toDate?.() || new Date(0);
+      return tb - ta;
+    });
+    
+    console.log('📥 عدد الليدز المحملة:', leads.length);
     renderBoard();
     renderStats();
     if (initialLeads) initialLeads = false;
   }, err => {
-    console.error('loadLeads error:', err);
-    showToast('خطأ في تحميل الليدز', 'error');
+    console.error('❌ loadLeads error:', err);
+    showToast('خطأ في تحميل الليدز: ' + err.message, 'error');
   });
 }
 
