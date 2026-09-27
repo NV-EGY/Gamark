@@ -924,6 +924,9 @@ window.openLeadDetails = function(leadId) {
     not_interested: '❌ غير مهتم'
   };
 
+   const reasonLabel = lead.reason ? REASON_LABELS[lead.reason] || '' : '';
+  const attemptsCount = lead.attemptCount || 0;
+
   const notes = (lead.notes || []).slice().reverse();
   const notesHtml = notes.length === 0
     ? '<div style="text-align:center; color:#999; padding:20px;">لا توجد ملاحظات بعد</div>'
@@ -1528,17 +1531,20 @@ window.exportLeads = function() {
 
 // ================== Populate Gov/City ==================
 function populateLeadGovs() {
-  const sel = document.getElementById('leadGov');
-  sel.innerHTML = '<option value="">-- اختر --</option>' + Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
-  sel.addEventListener('change', () => fillCities(sel.value, ''));
-
+  // ⚠️ الـ leadGov و leadCity مش موجودين في HTML (شيلناهم من مودال الليد)
+  // فبس بنعبّي الـ orderGov
   const orderGov = document.getElementById('orderGov');
-  orderGov.innerHTML = '<option value="">-- اختر --</option>' + Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
+  if (!orderGov) return;
+  
+  orderGov.innerHTML = '<option value="">-- اختر --</option>' + 
+    Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
   orderGov.addEventListener('change', () => fillOrderCities(orderGov.value, ''));
 }
 
 function fillCities(gov, selected) {
+  // ⚠️ حماية: لو العنصر مش موجود، نخرج بهدوء
   const citySel = document.getElementById('leadCity');
+  if (!citySel) return;
   if (!gov || !govData[gov]) {
     citySel.innerHTML = '<option value="">-- اختر المحافظة --</option>';
     return;
@@ -1549,6 +1555,7 @@ function fillCities(gov, selected) {
 
 function fillOrderCities(gov, selected) {
   const citySel = document.getElementById('orderCity');
+  if (!citySel) return;
   if (!gov || !govData[gov]) {
     citySel.innerHTML = '<option value="">-- اختر المحافظة --</option>';
     return;
