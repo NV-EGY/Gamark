@@ -428,57 +428,57 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
     </div>
     <div class="modal-body">
       <input type="hidden" id="leadId">
-      <div class="form-group">
-        <label>اسم العميل <span class="req">*</span></label>
-        <input type="text" id="leadName" class="form-control" placeholder="اسم العميل" required>
-      </div>
+      
+      <!-- التليفون - إجباري -->
       <div class="form-group">
         <label>رقم الهاتف <span class="req">*</span></label>
-        <input type="tel" id="leadPhone" class="form-control" placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
+        <input type="tel" id="leadPhone" class="form-control" 
+               placeholder="01xxxxxxxxx" 
+               style="direction:ltr; text-align:right; font-size:16px; font-weight:700;" 
+               autofocus>
+        <small style="color:#888; font-size:11px;">الرقم فقط إجباري — باقي البيانات اختيارية</small>
       </div>
+      
+      <!-- الاسم - اختياري -->
       <div class="form-group">
-        <label>الرقم الثاني (اختياري)</label>
-        <input type="tel" id="leadPhone2" class="form-control" placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
+        <label>اسم العميل <span style="color:#888; font-weight:400;">(اختياري - لو متاح)</span></label>
+        <input type="text" id="leadName" class="form-control" placeholder="اكتب الاسم لو معاك">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>المحافظة</label>
-          <select id="leadGov" class="form-control">
-            <option value="">-- اختر --</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>المدينة</label>
-          <select id="leadCity" class="form-control">
-            <option value="">-- اختر المحافظة --</option>
-          </select>
-        </div>
-      </div>
+      
+      <!-- الرقم الثاني -->
       <div class="form-group">
-        <label>العنوان</label>
-        <input type="text" id="leadAddress" class="form-control" placeholder="الشارع - رقم المنزل">
+        <label>رقم آخر (اختياري)</label>
+        <input type="tel" id="leadPhone2" class="form-control" 
+               placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
       </div>
-      <div class="form-group">
-        <label>مهتم بإيه؟ / المنتج</label>
-        <input type="text" id="leadInterest" class="form-control" placeholder="مثال: عبايات - عطور - ساعات">
-      </div>
+      
+      <!-- الخانة - اختياري -->
       <div class="form-group">
         <label>الخانة الابتدائية</label>
         <select id="leadStage" class="form-control">
           <option value="no_answer">📵 لم يرد</option>
           <option value="follow_up">🔄 متابعة</option>
-          <option value="new_order">✅ طلب جديد</option>
           <option value="not_interested">❌ غير مهتم</option>
         </select>
       </div>
+      
+      <!-- ملاحظة -->
       <div class="form-group">
-        <label>ملاحظة أولية</label>
-        <textarea id="leadNote" class="form-control" rows="2" placeholder="أي ملاحظة..."></textarea>
+        <label>ملاحظة أولية (اختياري)</label>
+        <textarea id="leadNote" class="form-control" rows="2" placeholder="مثال: سأل عن عبايات / طلب معاودة اتصال بكرة"></textarea>
+      </div>
+      
+      <!-- حقول مخفية للتوافق -->
+      <div style="display:none;">
+        <input type="hidden" id="leadGov">
+        <input type="hidden" id="leadCity">
+        <input type="hidden" id="leadAddress">
+        <input type="hidden" id="leadInterest">
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="closeModal('newLeadModal')">إلغاء</button>
-      <button class="btn-save" onclick="saveLead()"><i class="fas fa-save"></i> حفظ</button>
+      <button class="btn-save" onclick="saveLead()"><i class="fas fa-save"></i> حفظ الليد</button>
     </div>
   </div>
 </div>
@@ -1031,6 +1031,36 @@ window.changeLeadStage = async function(leadId, newStage) {
     not_interested: '❌ غير مهتم'
   };
 
+  // ✅ لو النقل لـ "طلب جديد" → نفتح نموذج الطلب فوراً
+  if (newStage === 'new_order') {
+    // نقفل مودال التفاصيل الأول
+    closeModal('leadDetailsModal');
+    
+    // نحدّث الحالة في Firestore أولاً (في الخلفية)
+    try {
+      const now = new Date();
+      const notes = [...(lead.notes || [])];
+      notes.push({
+        text: `نقل إلى "طلب جديد" — جاري تسجيل الطلب`,
+        type: 'stage-change',
+        addedBy: currentUserEmail,
+        createdAt: now.toISOString()
+      });
+      await updateDoc(doc(db, 'callCenterLeads', leadId), {
+        stage: 'new_order',
+        notes,
+        updatedAt: serverTimestamp()
+      });
+    } catch(e) {
+      console.warn('فشل تحديث الحالة مبدئياً:', e);
+    }
+    
+    // نفتح نموذج الطلب مباشرة
+    openNewOrderFromLead(leadId);
+    return;
+  }
+
+  // للباقي: تأكيد عادي
   const confirmed = await customConfirm(`نقل الليد إلى خانة "${stageLabels[newStage]}"؟`);
   if (!confirmed) return;
 
@@ -1050,7 +1080,7 @@ window.changeLeadStage = async function(leadId, newStage) {
       updatedAt: serverTimestamp(),
       ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
     });
-    showToast(`تم النقل إلى ${stageLabels[newStage]}`, 'success');
+    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
     closeModal('leadDetailsModal');
   } catch(e) {
     console.error(e);
@@ -1062,17 +1092,13 @@ window.changeLeadStage = async function(leadId, newStage) {
 window.openNewLeadModal = function() {
   document.getElementById('leadId').value = '';
   document.getElementById('newLeadTitle').textContent = '➕ ليد جديد';
-  document.getElementById('leadName').value = '';
   document.getElementById('leadPhone').value = '';
+  document.getElementById('leadName').value = '';
   document.getElementById('leadPhone2').value = '';
-  document.getElementById('leadGov').value = '';
-  document.getElementById('leadCity').innerHTML = '<option value="">-- اختر المحافظة --</option>';
-  document.getElementById('leadAddress').value = '';
-  document.getElementById('leadInterest').value = '';
   document.getElementById('leadStage').value = 'no_answer';
   document.getElementById('leadNote').value = '';
   document.getElementById('newLeadModal').classList.add('active');
-  setTimeout(() => document.getElementById('leadName').focus(), 200);
+  setTimeout(() => document.getElementById('leadPhone').focus(), 200);
 };
 
 window.editLead = function(leadId) {
@@ -1095,19 +1121,24 @@ window.editLead = function(leadId) {
 
 window.saveLead = async function() {
   const id = document.getElementById('leadId').value;
-  const name = document.getElementById('leadName').value.trim();
   const phone = cleanPhone(document.getElementById('leadPhone').value.trim());
   const phone2Raw = document.getElementById('leadPhone2').value.trim();
   const phone2 = phone2Raw ? cleanPhone(phone2Raw) : null;
-  const gov = document.getElementById('leadGov').value;
-  const city = document.getElementById('leadCity').value;
-  const address = document.getElementById('leadAddress').value.trim();
-  const interest = document.getElementById('leadInterest').value.trim();
-  const stage = document.getElementById('leadStage').value;
+  
+  // الاسم اختياري - لو مش موجود نستخدم "عميل - آخر 4 أرقام"
+  let name = document.getElementById('leadName').value.trim();
+  if (!name && phone) {
+    name = 'عميل ' + phone.slice(-4);
+  }
+  
+  const stage = document.getElementById('leadStage').value || 'no_answer';
   const initialNote = document.getElementById('leadNote').value.trim();
 
-  if (!name) { showToast('اكتب اسم العميل', 'warning'); return; }
-  if (!phone) { showToast('رقم الهاتف غير صحيح (مصري)', 'warning'); return; }
+  // ✅ التحقق: التليفون فقط إجباري
+  if (!phone) { 
+    showToast('⚠️ رقم الهاتف مطلوب ولا بد أن يكون رقم مصري صحيح', 'warning'); 
+    return; 
+  }
 
   try {
     const now = new Date();
@@ -1117,15 +1148,11 @@ window.saveLead = async function() {
         customerName: name,
         phone,
         phone2,
-        gov,
-        city,
-        address,
-        interest,
         stage,
         updatedAt: serverTimestamp(),
         updatedBy: currentUserEmail
       });
-      showToast('تم تحديث الليد', 'success');
+      showToast('✅ تم تحديث الليد', 'success');
     } else {
       // جديد
       const notes = [];
@@ -1137,14 +1164,15 @@ window.saveLead = async function() {
           createdAt: now.toISOString()
         });
       }
+      
       await addDoc(collection(db, 'callCenterLeads'), {
         customerName: name,
         phone,
         phone2,
-        gov,
-        city,
-        address,
-        interest,
+        gov: '',
+        city: '',
+        address: '',
+        interest: '',
         stage,
         attemptCount: 0,
         notes,
@@ -1152,7 +1180,7 @@ window.saveLead = async function() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-      showToast('تم إضافة الليد بنجاح', 'success');
+      showToast('✅ تم إضافة الليد', 'success');
     }
     closeModal('newLeadModal');
   } catch(e) {
@@ -1178,12 +1206,13 @@ window.deleteLead = async function(leadId) {
 window.openNewOrderFromLead = function(leadId) {
   const lead = leads.find(l => l.id === leadId);
   if (!lead) return;
+  
   document.getElementById('orderLeadId').value = leadId;
   document.getElementById('orderName').value = lead.customerName || '';
   document.getElementById('orderPhone').value = lead.phone || '';
   document.getElementById('orderPhone2').value = lead.phone2 || '';
   document.getElementById('orderGov').value = lead.gov || '';
-  fillOrderCities(lead.gov, lead.city || '');
+  fillOrderCities(lead.gov || '', lead.city || '');
   document.getElementById('orderAddress').value = lead.address || '';
   document.getElementById('orderProduct').value = lead.interest || '';
   document.getElementById('orderSize').value = '';
@@ -1195,6 +1224,7 @@ window.openNewOrderFromLead = function(leadId) {
   updateOrderTotal();
   closeModal('leadDetailsModal');
   document.getElementById('newOrderModal').classList.add('active');
+  setTimeout(() => document.getElementById('orderAddress').focus(), 300);
 };
 
 function updateOrderTotal() {
