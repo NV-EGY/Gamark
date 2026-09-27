@@ -4478,11 +4478,7 @@ document.addEventListener("DOMContentLoaded", () => {
         reviewSearch.addEventListener("input", () => renderReviews());
     }
 });
-// استبدال alert الأصلي (اختياري - تعليق إذا أردت الاحتفاظ بالـ alert القديم أحياناً)
-// window.alert = customAlert;
 
-// دالة مساعدة لعرض رسائل سريعة مثل toast (للمواعيد القصيرة)
-// دالة مساعدة لعرض رسائل سريعة مثل toast
 window.showToast = function(message, duration = 3000) {
     // إزالة أي toast موجود مسبقاً
     const existingToast = document.querySelector('.vante-toast');
@@ -5003,6 +4999,10 @@ window.editShippingGroup = editShippingGroup;
 window.deleteShippingGroup = deleteShippingGroup;
 window.saveShippingRate = saveShippingRate;
 window.toggleShippingGroup = toggleShippingGroup;
+// ================== Search & Date Listeners ==================
+document.getElementById('search')?.addEventListener('input', () => render());
+document.getElementById('dateFilter')?.addEventListener('change', () => render());
+document.getElementById('dayFilterSelect')?.addEventListener('change', () => render());
 </script>
 <!-- ===== مودال لصق الطلبات ===== -->
 <div id="pasteOrdersModal" class="custom-confirm-overlay" style="padding: 20px;">
