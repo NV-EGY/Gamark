@@ -338,6 +338,12 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
   .stat-card .label { font-size:10px; }
   .board { padding:0 8px; gap:10px; }
 }
+/* Shake animation للحقول اللي فيها خطأ */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
 </style>
 </head>
 <body>
@@ -946,16 +952,33 @@ function renderLeadCard(lead) {
       </div>
       ${quickActions}
       <div class="lead-actions" onclick="event.stopPropagation();">
-        <a href="tel:${lead.phone || ''}" class="btn-call"><i class="fas fa-phone"></i> اتصال</a>
-        <a href="https://wa.me/2${lead.phone || ''}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i></a>
-        <button class="btn-more" onclick="openLeadDetails('${lead.id}')"><i class="fas fa-ellipsis-h"></i></button>
-      </div>
+  <a href="tel:${lead.phone || ''}" class="btn-call" title="اتصال"><i class="fas fa-phone"></i></a>
+  <a href="https://wa.me/2${lead.phone || ''}" target="_blank" class="btn-wa" title="واتساب"><i class="fab fa-whatsapp"></i></a>
+  <button class="btn-more" onclick="openAddNote('${lead.id}')" title="ملاحظة سريعة" style="background:#f39c12; color:#fff;">
+    <i class="fas fa-sticky-note"></i>
+  </button>
+  <button class="btn-more" onclick="openLeadDetails('${lead.id}')" title="التفاصيل">
+    <i class="fas fa-ellipsis-h"></i>
+  </button>
+</div>
     </div>
   `;
 }
 
-// ================== Quick Stage Change (من الكارت مباشرة) ==================
-window.quickStageChange = async function(leadId, newStage) {
+// ================== Quick Stage Change ==================
+window.quickStageChange = function(leadId, newStage) {
+  openTransitionNoteModal(leadId, newStage);
+};
+
+// ================== Transition Note Modal ==================
+const TRANSITION_CHIPS = {
+  no_answer: ['📵 مردش تاني', '🔕 مغلق', '📞 اتصلت تاني بدون رد', '⏱️ رن ولم يجب'],
+  follow_up: ['✅ رد ومهتم', '⏰ طلب معاودة الاتصال', '🤔 بيفكر', '💰 بيسأل عن السعر', '📏 هيبعت المقاسات'],
+  not_interested: ['❌ مش مهتم بالمنتج', '💸 غالي عليه', '🎯 مش العميل المستهدف', '🚚 مش عاجبه الشحن', '📵 رد ورفض'],
+  new_order: ['🛒 عايز يطلب', '📏 بعت المقاسات']
+};
+
+window.openTransitionNoteModal = function(leadId, newStage) {
   const lead = leads.find(l => l.id === leadId);
   if (!lead || lead.stage === newStage) return;
 
@@ -966,30 +989,108 @@ window.quickStageChange = async function(leadId, newStage) {
     new_order: '✅ طلب جديد'
   };
 
-  const confirmed = await customConfirm(`نقل "${lead.customerName}" إلى "${stageLabels[newStage]}"؟`);
-  if (!confirmed) return;
+  document.getElementById('transitionLeadId').value = leadId;
+  document.getElementById('transitionToStage').value = newStage;
+  document.getElementById('transitionLeadName').textContent = '👤 ' + (lead.customerName || 'بدون اسم') + ' — ' + (lead.phone || '');
+  
+  document.getElementById('transitionBanner').innerHTML = `
+    <span style="color:#888;">من:</span> 
+    <span style="color:#e67e22; padding:2px 8px; background:#fff4e6; border-radius:8px;">${stageLabels[lead.stage] || lead.stage}</span>
+    <br style="margin:4px 0;">
+    <span style="font-size:18px;">⬇️</span><br>
+    <span style="color:#888;">إلى:</span> 
+    <span style="color:#27ae60; padding:2px 8px; background:#e8f5e9; border-radius:8px;">${stageLabels[newStage]}</span>
+  `;
+
+  // اقتراحات
+  const chips = TRANSITION_CHIPS[newStage] || [];
+  const chipsEl = document.getElementById('transitionQuickChips');
+  chipsEl.innerHTML = chips.map(c => 
+    `<span onclick="addChipToTransitionNote('${c.replace(/'/g, "\\'")}')" 
+           style="background:#f0f2f5; color:#333; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; transition:0.2s; user-select:none;"
+           onmouseover="this.style.background='#0F7B65'; this.style.color='#fff';"
+           onmouseout="this.style.background='#f0f2f5'; this.style.color='#333';">${c}</span>`
+  ).join('');
+
+  document.getElementById('transitionNoteText').value = '';
+  document.getElementById('transitionNoteModal').classList.add('active');
+  setTimeout(() => document.getElementById('transitionNoteText').focus(), 250);
+};
+
+window.addChipToTransitionNote = function(text) {
+  const ta = document.getElementById('transitionNoteText');
+  if (ta.value.trim()) ta.value += '\n' + text;
+  else ta.value = text;
+  ta.focus();
+};
+
+window.confirmTransitionWithNote = async function() {
+  const leadId = document.getElementById('transitionLeadId').value;
+  const newStage = document.getElementById('transitionToStage').value;
+  const noteText = document.getElementById('transitionNoteText').value.trim();
+  const lead = leads.find(l => l.id === leadId);
+
+  if (!lead) return;
+
+  const stageLabels = {
+    no_answer: '📵 لم يرد',
+    follow_up: '🔄 متابعة',
+    not_interested: '❌ غير مهتم',
+    new_order: '✅ طلب جديد'
+  };
+
+  const btn = document.getElementById('transitionConfirmBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
 
   try {
     const now = new Date();
     const notes = [...(lead.notes || [])];
+    
+    // ✅ إضافة الملاحظة (اختيارية - بس لو اتحطت)
+    if (noteText) {
+      notes.push({
+        text: noteText,
+        type: 'attempt',
+        addedBy: currentUserEmail,
+        createdAt: now.toISOString()
+      });
+    }
+
+    // ✅ إضافة سطر النقل (دائماً)
     notes.push({
-      text: `🔄 نقل سريع من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
+      text: `🔄 نقل من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
       type: 'stage-change',
       addedBy: currentUserEmail,
       createdAt: now.toISOString()
     });
 
-    await updateDoc(doc(db, 'callCenterLeads', leadId), {
+    const updateData = {
       stage: newStage,
       notes,
-      updatedAt: serverTimestamp()
-    });
+      updatedAt: serverTimestamp(),
+      lastContactAt: serverTimestamp(),
+      lastContactBy: currentUserEmail
+    };
 
-    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
+    // reset العداد لو رجعنا لـ "لم يرد"
+    if (newStage === 'no_answer') {
+      updateData.attemptCount = 0;
+    }
+
+    await updateDoc(doc(db, 'callCenterLeads', leadId), updateData);
+
+    closeModal('transitionNoteModal');
+    closeModal('leadDetailsModal');
+    showToast(`✅ تم نقل الليد إلى ${stageLabels[newStage]}`, 'success');
     await refreshLeads();
+
   } catch(e) {
-    console.error('❌ quickStageChange error:', e);
+    console.error('❌ confirmTransitionWithNote error:', e);
     showToast('فشل النقل: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> تأكيد النقل';
   }
 };
 
@@ -1040,6 +1141,25 @@ window.openLeadDetails = function(leadId) {
       <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">${stages[lead.stage] || ''}</span>
         <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">📊 ${lead.attemptCount || 0}/${MAX_ATTEMPTS} محاولات</span>
+      </div>
+    </div>
+
+        <!-- 📝 Quick Note Bar -->
+    <div style="background:#f0f7ff; border-right:4px solid #3498db; padding:12px; border-radius:12px; margin-bottom:14px;">
+      <div style="font-size:12px; font-weight:800; color:#0F7B65; margin-bottom:8px;">📝 ملاحظة سريعة</div>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="quickNoteInput_${lead.id}" 
+               placeholder="اكتب ملاحظة واضغط Enter..." 
+               style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #e0e0e0; font-size:13px; font-family:'Cairo', sans-serif; outline:none; transition:0.2s;"
+               onfocus="this.style.borderColor='#0F7B65'; this.style.boxShadow='0 0 0 3px rgba(15,123,101,0.1)'"
+               onblur="this.style.borderColor='#e0e0e0'; this.style.boxShadow=''"
+               onkeypress="if(event.key==='Enter'){event.preventDefault(); quickAddNote('${lead.id}');}">
+        <button onclick="quickAddNote('${lead.id}')" 
+                style="padding:10px 18px; background:#0F7B65; color:#fff; border:none; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;"
+                onmouseover="this.style.background='#0a5f4f'" 
+                onmouseout="this.style.background='#0F7B65'">
+          <i class="fas fa-plus"></i> إضافة
+        </button>
       </div>
     </div>
 
@@ -1182,49 +1302,54 @@ window.changeLeadStage = async function(leadId, newStage) {
   const lead = leads.find(l => l.id === leadId);
   if (!lead || lead.stage === newStage) return;
 
-  const stageLabels = {
-    no_answer: '📵 لم يرد',
-    follow_up: '🔄 متابعة',
-    new_order: '✅ طلب جديد',
-    not_interested: '❌ غير مهتم'
-  };
-
-  // لو "طلب جديد" → نفتح فورم الطلب فوراً
+  // لو "طلب جديد" → نفتح فورم الطلب فوراً (بدون ملاحظة، لأن الفورم نفسه فيه ملاحظات)
   if (newStage === 'new_order') {
     closeModal('leadDetailsModal');
     setTimeout(() => openNewOrderFromLead(leadId), 200);
     return;
   }
 
-  const confirmed = await customConfirm(`نقل الليد إلى "${stageLabels[newStage]}"؟`);
-  if (!confirmed) return;
+  // باقي الخانات → نفتح مودال الملاحظة الإجبارية
+  closeModal('leadDetailsModal');
+  setTimeout(() => openTransitionNoteModal(leadId, newStage), 200);
+};
+
+// ================== Quick Add Note (من تفاصيل الليد) ==================
+window.quickAddNote = async function(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  const input = document.getElementById('quickNoteInput_' + leadId);
+  const text = input?.value?.trim();
+  if (!text) {
+    showToast('اكتب ملاحظة أولاً', 'warning');
+    if (input) input.focus();
+    return;
+  }
 
   try {
     const now = new Date();
-    const notes = [...(lead.notes || [])];
-    notes.push({
-      text: `نقل من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
-      type: 'stage-change',
+    const notes = [...(lead.notes || []), {
+      text,
+      type: 'note',
       addedBy: currentUserEmail,
       createdAt: now.toISOString()
-    });
+    }];
 
     await updateDoc(doc(db, 'callCenterLeads', leadId), {
-      stage: newStage,
       notes,
       updatedAt: serverTimestamp(),
-      ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
+      lastContactAt: serverTimestamp(),
+      lastContactBy: currentUserEmail
     });
 
-    showToast(`✅ تم النقل إلى ${stageLabels[newStage]}`, 'success');
-    closeModal('leadDetailsModal');
-
-    // ✅ refresh يدوي
+    showToast('✅ تم حفظ الملاحظة', 'success');
     await refreshLeads();
-
+    
+    // إعادة فتح التفاصيل لعرض الملاحظة الجديدة
+    setTimeout(() => openLeadDetails(leadId), 150);
   } catch(e) {
-    console.error('❌ changeLeadStage error:', e);
-    showToast('فشل النقل: ' + e.message, 'error');
+    console.error('❌ quickAddNote error:', e);
+    showToast('فشل: ' + e.message, 'error');
   }
 };
 
@@ -1684,5 +1809,47 @@ onAuthStateChanged(auth, user => {
   }
 });
 </script>
+<!-- ===== Modal: Transition Note (ملاحظة إجبارية عند النقل) ===== -->
+<div class="modal-overlay" id="transitionNoteModal">
+  <div class="modal-box" style="max-width:460px;">
+    <div class="modal-header" style="background:linear-gradient(135deg, #3498db, #2980b9);">
+      <h3 style="color:#fff;">🔄 تحديث حالة الليد</h3>
+      <button class="modal-close" onclick="closeModal('transitionNoteModal')" style="background:rgba(255,255,255,0.2); color:#fff;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="transitionLeadId">
+      <input type="hidden" id="transitionToStage">
+
+      <!-- عرض الانتقال -->
+      <div id="transitionBanner" style="background:#f0f7ff; border-right:4px solid #3498db; padding:12px; border-radius:10px; margin-bottom:14px; text-align:center; font-weight:700; font-size:14px;"></div>
+
+      <!-- الاسم -->
+      <div style="text-align:center; font-size:14px; font-weight:800; color:#111; margin-bottom:14px; padding:8px; background:#f9f9f9; border-radius:10px;" id="transitionLeadName"></div>
+
+      <!-- ملاحظة إلزامية -->
+      <div class="form-group">
+        <label style="font-size:14px; color:#0F7B65; font-weight:800;">
+  📝 اكتب ملاحظة عن الليد <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span>
+</label>
+        <textarea id="transitionNoteText" class="form-control" rows="3" 
+                  placeholder="مثال: العميل رد وقال هيرد عليكم بكرة الساعة 5..." 
+                  style="font-size:14px; resize:vertical;"></textarea>
+        <small style="color:#888; font-size:11px; display:block; margin-top:4px;">💡 الملاحظة اختيارية — لكن يفضّل تسجيلها للرجوع إليها لاحقاً</small>
+      </div>
+
+      <!-- اقتراحات سريعة -->
+      <div style="margin-top:10px;">
+        <div style="font-size:12px; color:#666; font-weight:700; margin-bottom:6px;">⚡ اقتراحات سريعة (اضغط للإضافة):</div>
+        <div style="display:flex; flex-wrap:wrap; gap:6px;" id="transitionQuickChips"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('transitionNoteModal')">إلغاء</button>
+      <button class="btn-save" onclick="confirmTransitionWithNote()" id="transitionConfirmBtn">
+        <i class="fas fa-check"></i> تأكيد النقل
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
