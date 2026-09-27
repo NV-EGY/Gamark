@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎧 GAMARK Call Center</title>
+<link rel="manifest" href="manifest-orders.json">
+<meta name="theme-color" content="#0F7B65">
+<link rel="icon" type="image/png" href="images/favicon.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Cairo', sans-serif; }
+body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
+
+/* ===== Header ===== */
+.header {
+  position:sticky; top:0; z-index:1000; background:#fff;
+  padding:12px 16px; box-shadow:0 2px 12px rgba(0,0,0,0.06);
+  display:flex; flex-direction:column; gap:10px;
+}
+.header-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.header h1 { font-size:20px; color:#0F7B65; display:flex; align-items:center; gap:8px; margin:0; }
+.header-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.icon-btn {
+  width:42px; height:42px; border-radius:12px; border:none;
+  background:#f0f2f5; cursor:pointer; font-size:18px;
+  display:inline-flex; align-items:center; justify-content:center;
+  transition:0.2s;
+}
+.icon-btn:hover { background:#0F7B65; color:#fff; transform:scale(1.05); }
+.btn-primary {
+  padding:10px 20px; border:none; border-radius:50px;
+  background:linear-gradient(135deg, #0F7B65, #0a5f4f); color:#fff;
+  font-weight:700; cursor:pointer; font-size:14px;
+  display:inline-flex; align-items:center; gap:8px;
+  box-shadow:0 4px 15px rgba(15,123,101,0.3); transition:0.3s;
+}
+.btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(15,123,101,0.5); }
+
+.search-box {
+  flex:1; min-width:200px; max-width:400px;
+  padding:10px 20px; border-radius:50px; border:2px solid #e0e0e0;
+  background:#fff; font-size:14px; text-align:center;
+  font-family:'Cairo', sans-serif;
+  transition:0.3s;
+}
+.search-box:focus { border-color:#0F7B65; box-shadow:0 0 0 4px rgba(15,123,101,0.15); outline:none; }
+
+/* ===== Stats Bar ===== */
+.stats-bar {
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:10px;
+  padding:12px 16px; max-width:1400px; margin:0 auto;
+}
+.stat-card {
+  background:#fff; padding:14px; border-radius:16px; text-align:center;
+  box-shadow:0 2px 10px rgba(0,0,0,0.04); cursor:pointer;
+  border-right:4px solid #ccc; transition:0.25s;
+}
+.stat-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.1); }
+.stat-card.active { box-shadow:0 6px 20px rgba(0,0,0,0.15); }
+.stat-card .num { font-size:24px; font-weight:800; margin-bottom:2px; }
+.stat-card .label { font-size:12px; color:#666; font-weight:700; }
+.stat-card[data-stage="no_answer"] { border-color:#f39c12; }
+.stat-card[data-stage="no_answer"] .num { color:#f39c12; }
+.stat-card[data-stage="follow_up"] { border-color:#3498db; }
+.stat-card[data-stage="follow_up"] .num { color:#3498db; }
+.stat-card[data-stage="new_order"] { border-color:#2ecc71; }
+.stat-card[data-stage="new_order"] .num { color:#2ecc71; }
+.stat-card[data-stage="not_interested"] { border-color:#e74c3c; }
+.stat-card[data-stage="not_interested"] .num { color:#e74c3c; }
+
+/* ===== Filter Tabs ===== */
+.filter-tabs {
+  display:flex; gap:8px; padding:0 16px 12px; overflow-x:auto;
+  max-width:1400px; margin:0 auto; scrollbar-width:thin;
+}
+.tab-btn {
+  padding:10px 20px; border:none; border-radius:50px;
+  background:#fff; color:#555; font-weight:700; font-size:13px;
+  cursor:pointer; white-space:nowrap; transition:0.2s;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04); font-family:'Cairo', sans-serif;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.tab-btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+.tab-btn.active { background:#0F7B65; color:#fff; }
+
+/* ===== Kanban Board ===== */
+.board {
+  display:grid; grid-template-columns:repeat(4, 1fr); gap:14px;
+  padding:0 16px; max-width:1600px; margin:0 auto;
+  align-items:start;
+}
+.column {
+  background:#eef2f5; border-radius:20px; padding:12px;
+  min-height:200px; display:flex; flex-direction:column; gap:10px;
+}
+.column-header {
+  padding:10px 14px; border-radius:14px; display:flex;
+  align-items:center; justify-content:space-between;
+  font-weight:800; font-size:14px;
+}
+.column[data-stage="no_answer"] .column-header { background:#f39c12; color:#fff; }
+.column[data-stage="follow_up"] .column-header { background:#3498db; color:#fff; }
+.column[data-stage="new_order"] .column-header { background:#2ecc71; color:#fff; }
+.column[data-stage="not_interested"] .column-header { background:#e74c3c; color:#fff; }
+.column-header .count-badge {
+  background:rgba(255,255,255,0.25); padding:2px 10px;
+  border-radius:20px; font-size:12px;
+}
+.column-body { display:flex; flex-direction:column; gap:10px; min-height:60px; }
+.column-empty {
+  text-align:center; padding:30px 10px; color:#999;
+  font-size:12px; background:rgba(255,255,255,0.5); border-radius:12px;
+}
+
+/* ===== Lead Card ===== */
+.lead-card {
+  background:#fff; border-radius:14px; padding:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
+  transition:0.25s; cursor:pointer; position:relative;
+  border-right:4px solid #ccc;
+}
+.lead-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.lead-card[data-stage="no_answer"] { border-color:#f39c12; }
+.lead-card[data-stage="follow_up"] { border-color:#3498db; }
+.lead-card[data-stage="new_order"] { border-color:#2ecc71; }
+.lead-card[data-stage="not_interested"] { border-color:#e74c3c; }
+.lead-card.converted { border-color:#D4AF37; background:#fffbf0; }
+.lead-name {
+  font-weight:800; font-size:14px; color:#111;
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+}
+.lead-name .attempts {
+  background:#f39c12; color:#fff; padding:2px 8px;
+  border-radius:20px; font-size:10px; font-weight:700;
+}
+.lead-name .attempts.danger { background:#e74c3c; }
+.lead-name .attempts.success { background:#2ecc71; }
+.lead-phone {
+  font-size:12px; color:#555; margin-top:4px;
+  direction:ltr; font-family:monospace;
+}
+.lead-meta {
+  font-size:11px; color:#888; margin-top:6px;
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+}
+.lead-interest {
+  font-size:11px; color:#0F7B65; background:#e8f5e9;
+  padding:4px 8px; border-radius:8px; margin-top:6px;
+  display:inline-block; font-weight:700;
+}
+.lead-note-preview {
+  font-size:11px; color:#666; margin-top:6px;
+  background:#f8f9fa; padding:6px 8px; border-radius:8px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.lead-actions {
+  display:flex; gap:4px; margin-top:8px;
+  padding-top:8px; border-top:1px solid #f0f0f0;
+}
+.lead-actions button, .lead-actions a {
+  flex:1; padding:6px 4px; border:none; border-radius:8px;
+  cursor:pointer; font-size:11px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:3px; text-decoration:none; transition:0.2s;
+}
+.btn-call { background:#3498db; color:#fff; }
+.btn-call:hover { background:#2980b9; }
+.btn-wa { background:#25D366; color:#fff; }
+.btn-wa:hover { background:#1da851; }
+.btn-more { background:#f0f2f5; color:#333; }
+.btn-more:hover { background:#D4AF37; color:#fff; }
+
+.converted-badge {
+  position:absolute; top:8px; left:8px;
+  background:#D4AF37; color:#000; padding:2px 8px;
+  border-radius:20px; font-size:9px; font-weight:800;
+}
+
+/* ===== Modals ===== */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(4px); z-index:99999;
+  display:none; align-items:center; justify-content:center;
+  padding:16px; opacity:0; transition:opacity 0.25s;
+}
+.modal-overlay.active { display:flex; opacity:1; }
+.modal-box {
+  background:#fff; border-radius:24px; width:100%;
+  max-width:520px; max-height:92vh; overflow:hidden;
+  display:flex; flex-direction:column;
+  transform:scale(0.9); transition:transform 0.3s cubic-bezier(0.34,1.2,0.64,1);
+}
+.modal-overlay.active .modal-box { transform:scale(1); }
+.modal-header {
+  padding:16px 20px; display:flex;
+  align-items:center; justify-content:space-between;
+  border-bottom:1px solid #eee;
+}
+.modal-header h3 { font-size:17px; font-weight:800; color:#111; }
+.modal-close {
+  width:34px; height:34px; border-radius:50%; border:none;
+  background:#f0f2f5; cursor:pointer; font-size:16px;
+  display:flex; align-items:center; justify-content:center;
+}
+.modal-close:hover { background:#e74c3c; color:#fff; }
+.modal-body { padding:20px; overflow-y:auto; flex:1; }
+.modal-footer {
+  padding:14px 20px; border-top:1px solid #eee;
+  display:flex; gap:10px; justify-content:flex-end;
+}
+.modal-footer button {
+  padding:10px 22px; border:none; border-radius:50px;
+  font-weight:700; cursor:pointer; font-size:14px;
+  font-family:'Cairo', sans-serif; transition:0.2s;
+}
+.btn-cancel { background:#f0f2f5; color:#555; }
+.btn-cancel:hover { background:#ddd; }
+.btn-save { background:#0F7B65; color:#fff; }
+.btn-save:hover { background:#0a5f4f; transform:translateY(-2px); }
+.btn-danger { background:#e74c3c; color:#fff; }
+.btn-danger:hover { background:#c0392b; }
+
+/* ===== Form ===== */
+.form-group { margin-bottom:14px; }
+.form-group label {
+  display:block; font-size:12px; font-weight:700;
+  color:#555; margin-bottom:4px;
+}
+.form-group label .req { color:#e74c3c; }
+.form-control {
+  width:100%; padding:10px 14px; border-radius:10px;
+  border:2px solid #e0e0e0; font-family:'Cairo', sans-serif;
+  font-size:14px; transition:0.2s; background:#fff;
+}
+.form-control:focus {
+  border-color:#0F7B65; outline:none;
+  box-shadow:0 0 0 4px rgba(15,123,101,0.1);
+}
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-row-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+@media (max-width:520px) {
+  .form-row, .form-row-3 { grid-template-columns:1fr; }
+}
+
+/* ===== Notes Timeline ===== */
+.notes-timeline { display:flex; flex-direction:column; gap:10px; }
+.note-item {
+  background:#f8f9fa; padding:10px 12px; border-radius:10px;
+  border-right:3px solid #D4AF37;
+}
+.note-item .note-header {
+  display:flex; align-items:center; justify-content:space-between;
+  font-size:11px; color:#888; margin-bottom:4px;
+}
+.note-item .note-text { font-size:13px; color:#333; line-height:1.6; }
+.note-item.attempt { border-color:#f39c12; }
+.note-item.stage-change { border-color:#3498db; }
+.note-item.order-created { border-color:#2ecc71; background:#e8f5e9; }
+
+/* ===== Timeline/Attempt Visual ===== */
+.attempts-visual {
+  display:flex; gap:4px; margin-top:6px;
+}
+.attempt-dot {
+  width:20px; height:20px; border-radius:50%;
+  background:#e0e0e0; display:flex;
+  align-items:center; justify-content:center;
+  font-size:10px; color:#666; font-weight:800;
+}
+.attempt-dot.done { background:#f39c12; color:#fff; }
+.attempt-dot.fail { background:#e74c3c; color:#fff; }
+
+/* ===== Alert ===== */
+.toast {
+  position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+  background:#111; color:#fff; padding:12px 24px; border-radius:50px;
+  font-weight:700; font-size:14px; z-index:999999;
+  box-shadow:0 15px 35px rgba(0,0,0,0.3);
+  border:1px solid #D4AF37; display:flex; align-items:center; gap:10px;
+  animation:slideUp 0.3s ease;
+}
+.toast.success { border-color:#2ecc71; }
+.toast.error { border-color:#e74c3c; }
+.toast.warning { border-color:#f39c12; }
+@keyframes slideUp {
+  from { transform:translate(-50%, 50px); opacity:0; }
+  to { transform:translate(-50%, 0); opacity:1; }
+}
+
+/* Custom Confirm */
+.confirm-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  backdrop-filter:blur(4px); z-index:100000;
+  display:none; align-items:center; justify-content:center;
+  opacity:0; transition:0.3s;
+}
+.confirm-overlay.active { display:flex; opacity:1; }
+.confirm-box {
+  background:#fff; border-radius:24px; width:90%;
+  max-width:380px; overflow:hidden;
+  transform:scale(0.9); transition:0.3s cubic-bezier(0.34,1.2,0.64,1);
+}
+.confirm-overlay.active .confirm-box { transform:scale(1); }
+.confirm-header {
+  background:linear-gradient(135deg, #f39c12, #e67e22);
+  padding:18px; text-align:center; color:#fff;
+}
+.confirm-header i { font-size:40px; margin-bottom:8px; }
+.confirm-header h3 { font-size:18px; font-weight:800; }
+.confirm-message {
+  padding:20px; text-align:center; font-size:14px;
+  color:#333; line-height:1.7;
+}
+.confirm-buttons { display:flex; border-top:1px solid #eee; }
+.confirm-buttons button {
+  flex:1; padding:14px; border:none; background:#fff;
+  font-weight:700; font-size:15px; cursor:pointer;
+  font-family:'Cairo', sans-serif;
+}
+.confirm-buttons button:first-child { border-left:1px solid #eee; color:#e74c3c; }
+.confirm-buttons button:last-child { color:#0F7B65; }
+.confirm-buttons button:hover { background:#f9f9f9; }
+
+/* Responsive */
+@media (max-width:1024px) {
+  .board { grid-template-columns:1fr; }
+  .column { min-height:auto; }
+  .stats-bar { grid-template-columns:repeat(2, 1fr); }
+}
+@media (max-width:520px) {
+  .header h1 { font-size:16px; }
+  .stats-bar { grid-template-columns:repeat(2, 1fr); gap:8px; padding:10px; }
+  .stat-card { padding:10px 6px; }
+  .stat-card .num { font-size:18px; }
+  .stat-card .label { font-size:10px; }
+  .board { padding:0 8px; gap:10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<div class="header">
+  <div class="header-row">
+    <h1>🎧 GAMARK Call Center</h1>
+    <div class="header-actions">
+      <input type="text" id="search" class="search-box" placeholder="🔍 بحث بالاسم أو الرقم">
+      <button class="icon-btn" onclick="goBack()" title="صفحة الطلبات"><i class="fas fa-shopping-bag"></i></button>
+      <button class="icon-btn" onclick="goProducts()" title="المنتجات"><i class="fas fa-boxes"></i></button>
+      <button class="icon-btn" onclick="exportLeads()" title="تصدير Excel"><i class="fas fa-file-excel"></i></button>
+      <button class="btn-primary" onclick="openNewLeadModal()"><i class="fas fa-plus"></i> ليد جديد</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Stats ===== -->
+<div class="stats-bar">
+  <div class="stat-card active" data-stage="all" onclick="setStageFilter('all')">
+    <div class="num" id="stat-all">0</div>
+    <div class="label">📊 إجمالي</div>
+  </div>
+  <div class="stat-card" data-stage="no_answer" onclick="setStageFilter('no_answer')">
+    <div class="num" id="stat-no_answer">0</div>
+    <div class="label">📵 لم يرد</div>
+  </div>
+  <div class="stat-card" data-stage="follow_up" onclick="setStageFilter('follow_up')">
+    <div class="num" id="stat-follow_up">0</div>
+    <div class="label">🔄 متابعة</div>
+  </div>
+  <div class="stat-card" data-stage="new_order" onclick="setStageFilter('new_order')">
+    <div class="num" id="stat-new_order">0</div>
+    <div class="label">✅ طلب جديد</div>
+  </div>
+</div>
+
+<!-- ===== Board ===== -->
+<div class="board" id="board">
+  <div class="column" data-stage="no_answer">
+    <div class="column-header">
+      <span>📵 لم يرد (No Answer)</span>
+      <span class="count-badge" id="col-no_answer">0</span>
+    </div>
+    <div class="column-body" id="body-no_answer"></div>
+  </div>
+  <div class="column" data-stage="follow_up">
+    <div class="column-header">
+      <span>🔄 متابعة (Follow Up)</span>
+      <span class="count-badge" id="col-follow_up">0</span>
+    </div>
+    <div class="column-body" id="body-follow_up"></div>
+  </div>
+  <div class="column" data-stage="new_order">
+    <div class="column-header">
+      <span>✅ طلب جديد (New Order)</span>
+      <span class="count-badge" id="col-new_order">0</span>
+    </div>
+    <div class="column-body" id="body-new_order"></div>
+  </div>
+  <div class="column" data-stage="not_interested">
+    <div class="column-header">
+      <span>❌ غير مهتم (Not Interested)</span>
+      <span class="count-badge" id="col-not_interested">0</span>
+    </div>
+    <div class="column-body" id="body-not_interested"></div>
+  </div>
+</div>
+
+<!-- ===== Modal: Lead Details ===== -->
+<div class="modal-overlay" id="leadDetailsModal">
+  <div class="modal-box" style="max-width:600px;">
+    <div class="modal-header">
+      <h3 id="leadDetailsTitle">تفاصيل الليد</h3>
+      <button class="modal-close" onclick="closeModal('leadDetailsModal')">✕</button>
+    </div>
+    <div class="modal-body" id="leadDetailsBody"></div>
+  </div>
+</div>
+
+<!-- ===== Modal: New/Edit Lead ===== -->
+<div class="modal-overlay" id="newLeadModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="newLeadTitle">➕ ليد جديد</h3>
+      <button class="modal-close" onclick="closeModal('newLeadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="leadId">
+      <div class="form-group">
+        <label>اسم العميل <span class="req">*</span></label>
+        <input type="text" id="leadName" class="form-control" placeholder="اسم العميل" required>
+      </div>
+      <div class="form-group">
+        <label>رقم الهاتف <span class="req">*</span></label>
+        <input type="tel" id="leadPhone" class="form-control" placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
+      </div>
+      <div class="form-group">
+        <label>الرقم الثاني (اختياري)</label>
+        <input type="tel" id="leadPhone2" class="form-control" placeholder="01xxxxxxxxx" style="direction:ltr; text-align:right;">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المحافظة</label>
+          <select id="leadGov" class="form-control">
+            <option value="">-- اختر --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>المدينة</label>
+          <select id="leadCity" class="form-control">
+            <option value="">-- اختر المحافظة --</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>العنوان</label>
+        <input type="text" id="leadAddress" class="form-control" placeholder="الشارع - رقم المنزل">
+      </div>
+      <div class="form-group">
+        <label>مهتم بإيه؟ / المنتج</label>
+        <input type="text" id="leadInterest" class="form-control" placeholder="مثال: عبايات - عطور - ساعات">
+      </div>
+      <div class="form-group">
+        <label>الخانة الابتدائية</label>
+        <select id="leadStage" class="form-control">
+          <option value="no_answer">📵 لم يرد</option>
+          <option value="follow_up">🔄 متابعة</option>
+          <option value="new_order">✅ طلب جديد</option>
+          <option value="not_interested">❌ غير مهتم</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>ملاحظة أولية</label>
+        <textarea id="leadNote" class="form-control" rows="2" placeholder="أي ملاحظة..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newLeadModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveLead()"><i class="fas fa-save"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: New Order (from lead) ===== -->
+<div class="modal-overlay" id="newOrderModal">
+  <div class="modal-box" style="max-width:620px;">
+    <div class="modal-header" style="background:linear-gradient(135deg, #2ecc71, #27ae60); color:#fff;">
+      <h3 style="color:#fff;">✅ تسجيل طلب جديد - كول سينتر</h3>
+      <button class="modal-close" onclick="closeModal('newOrderModal')" style="background:rgba(255,255,255,0.2); color:#fff;">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="orderLeadId">
+      <div class="form-group">
+        <label>اسم العميل <span class="req">*</span></label>
+        <input type="text" id="orderName" class="form-control" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>رقم الهاتف <span class="req">*</span></label>
+          <input type="tel" id="orderPhone" class="form-control" style="direction:ltr; text-align:right;" required>
+        </div>
+        <div class="form-group">
+          <label>الرقم الثاني</label>
+          <input type="tel" id="orderPhone2" class="form-control" style="direction:ltr; text-align:right;">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>المحافظة <span class="req">*</span></label>
+          <select id="orderGov" class="form-control" required></select>
+        </div>
+        <div class="form-group">
+          <label>المدينة <span class="req">*</span></label>
+          <select id="orderCity" class="form-control" required></select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>العنوان <span class="req">*</span></label>
+        <input type="text" id="orderAddress" class="form-control" placeholder="الشارع - رقم المنزل - الدور" required>
+      </div>
+      <div class="form-group">
+        <label>المنتج <span class="req">*</span></label>
+        <input type="text" id="orderProduct" class="form-control" list="productsList" placeholder="اكتب اسم المنتج أو اختر" required>
+        <datalist id="productsList"></datalist>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label>المقاس</label>
+          <input type="text" id="orderSize" class="form-control" placeholder="S, M, L, XL">
+        </div>
+        <div class="form-group">
+          <label>الوزن (كجم)</label>
+          <input type="number" id="orderWeight" class="form-control" step="0.1" placeholder="اختياري">
+        </div>
+        <div class="form-group">
+          <label>الطول (سم)</label>
+          <input type="number" id="orderLength" class="form-control" step="0.1" placeholder="اختياري">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>سعر المنتج <span class="req">*</span></label>
+          <input type="number" id="orderPrice" class="form-control" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>الشحن <span class="req">*</span></label>
+          <input type="number" id="orderShipping" class="form-control" step="0.01" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>ملاحظات</label>
+        <textarea id="orderNotes" class="form-control" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
+      </div>
+      <div style="background:#e8f5e9; padding:12px; border-radius:12px; text-align:center; margin-top:8px;">
+        <span style="font-size:13px; color:#1e8449; font-weight:700;">
+          💰 الإجمالي: <span id="orderTotalPreview">0</span> جنيه
+        </span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('newOrderModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveOrderFromLead()"><i class="fas fa-check"></i> تسجيل الطلب</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: Add Note ===== -->
+<div class="modal-overlay" id="addNoteModal">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="modal-header">
+      <h3>📝 إضافة ملاحظة / محاولة</h3>
+      <button class="modal-close" onclick="closeModal('addNoteModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="noteLeadId">
+      <div class="form-group">
+        <label>نوع الإجراء</label>
+        <select id="noteType" class="form-control">
+          <option value="attempt">📵 لم يرد (محاولة)</option>
+          <option value="answered">✅ رد العميل</option>
+          <option value="note">📝 ملاحظة عامة</option>
+          <option value="callback">🔔 طلب معاودة الاتصال</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>التفاصيل</label>
+        <textarea id="noteText" class="form-control" rows="3" placeholder="اكتب هنا ما دار في المكالمة..."></textarea>
+      </div>
+      <div id="attemptWarning" style="display:none; background:#fef9e6; padding:10px; border-radius:10px; font-size:12px; color:#856404; border-right:3px solid #f39c12;">
+        ⚠️ <b>تنبيه:</b> هذه المحاولة رقم <span id="attemptNum">1</span>. عند الوصول لـ 3 محاولات، سينتقل الليد تلقائياً إلى "غير مهتم".
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('addNoteModal')">إلغاء</button>
+      <button class="btn-save" onclick="saveNote()"><i class="fas fa-save"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Custom Confirm ===== -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-header">
+      <i class="fas fa-question-circle"></i>
+      <h3>تأكيد العملية</h3>
+    </div>
+    <div class="confirm-message" id="confirmMessage">هل أنت متأكد؟</div>
+    <div class="confirm-buttons">
+      <button id="confirmNoBtn">إلغاء</button>
+      <button id="confirmYesBtn">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs, where, setDoc, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
+  authDomain: "gamark-d04ff.firebaseapp.com",
+  projectId: "gamark-d04ff",
+  storageBucket: "gamark-d04ff.firebasestorage.app",
+  messagingSenderId: "802246864333",
+  appId: "1:802246864333:web:23b5336c0c54280a736884"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+const auth = getAuth(app);
+
+// ================== State ==================
+let leads = [];
+let allProducts = [];
+let currentStageFilter = 'all';
+let searchTerm = '';
+let currentUserEmail = 'unknown';
+const MAX_ATTEMPTS = 3;
+
+// ================== Gov Data ==================
+const govData = {
+ "القاهرة": ["مدينة نصر","مصر الجديدة","مصر القديمة","التجمع الأول","التجمع الثالث","التجمع الخامس","الرحاب","مدينتي","الشروق","بدر","المعادي","زهراء المعادي","حلوان","15 مايو","عين شمس","المطرية","السلام","المرج","الزيتون","حدائق القبة","روض الفرج","شبرا مصر","وسط البلد","القاهرة الجديدة","القطامية","المقطم","هليوبوليس الجديدة","مدينة المستقبل","أحياء أخرى"],
+ "الجيزة": ["الجيزة","الدقي","العجوزة","إمبابة","بولاق الدكرور","الهرم","فيصل","الطالبية","العمرانية","حدائق الاهرام","6 أكتوبر","الشيخ زايد","حدائق أكتوبر","الحوامدية","البدرشين","العياط","أوسيم","كرداسة","الصف","دهشور","ناهيا","المنصورية","ألبراجيل","أبو رواش","منشأة القناطر","المنيب","أبو النمرس","شبرامنت","سقارة","نكلة","أطفيح","أحياء أخرى"],
+ "القليوبية": ["بنها","شبرا الخيمة","قليوب","القناطر الخيرية","ابو زعبل","الخانكة","العبور","الخصوص","كفر شكر","طوخ","شبين القناطر","أحياء أخرى"],
+ "الإسكندرية": ["الإسكندرية","العجمي","الدخيلة","برج العرب","سيدي جابر","محرم بك","العصافرة","المنتزه","أحياء أخرى"],
+ "الدقهلية": ["المنصورة","طلخا","ميت غمر","دكرنس","أجا","السنبلاوين","بلقاس","نبروه","تمي الأمديد","الجمالية","المنزلة","شربين","ميت سلسيل","أحياء أخرى"],
+ "الشرقية": ["الزقازيق","بلبيس","العاشر من رمضان","منيا القمح","فاقوس","أبو حماد","الحسينية","أولاد صقر","كفر صقر","ديرب نجم","الإبراهيمية","ههيا","مشتول السوق","أحياء أخرى"],
+ "الغربية": ["طنطا","المحلة الكبرى","كفر الزيات","زفتى","سمنود","قطور","بسيون","أحياء أخرى"],
+ "المنوفية": ["شبين الكوم","السادات","منوف","أشمون","الباجور","قويسنا","تلا","بركة السبع","الشهداء","أحياء أخرى"],
+ "البحيرة": ["دمنهور","كفر الدوار","رشيد","إدكو","أبو حمص","الدلنجات","إيتاي البارود","حوش عيسى","شبراخيت","كوم حمادة","بدر","وادي النطرون","أحياء أخرى"],
+ "كفر الشيخ": ["كفر الشيخ","دسوق","فوه","مطوبس","بلطيم","الحامول","بيلا","قلين","سيدي سالم","أحياء أخرى"],
+ "دمياط": ["دمياط","رأس البر","فارسكور","الزرقا","كفر سعد","أحياء أخرى"],
+ "بورسعيد": ["بورسعيد","بورفؤاد","أحياء أخرى"],
+ "الإسماعيلية": ["الإسماعيلية","فايد","القنطرة شرق","القنطرة غرب","التل الكبير","أبو صوير","أحياء أخرى"],
+ "السويس": ["السويس","الأربعين","عتاقة","الجناين","العين السخنة","أحياء أخرى"],
+ "بني سويف": ["بني سويف","الواسطى","ناصر","إهناسيا","ببا","سمسطا","الفشن","أحياء أخرى"],
+ "الفيوم": ["الفيوم","سنورس","إطسا","إبشواي","يوسف الصديق","أحياء أخرى"],
+ "المنيا": ["المنيا","سمالوط","بني مزار","مطاي","مغاغة","ملوي","أبو قرقاص","دير مواس","العدوة","أحياء أخرى"],
+ "أسيوط": ["أسيوط","ديروط","القوصية","منفلوط","أبنوب","أبو تيج","الغنايم","ساحل سليم","البداري","صدفا","أحياء أخرى"],
+ "سوهاج": ["سوهاج","أخميم","طهطا","المراغة","البلينا","جرجا","جهينة","دار السلام","ساقلته","المنشأة","أحياء أخرى"],
+ "قنا": ["قنا","نجع حمادي","دشنا","قفط","قوص","نقادة","فرشوط","أبو تشت","أحياء أخرى"],
+ "الأقصر": ["الأقصر","إسنا","أرمنت","الطود","البياضية","القرنة","أحياء أخرى"],
+ "أسوان": ["أسوان","إدفو","كوم أمبو","دراو","نصر النوبة","أحياء أخرى"],
+ "البحر الأحمر": ["الغردقة","رأس غارب","سفاجا","القصير","مرسى علم","حلايب","شلاتين","أحياء أخرى"],
+ "الوادي الجديد": ["الخارجة","الداخلة","الفرافرة","باريس","موط","أحياء أخرى"],
+ "مطروح": ["مرسى مطروح","الحمام","العلمين","الضبعة","سيوة","النجيلة","براني","السلوم","أحياء أخرى"],
+ "شمال سيناء":["العريش","رفح","الشيخ زويد","بئر العبد","أحياء أخرى"],
+ "جنوب سيناء":["دهب","شرم الشيخ","نويبع","طابا","سانت كاترين","الطور","رأس سدر","أحياء أخرى"]
+};
+
+// ================== Helpers ==================
+function escapeHtml(t) {
+  if (!t) return '';
+  const d = document.createElement('div');
+  d.textContent = t;
+  return d.innerHTML;
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-exclamation-triangle'}"></i> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transition = '0.3s';
+    setTimeout(() => t.remove(), 300);
+  }, 2800);
+}
+
+function customConfirm(msg) {
+  return new Promise(resolve => {
+    const ov = document.getElementById('confirmOverlay');
+    document.getElementById('confirmMessage').innerHTML = msg;
+    ov.classList.add('active');
+    const yes = document.getElementById('confirmYesBtn');
+    const no  = document.getElementById('confirmNoBtn');
+    const cleanup = () => {
+      ov.classList.remove('active');
+      yes.removeEventListener('click', onYes);
+      no.removeEventListener('click', onNo);
+    };
+    const onYes = () => { cleanup(); resolve(true); };
+    const onNo  = () => { cleanup(); resolve(false); };
+    yes.addEventListener('click', onYes);
+    no.addEventListener('click', onNo);
+  });
+}
+
+function formatDate(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const now = new Date();
+  const diff = (now - d) / 1000;
+  if (diff < 60) return 'الآن';
+  if (diff < 3600) return `منذ ${Math.floor(diff / 60)} دقيقة`;
+  if (diff < 86400) return `منذ ${Math.floor(diff / 3600)} ساعة`;
+  if (diff < 604800) return `منذ ${Math.floor(diff / 86400)} يوم`;
+  return d.toLocaleDateString('ar-EG', { day:'numeric', month:'short' });
+}
+
+function cleanPhone(raw) {
+  if (!raw) return null;
+  let p = String(raw).replace(/[\s\-\(\)\.]/g, '').replace(/^\+/, '');
+  if (p.startsWith('0020')) p = '0' + p.substring(4);
+  else if (p.startsWith('20') && p.length >= 12) p = '0' + p.substring(2);
+  if (/^1[0-9]{9}$/.test(p)) p = '0' + p;
+  return /^01[0125][0-9]{8}$/.test(p) ? p : null;
+}
+
+// ================== Modals ==================
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('active');
+};
+
+window.goBack = () => window.location.href = 'admin-orders.html';
+window.goProducts = () => window.location.href = 'admin-products.html';
+
+// ================== Load Products ==================
+async function loadProducts() {
+  try {
+    const snap = await getDocs(collection(db, 'products'));
+    allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const dl = document.getElementById('productsList');
+    if (dl) {
+      dl.innerHTML = allProducts.map(p => `<option value="${escapeHtml(p.name)}">`).join('');
+    }
+  } catch(e) {
+    console.warn('loadProducts failed:', e);
+  }
+}
+
+// ================== Load Leads ==================
+let initialLeads = true;
+function loadLeads() {
+  const q = query(collection(db, 'callCenterLeads'), orderBy('updatedAt', 'desc'));
+  onSnapshot(q, snap => {
+    leads = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderBoard();
+    renderStats();
+    if (initialLeads) initialLeads = false;
+  }, err => {
+    console.error('loadLeads error:', err);
+    showToast('خطأ في تحميل الليدز', 'error');
+  });
+}
+
+// ================== Render ==================
+function getFilteredLeads() {
+  return leads.filter(l => {
+    if (searchTerm) {
+      const s = searchTerm.toLowerCase();
+      const name = (l.customerName || '').toLowerCase();
+      const phone = (l.phone || '').replace(/^0/, '');
+      if (!name.includes(s) && !phone.includes(s.replace(/^0/, ''))) return false;
+    }
+    return true;
+  });
+}
+
+function renderStats() {
+  const filtered = getFilteredLeads();
+  document.getElementById('stat-all').textContent = filtered.length;
+  ['no_answer', 'follow_up', 'new_order', 'not_interested'].forEach(s => {
+    document.getElementById('stat-' + s).textContent = filtered.filter(l => l.stage === s).length;
+  });
+}
+
+function renderBoard() {
+  const filtered = getFilteredLeads();
+  const stages = ['no_answer', 'follow_up', 'new_order', 'not_interested'];
+  stages.forEach(stage => {
+    const list = filtered.filter(l => l.stage === stage);
+    document.getElementById('col-' + stage).textContent = list.length;
+    const body = document.getElementById('body-' + stage);
+    if (currentStageFilter !== 'all' && currentStageFilter !== stage) {
+      body.closest('.column').style.display = 'none';
+    } else {
+      body.closest('.column').style.display = 'flex';
+    }
+    if (list.length === 0) {
+      body.innerHTML = `<div class="column-empty">📭 لا توجد ليدز هنا</div>`;
+    } else {
+      body.innerHTML = list.map(renderLeadCard).join('');
+    }
+  });
+}
+
+function renderLeadCard(lead) {
+  const stage = lead.stage || 'no_answer';
+  const attempts = lead.attemptCount || 0;
+  const isConverted = lead.converted === true;
+  let attemptsClass = '';
+  if (attempts >= MAX_ATTEMPTS) attemptsClass = 'danger';
+  else if (stage === 'new_order' || isConverted) attemptsClass = 'success';
+  const lastNote = (lead.notes && lead.notes.length > 0) ? lead.notes[lead.notes.length - 1] : null;
+
+  return `
+    <div class="lead-card ${isConverted ? 'converted' : ''}" data-stage="${stage}" onclick="openLeadDetails('${lead.id}')">
+      ${isConverted ? '<span class="converted-badge">✅ تم الطلب</span>' : ''}
+      <div class="lead-name">
+        <span>${escapeHtml(lead.customerName || 'بدون اسم')}</span>
+        ${attempts > 0 ? `<span class="attempts ${attemptsClass}">${attempts}/${MAX_ATTEMPTS}</span>` : ''}
+      </div>
+      <div class="lead-phone">📞 ${lead.phone || '-'}</div>
+      ${lead.gov ? `<div class="lead-meta">📍 ${escapeHtml(lead.gov)}${lead.city ? ' - ' + escapeHtml(lead.city) : ''}</div>` : ''}
+      ${lead.interest ? `<div class="lead-interest">🎯 ${escapeHtml(lead.interest)}</div>` : ''}
+      ${lastNote ? `<div class="lead-note-preview">💬 ${escapeHtml(lastNote.text || '')}</div>` : ''}
+      <div class="lead-meta" style="margin-top:6px;">
+        <span>⏰ ${formatDate(lead.updatedAt)}</span>
+        ${lead.addedBy ? `<span style="font-size:10px;">👤 ${escapeHtml(lead.addedBy.split('@')[0])}</span>` : ''}
+      </div>
+      <div class="lead-actions" onclick="event.stopPropagation();">
+        <a href="tel:${lead.phone || ''}" class="btn-call"><i class="fas fa-phone"></i> اتصال</a>
+        <a href="https://wa.me/2${lead.phone || ''}" target="_blank" class="btn-wa"><i class="fab fa-whatsapp"></i></a>
+        <button class="btn-more" onclick="openLeadDetails('${lead.id}')"><i class="fas fa-ellipsis-h"></i></button>
+      </div>
+    </div>
+  `;
+}
+
+// ================== Lead Details Modal ==================
+window.openLeadDetails = function(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+
+  const stages = {
+    no_answer: '📵 لم يرد',
+    follow_up: '🔄 متابعة',
+    new_order: '✅ طلب جديد',
+    not_interested: '❌ غير مهتم'
+  };
+
+  const notes = (lead.notes || []).slice().reverse();
+  const notesHtml = notes.length === 0
+    ? '<div style="text-align:center; color:#999; padding:20px;">لا توجد ملاحظات بعد</div>'
+    : notes.map(n => `
+        <div class="note-item ${n.type || ''}">
+          <div class="note-header">
+            <span>${n.type === 'attempt' ? '📵 محاولة' : n.type === 'answered' ? '✅ رد' : n.type === 'order-created' ? '🛒 طلب' : n.type === 'stage-change' ? '🔄 نقل' : '📝 ملاحظة'}</span>
+            <span>${formatDate(n.createdAt)}</span>
+          </div>
+          <div class="note-text">${escapeHtml(n.text || '')}</div>
+          ${n.addedBy ? `<div style="font-size:10px; color:#aaa; margin-top:4px;">👤 ${escapeHtml(n.addedBy)}</div>` : ''}
+        </div>
+      `).join('');
+
+  const stageButtons = Object.entries(stages).map(([s, label]) =>
+    s !== lead.stage 
+      ? `<button onclick="changeLeadStage('${lead.id}', '${s}')" style="flex:1; padding:8px 6px; border:none; border-radius:10px; background:#f0f2f5; cursor:pointer; font-size:11px; font-weight:700;">${label}</button>`
+      : ''
+  ).join('');
+
+  document.getElementById('leadDetailsTitle').textContent = lead.customerName || 'تفاصيل الليد';
+  document.getElementById('leadDetailsBody').innerHTML = `
+    <div style="background:linear-gradient(135deg, #0F7B65, #0a5f4f); color:#fff; padding:16px; border-radius:16px; margin-bottom:14px;">
+      <div style="font-size:18px; font-weight:800; margin-bottom:6px;">${escapeHtml(lead.customerName || 'بدون اسم')}</div>
+      <div style="font-size:13px; opacity:0.95;">📞 ${lead.phone || '-'} ${lead.phone2 ? ' / ' + lead.phone2 : ''}</div>
+      ${lead.gov ? `<div style="font-size:13px; opacity:0.95; margin-top:4px;">📍 ${escapeHtml(lead.gov)} - ${escapeHtml(lead.city || '')}</div>` : ''}
+      ${lead.address ? `<div style="font-size:12px; opacity:0.85; margin-top:4px;">${escapeHtml(lead.address)}</div>` : ''}
+      ${lead.interest ? `<div style="font-size:12px; opacity:0.95; margin-top:6px; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:10px;">🎯 ${escapeHtml(lead.interest)}</div>` : ''}
+      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">${stages[lead.stage] || ''}</span>
+        <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">📊 ${lead.attemptCount || 0}/${MAX_ATTEMPTS} محاولات</span>
+      </div>
+    </div>
+
+    ${lead.converted && lead.orderID ? `
+      <div style="background:#fff8e1; padding:12px; border-radius:12px; border-right:4px solid #D4AF37; margin-bottom:14px; text-align:center;">
+        <div style="font-size:12px; color:#8B6914; font-weight:700;">🛒 تم إنشاء الطلب</div>
+        <div style="font-size:15px; font-weight:800; color:#0F7B65; margin-top:4px;">${escapeHtml(lead.orderID)}</div>
+      </div>
+    ` : ''}
+
+    <!-- Actions -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px;">
+      <button onclick="openAddNote('${lead.id}')" style="padding:10px; background:#f39c12; color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">
+        <i class="fas fa-phone-slash"></i> تسجيل محاولة
+      </button>
+      <button onclick="openNewOrderFromLead('${lead.id}')" style="padding:10px; background:#2ecc71; color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px;">
+        <i class="fas fa-cart-plus"></i> تسجيل طلب
+      </button>
+      <a href="tel:${lead.phone}" style="padding:10px; background:#3498db; color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px; text-decoration:none; text-align:center;">
+        <i class="fas fa-phone"></i> اتصال مباشر
+      </a>
+      <a href="https://wa.me/2${lead.phone}" target="_blank" style="padding:10px; background:#25D366; color:#fff; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:13px; text-decoration:none; text-align:center;">
+        <i class="fab fa-whatsapp"></i> واتساب
+      </a>
+    </div>
+
+    <!-- Stage Changer -->
+    <div style="background:#f8f9fa; padding:12px; border-radius:12px; margin-bottom:14px;">
+      <div style="font-size:12px; font-weight:700; color:#555; margin-bottom:8px;">🔄 نقل إلى خانة:</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        ${stageButtons || '<span style="color:#999; font-size:12px;">لا يمكن النقل</span>'}
+      </div>
+    </div>
+
+    <!-- Edit / Delete -->
+    <div style="display:flex; gap:8px; margin-bottom:14px;">
+      <button onclick="editLead('${lead.id}')" style="flex:1; padding:9px; background:#f0f2f5; color:#333; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px;">
+        <i class="fas fa-edit"></i> تعديل
+      </button>
+      <button onclick="deleteLead('${lead.id}')" style="flex:1; padding:9px; background:#fde8e8; color:#e74c3c; border:none; border-radius:10px; cursor:pointer; font-weight:700; font-size:12px;">
+        <i class="fas fa-trash"></i> حذف
+      </button>
+    </div>
+
+    <!-- Notes Timeline -->
+    <div style="font-size:13px; font-weight:800; color:#0F7B65; margin-bottom:10px;">📜 سجل المحاولات والملاحظات</div>
+    <div class="notes-timeline">${notesHtml}</div>
+  `;
+
+  document.getElementById('leadDetailsModal').classList.add('active');
+};
+
+// ================== Stage Filter ==================
+window.setStageFilter = function(stage) {
+  currentStageFilter = stage;
+  document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+  document.querySelector(`.stat-card[data-stage="${stage}"]`)?.classList.add('active');
+  renderBoard();
+};
+
+// ================== Add Note ==================
+window.openAddNote = function(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  document.getElementById('noteLeadId').value = leadId;
+  document.getElementById('noteType').value = 'attempt';
+  document.getElementById('noteText').value = '';
+  const attempts = (lead.attemptCount || 0) + 1;
+  if (attempts <= MAX_ATTEMPTS) {
+    document.getElementById('attemptWarning').style.display = 'block';
+    document.getElementById('attemptNum').textContent = attempts;
+  } else {
+    document.getElementById('attemptWarning').style.display = 'none';
+  }
+  document.getElementById('addNoteModal').classList.add('active');
+};
+
+window.saveNote = async function() {
+  const leadId = document.getElementById('noteLeadId').value;
+  const type = document.getElementById('noteType').value;
+  const text = document.getElementById('noteText').value.trim();
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  if (!text) {
+    showToast('اكتب تفاصيل الملاحظة', 'warning');
+    return;
+  }
+
+  try {
+    const now = new Date();
+    const newNote = {
+      text,
+      type,
+      addedBy: currentUserEmail,
+      createdAt: now.toISOString()
+    };
+    const notes = [...(lead.notes || []), newNote];
+    const updateData = {
+      notes,
+      updatedAt: serverTimestamp(),
+      lastContactAt: serverTimestamp(),
+      lastContactBy: currentUserEmail
+    };
+
+    // إذا كانت محاولة "لم يرد" → زود العداد
+    if (type === 'attempt' && lead.stage === 'no_answer') {
+      const newCount = (lead.attemptCount || 0) + 1;
+      updateData.attemptCount = newCount;
+      // لو وصل للحد الأقصى → انقل تلقائياً لـ not_interested
+      if (newCount >= MAX_ATTEMPTS) {
+        updateData.stage = 'not_interested';
+        notes.push({
+          text: `🔄 انتقال تلقائي إلى "غير مهتم" بعد ${MAX_ATTEMPTS} محاولات بدون رد`,
+          type: 'stage-change',
+          addedBy: 'system',
+          createdAt: now.toISOString()
+        });
+        updateData.notes = notes;
+        showToast(`تم نقل الليد تلقائياً إلى "غير مهتم" بعد ${MAX_ATTEMPTS} محاولات`, 'warning');
+      } else {
+        showToast(`تم تسجيل المحاولة ${newCount}/${MAX_ATTEMPTS}`, 'success');
+      }
+    } else {
+      showToast('تم حفظ الملاحظة', 'success');
+    }
+
+    await updateDoc(doc(db, 'callCenterLeads', leadId), updateData);
+    closeModal('addNoteModal');
+  } catch(e) {
+    console.error(e);
+    showToast('فشل الحفظ: ' + e.message, 'error');
+  }
+};
+
+// ================== Change Stage ==================
+window.changeLeadStage = async function(leadId, newStage) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead || lead.stage === newStage) return;
+
+  const stageLabels = {
+    no_answer: '📵 لم يرد',
+    follow_up: '🔄 متابعة',
+    new_order: '✅ طلب جديد',
+    not_interested: '❌ غير مهتم'
+  };
+
+  const confirmed = await customConfirm(`نقل الليد إلى خانة "${stageLabels[newStage]}"؟`);
+  if (!confirmed) return;
+
+  try {
+    const now = new Date();
+    const notes = [...(lead.notes || [])];
+    notes.push({
+      text: `نقل من "${stageLabels[lead.stage]}" إلى "${stageLabels[newStage]}"`,
+      type: 'stage-change',
+      addedBy: currentUserEmail,
+      createdAt: now.toISOString()
+    });
+
+    await updateDoc(doc(db, 'callCenterLeads', leadId), {
+      stage: newStage,
+      notes,
+      updatedAt: serverTimestamp(),
+      ...(newStage === 'no_answer' ? { attemptCount: 0 } : {})
+    });
+    showToast(`تم النقل إلى ${stageLabels[newStage]}`, 'success');
+    closeModal('leadDetailsModal');
+  } catch(e) {
+    console.error(e);
+    showToast('فشل النقل: ' + e.message, 'error');
+  }
+};
+
+// ================== New Lead Modal ==================
+window.openNewLeadModal = function() {
+  document.getElementById('leadId').value = '';
+  document.getElementById('newLeadTitle').textContent = '➕ ليد جديد';
+  document.getElementById('leadName').value = '';
+  document.getElementById('leadPhone').value = '';
+  document.getElementById('leadPhone2').value = '';
+  document.getElementById('leadGov').value = '';
+  document.getElementById('leadCity').innerHTML = '<option value="">-- اختر المحافظة --</option>';
+  document.getElementById('leadAddress').value = '';
+  document.getElementById('leadInterest').value = '';
+  document.getElementById('leadStage').value = 'no_answer';
+  document.getElementById('leadNote').value = '';
+  document.getElementById('newLeadModal').classList.add('active');
+  setTimeout(() => document.getElementById('leadName').focus(), 200);
+};
+
+window.editLead = function(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  document.getElementById('leadId').value = leadId;
+  document.getElementById('newLeadTitle').textContent = '✏️ تعديل الليد';
+  document.getElementById('leadName').value = lead.customerName || '';
+  document.getElementById('leadPhone').value = lead.phone || '';
+  document.getElementById('leadPhone2').value = lead.phone2 || '';
+  document.getElementById('leadGov').value = lead.gov || '';
+  fillCities(lead.gov, lead.city || '');
+  document.getElementById('leadAddress').value = lead.address || '';
+  document.getElementById('leadInterest').value = lead.interest || '';
+  document.getElementById('leadStage').value = lead.stage || 'no_answer';
+  document.getElementById('leadNote').value = '';
+  closeModal('leadDetailsModal');
+  document.getElementById('newLeadModal').classList.add('active');
+};
+
+window.saveLead = async function() {
+  const id = document.getElementById('leadId').value;
+  const name = document.getElementById('leadName').value.trim();
+  const phone = cleanPhone(document.getElementById('leadPhone').value.trim());
+  const phone2Raw = document.getElementById('leadPhone2').value.trim();
+  const phone2 = phone2Raw ? cleanPhone(phone2Raw) : null;
+  const gov = document.getElementById('leadGov').value;
+  const city = document.getElementById('leadCity').value;
+  const address = document.getElementById('leadAddress').value.trim();
+  const interest = document.getElementById('leadInterest').value.trim();
+  const stage = document.getElementById('leadStage').value;
+  const initialNote = document.getElementById('leadNote').value.trim();
+
+  if (!name) { showToast('اكتب اسم العميل', 'warning'); return; }
+  if (!phone) { showToast('رقم الهاتف غير صحيح (مصري)', 'warning'); return; }
+
+  try {
+    const now = new Date();
+    if (id) {
+      // تعديل
+      await updateDoc(doc(db, 'callCenterLeads', id), {
+        customerName: name,
+        phone,
+        phone2,
+        gov,
+        city,
+        address,
+        interest,
+        stage,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUserEmail
+      });
+      showToast('تم تحديث الليد', 'success');
+    } else {
+      // جديد
+      const notes = [];
+      if (initialNote) {
+        notes.push({
+          text: initialNote,
+          type: 'note',
+          addedBy: currentUserEmail,
+          createdAt: now.toISOString()
+        });
+      }
+      await addDoc(collection(db, 'callCenterLeads'), {
+        customerName: name,
+        phone,
+        phone2,
+        gov,
+        city,
+        address,
+        interest,
+        stage,
+        attemptCount: 0,
+        notes,
+        addedBy: currentUserEmail,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      showToast('تم إضافة الليد بنجاح', 'success');
+    }
+    closeModal('newLeadModal');
+  } catch(e) {
+    console.error(e);
+    showToast('فشل الحفظ: ' + e.message, 'error');
+  }
+};
+
+// ================== Delete Lead ==================
+window.deleteLead = async function(leadId) {
+  const confirmed = await customConfirm('⚠️ حذف هذا الليد نهائياً؟ لا يمكن التراجع.');
+  if (!confirmed) return;
+  try {
+    await deleteDoc(doc(db, 'callCenterLeads', leadId));
+    showToast('تم حذف الليد', 'success');
+    closeModal('leadDetailsModal');
+  } catch(e) {
+    showToast('فشل الحذف: ' + e.message, 'error');
+  }
+};
+
+// ================== Order From Lead ==================
+window.openNewOrderFromLead = function(leadId) {
+  const lead = leads.find(l => l.id === leadId);
+  if (!lead) return;
+  document.getElementById('orderLeadId').value = leadId;
+  document.getElementById('orderName').value = lead.customerName || '';
+  document.getElementById('orderPhone').value = lead.phone || '';
+  document.getElementById('orderPhone2').value = lead.phone2 || '';
+  document.getElementById('orderGov').value = lead.gov || '';
+  fillOrderCities(lead.gov, lead.city || '');
+  document.getElementById('orderAddress').value = lead.address || '';
+  document.getElementById('orderProduct').value = lead.interest || '';
+  document.getElementById('orderSize').value = '';
+  document.getElementById('orderWeight').value = '';
+  document.getElementById('orderLength').value = '';
+  document.getElementById('orderPrice').value = '';
+  document.getElementById('orderShipping').value = '';
+  document.getElementById('orderNotes').value = '';
+  updateOrderTotal();
+  closeModal('leadDetailsModal');
+  document.getElementById('newOrderModal').classList.add('active');
+};
+
+function updateOrderTotal() {
+  const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+  const shipping = parseFloat(document.getElementById('orderShipping').value) || 0;
+  document.getElementById('orderTotalPreview').textContent = (price + shipping).toFixed(0);
+}
+document.getElementById('orderPrice')?.addEventListener('input', updateOrderTotal);
+document.getElementById('orderShipping')?.addEventListener('input', updateOrderTotal);
+
+window.saveOrderFromLead = async function() {
+  const leadId = document.getElementById('orderLeadId').value;
+  const lead = leads.find(l => l.id === leadId);
+
+  const name = document.getElementById('orderName').value.trim();
+  const phone = cleanPhone(document.getElementById('orderPhone').value.trim());
+  const phone2Raw = document.getElementById('orderPhone2').value.trim();
+  const phone2 = phone2Raw ? cleanPhone(phone2Raw) : null;
+  const gov = document.getElementById('orderGov').value;
+  const city = document.getElementById('orderCity').value;
+  const address = document.getElementById('orderAddress').value.trim();
+  const product = document.getElementById('orderProduct').value.trim();
+  const size = document.getElementById('orderSize').value.trim();
+  const weight = parseFloat(document.getElementById('orderWeight').value) || null;
+  const length = parseFloat(document.getElementById('orderLength').value) || null;
+  const price = parseFloat(document.getElementById('orderPrice').value) || 0;
+  const shipping = parseFloat(document.getElementById('orderShipping').value) || 0;
+  const notes = document.getElementById('orderNotes').value.trim();
+
+  // Validation
+  if (!name) { showToast('اكتب اسم العميل', 'warning'); return; }
+  if (!phone) { showToast('رقم الهاتف غير صحيح', 'warning'); return; }
+  if (!gov || !city) { showToast('اختر المحافظة والمدينة', 'warning'); return; }
+  if (!address) { showToast('اكتب العنوان', 'warning'); return; }
+  if (!product) { showToast('اكتب اسم المنتج', 'warning'); return; }
+  if (!size && !weight && !length) {
+    showToast('لازم تدخل المقاس أو الوزن/الطول على الأقل', 'warning');
+    return;
+  }
+  if (price <= 0) { showToast('السعر غير صحيح', 'warning'); return; }
+
+  const btn = event.target;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
+
+  try {
+    // توليد رقم الطلب
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${yyyy}${mm}${dd}`;
+
+    const qToday = query(collection(db, 'orders'), where('date', '==', dateStr));
+    const todaySnap = await getDocs(qToday);
+    const dailyCount = todaySnap.size + 1;
+
+    // كود العميل
+    const customersRef = collection(db, 'customers');
+    const qCust = query(customersRef, where('phone', '==', phone));
+    const custSnap = await getDocs(qCust);
+    let customerCode;
+    if (!custSnap.empty) {
+      customerCode = custSnap.docs[0].data().customerCode;
+    } else {
+      const counterRef = doc(db, 'counters', 'customers');
+      const counterSnap = await getDoc(counterRef);
+      if (!counterSnap.exists()) await setDoc(counterRef, { value: 0 });
+      await updateDoc(counterRef, { value: increment(1) });
+      const newNumber = (await getDoc(counterRef)).data().value;
+      customerCode = `V${newNumber}`;
+      await setDoc(doc(db, 'customers', phone), {
+        phone,
+        name,
+        customerCode,
+        createdAt: serverTimestamp()
+      });
+    }
+
+    const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
+
+    // مطابقة المنتج من القائمة
+    const matched = allProducts.find(p =>
+      (p.name || '').trim().toLowerCase() === product.toLowerCase()
+    );
+
+    const orderDetails = [{
+      productId: matched?.id || null,
+      sku: matched?.sku || null,
+      name: product,
+      size: size || 'غير محدد',
+      qty: 1,
+      price: price,
+      image: matched?.image || '',
+      costPrice: matched?.costPrice || 0,
+      customerWeight: weight,
+      customerWeightMax: null,
+      customerLength: length
+    }];
+
+    const finalTotal = price + shipping;
+    const totalCost = matched?.costPrice || 0;
+
+    const orderData = {
+      orderID,
+      customerName: name,
+      phone,
+      secondaryPhone: phone2,
+      gov,
+      city,
+      address,
+      orderDetails,
+      quantity: 1,
+      price,
+      shipping,
+      shippingCostPaid: shipping,
+      finalTotal,
+      status: 'new',
+      date: dateStr,
+      notes,
+      stockDeducted: false,
+      stockRestored: false,
+      createdAt: serverTimestamp(),
+      originalCreatedAt: serverTimestamp(),
+      totalCost,
+      profit: finalTotal - totalCost - shipping,
+      source: 'callcenter',           // ← مهم
+      addedBy: currentUserEmail,       // ← مهم
+      callCenterLeadId: leadId
+    };
+
+    const orderRef = await addDoc(collection(db, 'orders'), orderData);
+
+    // خصم المخزون لو فيه مقاس
+    if (matched?.id && size && matched.stockBySize?.[size] !== undefined) {
+      const sb = { ...matched.stockBySize };
+      if (sb[size] !== null && sb[size] !== undefined && sb[size] >= 1) {
+        sb[size] = sb[size] - 1;
+        try {
+          await updateDoc(doc(db, 'products', matched.id), {
+            stockBySize: sb,
+            salesCount: increment(1)
+          });
+        } catch(e) { console.warn('stock update failed:', e); }
+      }
+    }
+
+    // تحديث الليد
+    if (lead) {
+      const now = new Date();
+      const notesArr = [...(lead.notes || [])];
+      notesArr.push({
+        text: `🛒 تم تسجيل الطلب: ${orderID} (${finalTotal} جنيه)`,
+        type: 'order-created',
+        addedBy: currentUserEmail,
+        createdAt: now.toISOString()
+      });
+      await updateDoc(doc(db, 'callCenterLeads', leadId), {
+        stage: 'new_order',
+        converted: true,
+        orderID,
+        orderFirestoreId: orderRef.id,
+        notes: notesArr,
+        updatedAt: serverTimestamp()
+      });
+    }
+
+    showToast(`✅ تم تسجيل الطلب ${orderID}`, 'success');
+    closeModal('newOrderModal');
+  } catch(e) {
+    console.error(e);
+    showToast('فشل التسجيل: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-check"></i> تسجيل الطلب';
+  }
+};
+
+// ================== Export Excel ==================
+window.exportLeads = function() {
+  if (!leads.length) { showToast('لا توجد ليدز للتصدير', 'warning'); return; }
+  const rows = leads.map((l, i) => ({
+    'م': i + 1,
+    'الاسم': l.customerName || '',
+    'الهاتف': l.phone || '',
+    'الهاتف 2': l.phone2 || '',
+    'المحافظة': l.gov || '',
+    'المدينة': l.city || '',
+    'العنوان': l.address || '',
+    'مهتم بـ': l.interest || '',
+    'الخانة': {
+      no_answer: 'لم يرد',
+      follow_up: 'متابعة',
+      new_order: 'طلب جديد',
+      not_interested: 'غير مهتم'
+    }[l.stage] || l.stage,
+    'عدد المحاولات': l.attemptCount || 0,
+    'رقم الطلب': l.orderID || '',
+    'أضيف بواسطة': l.addedBy || '',
+    'آخر تحديث': l.updatedAt?.toDate?.().toLocaleString('ar-EG') || ''
+  }));
+
+  // CSV بسيط (بدون مكتبات إضافية)
+  const headers = Object.keys(rows[0]);
+  const csv = '\uFEFF' + [
+    headers.join(','),
+    ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(','))
+  ].join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `call-center-leads-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('تم تصدير الليدز', 'success');
+};
+
+// ================== Populate Gov/City ==================
+function populateLeadGovs() {
+  const sel = document.getElementById('leadGov');
+  sel.innerHTML = '<option value="">-- اختر --</option>' + Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
+  sel.addEventListener('change', () => fillCities(sel.value, ''));
+
+  const orderGov = document.getElementById('orderGov');
+  orderGov.innerHTML = '<option value="">-- اختر --</option>' + Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
+  orderGov.addEventListener('change', () => fillOrderCities(orderGov.value, ''));
+}
+
+function fillCities(gov, selected) {
+  const citySel = document.getElementById('leadCity');
+  if (!gov || !govData[gov]) {
+    citySel.innerHTML = '<option value="">-- اختر المحافظة --</option>';
+    return;
+  }
+  citySel.innerHTML = '<option value="">-- اختر المدينة --</option>' +
+    govData[gov].map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+function fillOrderCities(gov, selected) {
+  const citySel = document.getElementById('orderCity');
+  if (!gov || !govData[gov]) {
+    citySel.innerHTML = '<option value="">-- اختر المحافظة --</option>';
+    return;
+  }
+  citySel.innerHTML = '<option value="">-- اختر المدينة --</option>' +
+    govData[gov].map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+}
+
+// ================== Search ==================
+document.getElementById('search')?.addEventListener('input', e => {
+  searchTerm = e.target.value.trim();
+  renderBoard();
+  renderStats();
+});
+
+// ================== Auth ==================
+onAuthStateChanged(auth, user => {
+  if (user) {
+    currentUserEmail = user.email || 'unknown';
+    console.log('✅ Call Center user:', currentUserEmail);
+    populateLeadGovs();
+    loadProducts();
+    loadLeads();
+  } else {
+    window.location.href = 'login.html';
+  }
+});
+</script>
+</body>
+</html>
