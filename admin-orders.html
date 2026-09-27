@@ -866,6 +866,11 @@
             <div class="icon-btn" onclick="goToProducts()" style="background: #D4AF37; color: #000; width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;">
                 📦
             </div>
+            <div class="icon-btn" onclick="window.location.href='call-center.html'" 
+     style="background: #0F7B65; color: #fff; width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer;" 
+     title="الكول سينتر">
+    🎧
+</div>
         </div>
     </div>
 </div>
@@ -2259,6 +2264,8 @@ if (product && product.stockBySize) {
         originalCreatedAt: serverTimestamp(),
         totalCost: totalCost,
         profit: finalTotal - totalCost - order.shipping,
+           source: 'admin',                              // ← ضيف
+    addedBy: window.currentUserEmail || 'unknown', // ← ضيف
         source: 'paste'
     };
 
@@ -3115,6 +3122,7 @@ window.saveEdit = async (id) => {
         shippingCostPaid,
         profit,
         notes,
+        updatedBy: window.currentUserEmail || 'unknown',
         updatedAt: serverTimestamp()
     };
 
