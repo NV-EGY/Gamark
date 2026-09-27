@@ -421,7 +421,7 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
 
 <!-- ===== Modal: New/Edit Lead ===== -->
 <div class="modal-overlay" id="newLeadModal">
-  <div class="modal-box" style="max-width:440px;">
+  <div class="modal-box" style="max-width:460px;">
     <div class="modal-header" style="background:linear-gradient(135deg, #0F7B65, #0a5f4f);">
       <h3 id="newLeadTitle" style="color:#fff;">➕ ليد جديد</h3>
       <button class="modal-close" onclick="closeModal('newLeadModal')" style="background:rgba(255,255,255,0.2); color:#fff;">✕</button>
@@ -429,25 +429,33 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
     <div class="modal-body">
       <input type="hidden" id="leadId">
 
-      <!-- 📞 التليفون — إجباري -->
+      <!-- 📞 التليفون (إجباري) -->
       <div class="form-group">
         <label style="font-size:14px;">📞 رقم الهاتف <span class="req">*</span></label>
         <input type="tel" id="leadPhone" class="form-control" 
                placeholder="01xxxxxxxxx" 
                style="direction:ltr; text-align:center; font-size:18px; font-weight:700; letter-spacing:1px; padding:14px;" 
                autocomplete="tel">
-        <small style="color:#888; font-size:11px; display:block; margin-top:4px;">الرقم هو الحقل الوحيد الإجباري</small>
       </div>
 
-      <!-- 👤 الاسم — اختياري -->
+      <!-- 👤 الاسم (اختياري) -->
       <div class="form-group">
         <label style="font-size:14px;">👤 اسم العميل <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
         <input type="text" id="leadName" class="form-control" placeholder="اتركه فارغ لو مش متاح">
       </div>
 
-      <!-- 🏷️ الخانة -->
+      <!-- 🛍️ المنتج/الاهتمام (اختياري) -->
       <div class="form-group">
-        <label style="font-size:14px;">🏷️ الخانة الابتدائية</label>
+        <label style="font-size:14px;">🛍️ المنتج / مهتم بإيه؟ <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
+        <input type="text" id="leadProduct" class="form-control" 
+               list="leadProductsList"
+               placeholder="مثال: عبايات / عطور / ساعات">
+        <datalist id="leadProductsList"></datalist>
+      </div>
+
+      <!-- 🏷️ الخانة الابتدائية -->
+      <div class="form-group">
+        <label style="font-size:14px;">🏷️ الخانة الابتدائية <span class="req">*</span></label>
         <select id="leadStage" class="form-control" style="font-weight:700;">
           <option value="no_answer">📵 لم يرد (No Answer)</option>
           <option value="follow_up">🔄 متابعة (Follow Up)</option>
@@ -455,10 +463,28 @@ body { background:#f4f6f9; padding-bottom:40px; min-height:100vh; }
         </select>
       </div>
 
-      <!-- 📝 ملاحظة سريعة -->
+      <!-- 📋 سبب الاتصال / الوصف -->
       <div class="form-group">
-        <label style="font-size:14px;">📝 ملاحظة سريعة <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
-        <textarea id="leadNote" class="form-control" rows="2" placeholder="مثال: سأل عن عبايات / اتصل بعدين"></textarea>
+        <label style="font-size:14px;">📋 حالة الليد <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
+        <select id="leadReason" class="form-control">
+          <option value="">— اختر —</option>
+          <option value="asked_price">💰 سألت عن السعر</option>
+          <option value="sent_measurements">📏 بعتت الطول والوزن</option>
+          <option value="incomplete_data">📝 مكملتش بياناتها</option>
+          <option value="will_reply_later">⏰ قالت هرد عليكم بعدين</option>
+          <option value="wants_callback">📞 طلب معاودة الاتصال</option>
+          <option value="interested_shipping">🚚 سألت عن الشحن</option>
+          <option value="comparing_prices">🔍 بيقارن أسعار</option>
+          <option value="no_response_whatsapp">💬 مردش على الواتساب</option>
+          <option value="thinking">🤔 بيفكر / محتاج وقت</option>
+          <option value="other">📌 أخرى</option>
+        </select>
+      </div>
+
+      <!-- 📝 ملاحظة -->
+      <div class="form-group">
+        <label style="font-size:14px;">📝 ملاحظة إضافية <span style="color:#888; font-weight:400; font-size:11px;">(اختياري)</span></label>
+        <textarea id="leadNote" class="form-control" rows="2" placeholder="أي تفاصيل..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -625,6 +651,20 @@ let searchTerm = '';
 let currentUserEmail = 'unknown';
 const MAX_ATTEMPTS = 3;
 
+// 📋 خريطة أسباب/حالات الليد
+const REASON_LABELS = {
+  asked_price:           '💰 سألت عن السعر',
+  sent_measurements:     '📏 بعتت الطول والوزن',
+  incomplete_data:       '📝 مكملتش بياناتها',
+  will_reply_later:      '⏰ قالت هرد عليكم بعدين',
+  wants_callback:        '📞 طلب معاودة الاتصال',
+  interested_shipping:   '🚚 سألت عن الشحن',
+  comparing_prices:      '🔍 بيقارن أسعار',
+  no_response_whatsapp:  '💬 مردش على الواتساب',
+  thinking:              '🤔 بيفكر / محتاج وقت',
+  other:                 '📌 أخرى'
+};
+
 // ================== Gov Data ==================
 const govData = {
  "القاهرة": ["مدينة نصر","مصر الجديدة","مصر القديمة","التجمع الأول","التجمع الثالث","التجمع الخامس","الرحاب","مدينتي","الشروق","بدر","المعادي","زهراء المعادي","حلوان","15 مايو","عين شمس","المطرية","السلام","المرج","الزيتون","حدائق القبة","روض الفرج","شبرا مصر","وسط البلد","القاهرة الجديدة","القطامية","المقطم","هليوبوليس الجديدة","مدينة المستقبل","أحياء أخرى"],
@@ -733,6 +773,10 @@ async function loadProducts() {
     if (dl) {
       dl.innerHTML = allProducts.map(p => `<option value="${escapeHtml(p.name)}">`).join('');
     }
+        const dl2 = document.getElementById('leadProductsList');
+    if (dl2) {
+      dl2.innerHTML = allProducts.map(p => `<option value="${escapeHtml(p.name)}">`).join('');
+    }
   } catch(e) {
     console.warn('loadProducts failed:', e);
   }
@@ -802,6 +846,7 @@ function renderLeadCard(lead) {
   if (attempts >= MAX_ATTEMPTS) attemptsClass = 'danger';
   else if (stage === 'new_order' || isConverted) attemptsClass = 'success';
   const lastNote = (lead.notes && lead.notes.length > 0) ? lead.notes[lead.notes.length - 1] : null;
+  const reasonLabel = lead.reason ? REASON_LABELS[lead.reason] || '' : '';
 
   return `
     <div class="lead-card ${isConverted ? 'converted' : ''}" data-stage="${stage}" onclick="openLeadDetails('${lead.id}')">
@@ -811,9 +856,9 @@ function renderLeadCard(lead) {
         ${attempts > 0 ? `<span class="attempts ${attemptsClass}">${attempts}/${MAX_ATTEMPTS}</span>` : ''}
       </div>
       <div class="lead-phone">📞 ${lead.phone || '-'}</div>
-      ${lead.gov ? `<div class="lead-meta">📍 ${escapeHtml(lead.gov)}${lead.city ? ' - ' + escapeHtml(lead.city) : ''}</div>` : ''}
-      ${lead.interest ? `<div class="lead-interest">🎯 ${escapeHtml(lead.interest)}</div>` : ''}
-      ${lastNote ? `<div class="lead-note-preview">💬 ${escapeHtml(lastNote.text || '')}</div>` : ''}
+      ${lead.interest ? `<div class="lead-interest">🛍️ ${escapeHtml(lead.interest)}</div>` : ''}
+      ${reasonLabel ? `<div style="font-size:11px; color:#8B6914; background:#fff8e1; padding:4px 8px; border-radius:8px; margin-top:6px; display:inline-block; font-weight:700;">${reasonLabel}</div>` : ''}
+      ${lastNote && !reasonLabel ? `<div class="lead-note-preview">💬 ${escapeHtml(lastNote.text || '')}</div>` : ''}
       <div class="lead-meta" style="margin-top:6px;">
         <span>⏰ ${formatDate(lead.updatedAt)}</span>
         ${lead.addedBy ? `<span style="font-size:10px;">👤 ${escapeHtml(lead.addedBy.split('@')[0])}</span>` : ''}
@@ -860,13 +905,14 @@ window.openLeadDetails = function(leadId) {
   ).join('');
 
   document.getElementById('leadDetailsTitle').textContent = lead.customerName || 'تفاصيل الليد';
-  document.getElementById('leadDetailsBody').innerHTML = `
+   document.getElementById('leadDetailsBody').innerHTML = `
     <div style="background:linear-gradient(135deg, #0F7B65, #0a5f4f); color:#fff; padding:16px; border-radius:16px; margin-bottom:14px;">
       <div style="font-size:18px; font-weight:800; margin-bottom:6px;">${escapeHtml(lead.customerName || 'بدون اسم')}</div>
       <div style="font-size:13px; opacity:0.95;">📞 ${lead.phone || '-'} ${lead.phone2 ? ' / ' + lead.phone2 : ''}</div>
       ${lead.gov ? `<div style="font-size:13px; opacity:0.95; margin-top:4px;">📍 ${escapeHtml(lead.gov)} - ${escapeHtml(lead.city || '')}</div>` : ''}
       ${lead.address ? `<div style="font-size:12px; opacity:0.85; margin-top:4px;">${escapeHtml(lead.address)}</div>` : ''}
-      ${lead.interest ? `<div style="font-size:12px; opacity:0.95; margin-top:6px; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:10px;">🎯 ${escapeHtml(lead.interest)}</div>` : ''}
+      ${lead.interest ? `<div style="font-size:12px; opacity:0.95; margin-top:6px; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:10px;">🛍️ ${escapeHtml(lead.interest)}</div>` : ''}
+      ${reasonLabel ? `<div style="font-size:12px; opacity:0.95; margin-top:6px; background:rgba(255,255,255,0.2); padding:6px 10px; border-radius:10px;">${reasonLabel}</div>` : ''}
       <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">${stages[lead.stage] || ''}</span>
         <span style="background:rgba(255,255,255,0.25); padding:3px 10px; border-radius:20px; font-size:11px;">📊 ${lead.attemptCount || 0}/${MAX_ATTEMPTS} محاولات</span>
@@ -1063,7 +1109,9 @@ window.openNewLeadModal = function() {
   document.getElementById('newLeadTitle').textContent = '➕ ليد جديد';
   document.getElementById('leadPhone').value = '';
   document.getElementById('leadName').value = '';
+  document.getElementById('leadProduct').value = '';
   document.getElementById('leadStage').value = 'no_answer';
+  document.getElementById('leadReason').value = '';
   document.getElementById('leadNote').value = '';
   document.getElementById('newLeadModal').classList.add('active');
   setTimeout(() => document.getElementById('leadPhone').focus(), 250);
@@ -1074,14 +1122,11 @@ window.editLead = function(leadId) {
   if (!lead) return;
   document.getElementById('leadId').value = leadId;
   document.getElementById('newLeadTitle').textContent = '✏️ تعديل الليد';
-  document.getElementById('leadName').value = lead.customerName || '';
   document.getElementById('leadPhone').value = lead.phone || '';
-  document.getElementById('leadPhone2').value = lead.phone2 || '';
-  document.getElementById('leadGov').value = lead.gov || '';
-  fillCities(lead.gov, lead.city || '');
-  document.getElementById('leadAddress').value = lead.address || '';
-  document.getElementById('leadInterest').value = lead.interest || '';
+  document.getElementById('leadName').value = lead.customerName || '';
+  document.getElementById('leadProduct').value = lead.interest || '';
   document.getElementById('leadStage').value = lead.stage || 'no_answer';
+  document.getElementById('leadReason').value = lead.reason || '';
   document.getElementById('leadNote').value = '';
   closeModal('leadDetailsModal');
   document.getElementById('newLeadModal').classList.add('active');
@@ -1091,40 +1136,66 @@ window.saveLead = async function() {
   const id       = document.getElementById('leadId').value;
   const phone    = cleanPhone(document.getElementById('leadPhone').value.trim());
   const nameRaw  = document.getElementById('leadName').value.trim();
+  const product  = document.getElementById('leadProduct').value.trim();
   const stage    = document.getElementById('leadStage').value || 'no_answer';
+  const reason   = document.getElementById('leadReason').value || '';
   const note     = document.getElementById('leadNote').value.trim();
 
-  // ✅ التحقق: التليفون فقط إجباري
   if (!phone) {
     showToast('⚠️ اكتب رقم هاتف مصري صحيح', 'warning');
     document.getElementById('leadPhone').focus();
     return;
   }
 
-  // ✅ لو الاسم فاضي → نستخدم آخر 4 أرقام
   const name = nameRaw || `عميل ${phone.slice(-4)}`;
 
   try {
     const now = new Date();
 
     if (id) {
-      // ===== تعديل =====
+      // تعديل
       await updateDoc(doc(db, 'callCenterLeads', id), {
         customerName: name,
         phone,
+        interest: product,
         stage,
+        reason,
         updatedAt: serverTimestamp(),
         updatedBy: currentUserEmail
       });
       showToast('✅ تم تحديث الليد', 'success');
     } else {
-      // ===== جديد =====
-      const notes = note ? [{
-        text: note,
-        type: 'note',
-        addedBy: currentUserEmail,
-        createdAt: now.toISOString()
-      }] : [];
+      // جديد
+      const notes = [];
+      if (reason) {
+        const reasonText = {
+          asked_price: '💰 سألت عن السعر',
+          sent_measurements: '📏 بعتت الطول والوزن',
+          incomplete_data: '📝 مكملتش بياناتها',
+          will_reply_later: '⏰ قالت هرد عليكم بعدين',
+          wants_callback: '📞 طلب معاودة الاتصال',
+          interested_shipping: '🚚 سألت عن الشحن',
+          comparing_prices: '🔍 بيقارن أسعار',
+          no_response_whatsapp: '💬 مردش على الواتساب',
+          thinking: '🤔 بيفكر / محتاج وقت',
+          other: '📌 أخرى'
+        }[reason] || reason;
+
+        notes.push({
+          text: reasonText,
+          type: 'note',
+          addedBy: currentUserEmail,
+          createdAt: now.toISOString()
+        });
+      }
+      if (note) {
+        notes.push({
+          text: note,
+          type: 'note',
+          addedBy: currentUserEmail,
+          createdAt: now.toISOString()
+        });
+      }
 
       await addDoc(collection(db, 'callCenterLeads'), {
         customerName: name,
@@ -1133,24 +1204,15 @@ window.saveLead = async function() {
         gov: '',
         city: '',
         address: '',
-        interest: '',
+        interest: product,
         stage,
+        reason,
         attemptCount: 0,
         notes,
         addedBy: currentUserEmail,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       });
-
-      // لو الخانة "لم يرد" → نسجل محاولة أولى تلقائياً
-      if (stage === 'no_answer') {
-        const docRef = await getDocs(query(
-          collection(db, 'callCenterLeads'),
-          where('phone', '==', phone)
-        ));
-        // (اختياري: مش لازم نعمل حاجة، اللوج هيتسجل لما يعمل محاولة)
-      }
-
       showToast('✅ تم إضافة الليد', 'success');
     }
 
