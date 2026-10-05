@@ -877,6 +877,223 @@
     color: #888;
 }
 
+/* ═══════════════════════════════════════════ */
+/* 📆 أنماط تجميع الأشهر */
+/* ═══════════════════════════════════════════ */
+.month-group { margin-bottom: 14px; }
+.month-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #D4AF37, #B8860B);
+    border-radius: 16px;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(212,175,55,0.35);
+    transition: all 0.25s ease;
+    user-select: none;
+}
+.month-header:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(212,175,55,0.5);
+}
+.month-header:active { transform: translateY(0); }
+.month-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #000;
+}
+.month-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.month-count-badge {
+    background: #000;
+    color: #D4AF37;
+    padding: 4px 14px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+}
+.month-total-badge {
+    background: rgba(0,0,0,0.15);
+    color: #000;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 11px;
+    font-weight: 700;
+}
+.month-header i { color: #000; transition: transform 0.3s ease; }
+
+/* ═══════════════════════════════════════════ */
+/* 🧠 المعاينة الذكية للصق */
+/* ═══════════════════════════════════════════ */
+.smart-preview-summary {
+    background: linear-gradient(135deg, #0F7B65, #0a5f4f);
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+    gap: 10px;
+    text-align: center;
+}
+.smart-stat { padding: 4px 0; }
+.smart-stat-value { font-size: 22px; font-weight: 800; line-height: 1.2; }
+.smart-stat-label { font-size: 11px; opacity: 0.85; font-weight: 700; }
+.smart-stat.valid .smart-stat-value { color: #7CFFB2; }
+.smart-stat.warn .smart-stat-value { color: #FFE066; }
+.smart-stat.err .smart-stat-value { color: #FF8A8A; }
+.smart-stat.dup .smart-stat-value { color: #FFC966; }
+.smart-stat.total .smart-stat-value { color: #FFD700; }
+
+.smart-order-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    border-right: 4px solid #ddd;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.2s ease;
+    text-align: right;
+    font-size: 12px;
+}
+.smart-order-card.valid { border-right-color: #2ecc71; }
+.smart-order-card.warn  { border-right-color: #f39c12; background: #fffdf5; }
+.smart-order-card.error { border-right-color: #e74c3c; background: #fff5f5; opacity: 0.9; }
+.smart-order-card.duplicate { border-right-color: #e67e22; background: #fff8ee; }
+
+.smart-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.smart-order-num {
+    background: #0F7B65;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 800;
+    font-size: 11px;
+}
+.smart-order-name {
+    font-weight: 800;
+    color: #111;
+    font-size: 13px;
+    flex: 1;
+    text-align: right;
+}
+.smart-badges {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin: 6px 0;
+}
+.smart-badge {
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+}
+.smart-badge.ok   { background: #d4f5e0; color: #1e8449; }
+.smart-badge.warn { background: #fff3cd; color: #8B6914; }
+.smart-badge.err  { background: #fdd; color: #c0392b; }
+.smart-badge.info { background: #e3f2fd; color: #1e5f99; }
+
+.smart-products-grid {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.smart-product-row {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 5px 6px;
+    background: #fff;
+    border-radius: 8px;
+    font-size: 11px;
+}
+.smart-product-idx {
+    width: 22px;
+    height: 22px;
+    background: #0F7B65;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 10px;
+}
+.smart-product-name {
+    font-weight: 700;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.smart-product-meta {
+    color: #666;
+    font-size: 10px;
+    font-weight: 600;
+}
+.smart-product-price {
+    color: #0F7B65;
+    font-weight: 800;
+    font-size: 12px;
+}
+.smart-warning-list {
+    background: #fff8e1;
+    border-right: 3px solid #f39c12;
+    padding: 7px 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #8B6914;
+    line-height: 1.6;
+}
+.smart-error-list {
+    background: #fee;
+    border-right: 3px solid #e74c3c;
+    padding: 7px 10px;
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #c0392b;
+    line-height: 1.6;
+    font-weight: 700;
+}
+.smart-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #0F7B65, #0a5f4f);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-top: 8px;
+    font-weight: 800;
+    font-size: 13px;
+}
+
 </style>
 
   </style>
@@ -971,15 +1188,25 @@
   
   <input type="date" id="dateFilter" style="display:none;">
 <!-- سليكت فلتر اليوم -->
-<div style="display: flex; justify-content: center; margin: 8px 0;">
+<div style="display: flex; justify-content: center; gap: 10px; margin: 8px 0; flex-wrap: wrap;">
   <select id="dayFilterSelect" onchange="applyDayFilter(this.value)" 
-          style="padding: 8px 20px; border-radius: 30px; border: 2px solid #0F7B65; background: #fff; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 14px; color: #0F7B65; cursor: pointer; box-shadow: 0 2px 8px rgba(15,123,101,0.15); min-width: 200px; text-align: center;">
+          style="padding: 8px 20px; border-radius: 30px; border: 2px solid #0F7B65; background: #fff; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 14px; color: #0F7B65; cursor: pointer; box-shadow: 0 2px 8px rgba(15,123,101,0.15); min-width: 180px; text-align: center;">
     <option value="all">📅 كل الأيام</option>
     <option value="today">📅 اليوم</option>
     <option value="yesterday">📅 أمس</option>
     <option value="last7">📅 آخر 7 أيام</option>
     <option value="last30">📅 آخر 30 يوم</option>
   </select>
+  
+  <select id="emailFilterSelect" onchange="applyEmailFilter(this.value)" 
+          style="padding: 8px 20px; border-radius: 30px; border: 2px solid #9b59b6; background: #fff; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 14px; color: #6c3483; cursor: pointer; box-shadow: 0 2px 8px rgba(155,89,182,0.15); min-width: 180px; text-align: center;">
+    <option value="all">📧 كل الإيميلات</option>
+  </select>
+  
+  <button onclick="toggleGroupMode()" id="groupModeBtn" 
+          style="padding: 8px 20px; border-radius: 30px; border: 2px solid #D4AF37; background: #fff; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 14px; color: #8B6914; cursor: pointer; box-shadow: 0 2px 8px rgba(212,175,55,0.15);">
+    📅 تجميع بالأيام
+  </button>
 </div>
   <div style="display: flex; gap: 10px; margin: 5px 0; justify-content: center;">
     <button onclick="switchTab('orders')" id="tabOrdersBtn" style="background: #0F7B65; color: #fff; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">📦 الطلبات</button>
@@ -1568,14 +1795,42 @@ function parseWeightLengthSmart(text) {
     };
 }
 
-// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) =====
+// ============================================================
+// 🧠 دوال الفصل الذكية (تدعم كل الفواصل)
+// ============================================================
+function splitMultiSimple(value) {
+    if (!value) return [];
+    return value
+        .split(/\s*(?:\||,|،|؛|;|[-–—])\s*/)
+        .map(s => {
+            const t = s.trim();
+            if (!t || /^(بدون|لا يوجد|لايوجد|none|—|-)$/i.test(t)) return '';
+            return t;
+        });
+}
+
+function splitWeightsSmart(value) {
+    if (!value) return [];
+    let parts = value.split(/\s*(?:\||,|،|؛|;)\s*/);
+    parts = parts.flatMap(p => p.split(/\s+[-–—]\s+/));
+    parts = parts.flatMap(p => {
+        if (/من/.test(p)) return [p];
+        if (/\d\s*-\s*\d\s*\//.test(p)) return p.split(/\s*[-–—]\s*/);
+        return [p];
+    });
+    return parts.map(p => {
+        const t = p.trim();
+        if (!t || /^(بدون|لا يوجد|لايوجد|none)$/i.test(t)) return '';
+        return t;
+    });
+}
+
 function parseProductLine(value) {
     if (!value) return [];
     const products = [];
 
-    // لو فيه "(السعر X)" → التنسيق الجديد
     if (/السعر/.test(value)) {
-        const parts = value.split(/\s+-\s+/);
+        const parts = splitMultiSimple(value).filter(Boolean);
         for (const part of parts) {
             const priceMatch = part.match(/\(السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)/);
             const price = priceMatch ? parseFloat(priceMatch[1]) : null;
@@ -1586,31 +1841,25 @@ function parseProductLine(value) {
         return products;
     }
 
-    // لو فيه " - " → منتجات متعددة بدون أسعار
-    const parts = value.split(/\s+-\s+/);
-    if (parts.length > 1) {
-        for (const p of parts) {
-            const trimmed = p.trim();
-            if (trimmed) products.push({ name: trimmed, price: null });
-        }
-        return products;
+    const parts = splitMultiSimple(value).filter(Boolean);
+    if (parts.length > 0) {
+        return parts.map(p => ({ name: p, price: null }));
     }
-
     return [{ name: value.trim(), price: null }];
 }
 
-// ===== تحليل سطر الأوزان/الأطوال (متعدد) =====
 function parseWeightsLengths(value) {
     if (!value) return [];
-    const parts = value.split(/\s+-\s+/);
-    return parts.map(p => parseWeightLengthSmart(p));
+    const parts = splitWeightsSmart(value);
+    return parts.map(p => {
+        if (!p) return { weight: null, weightMax: null, length: null };
+        return parseWeightLengthSmart(p);
+    });
 }
 
-// ===== تحليل سطر المقاسات (متعدد) =====
 function parseSizes(value) {
     if (!value) return [];
-    const parts = value.split(/\s+-\s+/);
-    return parts.map(p => p.trim()).filter(Boolean);
+    return splitMultiSimple(value);
 }
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
@@ -1636,28 +1885,54 @@ function parseOrdersFromPaste(text) {
 function parseOrderBlock(block) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
-   const order = {
-    rawPhone: '', phones: [],
-    customerName: '',
-    gov: '', govOriginal: '',
-    city: '', cityOriginal: '',
-    _cityUnrecognized: false,   // 👈 جديد
-    address: '',
-    productName: '',
-    products: [],
-    sizeRaw: '',
-    sizes: [],
-    weight: null, length: null,
-    price: 0, shipping: 0,
-    notes: '',
-    _errors: [], _warnings: [],
-    _product: null,
-    _duplicate: false, _duplicateOf: null
-};
+    const order = {
+        rawPhone: '', phones: [],
+        customerName: '',
+        gov: '', govOriginal: '',
+        city: '', cityOriginal: '',
+        _cityUnrecognized: false,
+        address: '',
+        productName: '',
+        products: [],
+        sizeRaw: '',
+        sizes: [],
+        weight: null, length: null,
+        price: 0, shipping: 0,
+        notes: '',
+        _errors: [], _warnings: [],
+        _product: null,
+        _duplicate: false, _duplicateOf: null
+    };
 
     let wlBuffer = null;
     let lastKey = null;
     let stopReading = false;
+
+    // 🧠 كلمات مفتاحية مرنة
+    const KEY_MAP = {
+        name:    ['اسم العميل','الاسم','اسم','عميل','العميل'],
+        phone:   ['تليفون','هاتف','موبايل','رقم','جوال','موبيل'],
+        gov:     ['محافظة','محافظه','المحافظة'],
+        city:    ['مدينة','مدينه','المدينة','منطقة','المنطقة'],
+        addr:    ['عنوان','العنوان','شارع','العنوان بالتفصيل'],
+        product: ['منتج','منتجات','المنتج','بضاعة','بضاعه'],
+        size:    ['مقاس','مقاسات','قياس','المقاس'],
+        wl:      ['وزن','طول','الوزن','الطول','وزن/طول','الوزن/الطول','اوزان','اوزان واطوال'],
+        price:   ['سعر','السعر','سعر البيع','اجمالي'],
+        ship:    ['شحن','الشحن','مصاريف الشحن'],
+        notes:   ['ملاحظات','ملاحظة','ملاحظه','note']
+    };
+
+    function matchKey(rawKey) {
+        const k = normalizeArabic(rawKey);
+        for (const [type, variants] of Object.entries(KEY_MAP)) {
+            for (const v of variants) {
+                const nv = normalizeArabic(v);
+                if (k === nv || k.includes(nv) || nv.includes(k)) return type;
+            }
+        }
+        return null;
+    }
 
     for (const line of lines) {
         if (stopReading) break;
@@ -1665,83 +1940,82 @@ function parseOrderBlock(block) {
         const km = line.match(/^([^:：]{2,40})\s*[:：]\s*(.*)$/);
 
         if (km) {
-            const key = normalizeArabic(km[1]);
+            const rawKey = km[1];
             const value = km[2].trim();
+            const keyType = matchKey(rawKey);
 
-           // لو كنا في وضع WL، نحلل الـ buffer الأول
-if (wlBuffer !== null) {
-    const wls = parseWeightsLengths(wlBuffer);
-    order.weights = wls;
-    order.weight = wls[0]?.weight || null;
-    order.weightMax = wls[0]?.weightMax || null;
-    order.length = wls[0]?.length || null;
-    wlBuffer = null;
-}
+            if (wlBuffer !== null) {
+                const wls = parseWeightsLengths(wlBuffer);
+                order.weights = wls;
+                order.weight = wls[0]?.weight || null;
+                order.weightMax = wls[0]?.weightMax || null;
+                order.length = wls[0]?.length || null;
+                wlBuffer = null;
+            }
 
-            if (key.includes('اسم') && key.includes('عميل')) {
-                order.customerName = value;
-                lastKey = 'name';
-            } else if (key.includes('تليفون') || key.includes('هاتف') || key.includes('موبايل')) {
-                order.rawPhone = value;
-                order.phones = extractPhones(value);
-                lastKey = 'phone';
-            } else if (key.includes('محافظ')) {
-                order.govOriginal = value;
-                order.gov = matchGovernorate(value) || value;
-                lastKey = 'gov';
-           } else if (key.includes('مدين')) {
-    order.cityOriginal = value;
-    const c = matchCity(value);
-    order.city = c ? c.city : value;
-    order._cityUnrecognized = !c;   // 👈 جديد
-    lastKey = 'city';
-} else if (key.includes('عنوان')) {
-                order.address = value;
-                lastKey = 'addr';
-           } else if (key.includes('منتج')) {
-    order.productsRaw = value;
-    order.products = parseProductLine(value);
-    order.productName = order.products[0]?.name || value;
-    lastKey = 'product';
-}
-// 👇👇👇 أضف هذا الفرع
-else if (key.includes('مقاس') || key.includes('قياس')) {
-    order.sizeRaw = value;
-    order.sizes = parseSizes(value);
-    lastKey = 'size';
-}
-// 👆👆👆
-else if (key.includes('وزن') || key.includes('طول')) {
-
-                if (lastKey === 'wl' && wlBuffer !== null) {
-                    wlBuffer += ' ' + line; // نضيف السطر كامل
-                } else {
+            switch (keyType) {
+                case 'name':
+                    order.customerName = value;
+                    lastKey = 'name';
+                    break;
+                case 'phone':
+                    order.rawPhone = value;
+                    order.phones = extractPhones(value);
+                    lastKey = 'phone';
+                    break;
+                case 'gov':
+                    order.govOriginal = value;
+                    order.gov = matchGovernorate(value) || value;
+                    lastKey = 'gov';
+                    break;
+                case 'city':
+                    order.cityOriginal = value;
+                    const c = matchCity(value);
+                    order.city = c ? c.city : value;
+                    order._cityUnrecognized = !c;
+                    lastKey = 'city';
+                    break;
+                case 'addr':
+                    order.address = value;
+                    lastKey = 'addr';
+                    break;
+                case 'product':
+                    order.productsRaw = value;
+                    order.products = parseProductLine(value);
+                    order.productName = order.products[0]?.name || value;
+                    lastKey = 'product';
+                    break;
+                case 'size':
+                    order.sizeRaw = value;
+                    order.sizes = parseSizes(value);
+                    lastKey = 'size';
+                    break;
+                case 'wl':
                     wlBuffer = value;
                     lastKey = 'wl';
-                }
-            } else if (key.includes('سعر')) {
-                order.price = parseFloat(toEnglishDigits(value)) || 0;
-                lastKey = 'price';
-            } else if (key.includes('شحن')) {
-    order.shipping = parseFloat(toEnglishDigits(value)) || 0;
-    order._hasShipping = true;   // 👈 جديد
-    lastKey = 'ship';
-    } else if (key.includes('ملاحظ')) {
-                order.notes = value;
-                lastKey = 'notes';
-                stopReading = true; // ⭐ نوقف عند ملاحظات
-            } else {
-                // مفتاح غير معروف - نتجاهله
-                lastKey = 'unknown';
+                    break;
+                case 'price':
+                    order.price = parseFloat(toEnglishDigits(value)) || 0;
+                    lastKey = 'price';
+                    break;
+                case 'ship':
+                    order.shipping = parseFloat(toEnglishDigits(value)) || 0;
+                    order._hasShipping = true;
+                    lastKey = 'ship';
+                    break;
+                case 'notes':
+                    order.notes = value;
+                    lastKey = 'notes';
+                    stopReading = true;
+                    break;
+                default:
+                    lastKey = 'unknown';
             }
         } else if (lastKey === 'wl' && wlBuffer !== null) {
-            // سطر امتداد في وضع الوزن/الطول
             wlBuffer += ' ' + line;
         }
-        // أي سطر تاني بدون مفتاح → نطنشه (زي تواريخ WhatsApp)
     }
 
-        // معالجة الـ buffer الأخير
     if (wlBuffer !== null) {
         const wls = parseWeightsLengths(wlBuffer);
         order.weights = wls;
@@ -1752,7 +2026,6 @@ else if (key.includes('وزن') || key.includes('طول')) {
         order.weights = [];
     }
 
-    // لو مفيش منتجات، استخدم الاسم القديم
     if (!order.products || order.products.length === 0) {
         order.products = order.productName ? [{ name: order.productName, price: order.price }] : [];
     }
@@ -1865,64 +2138,180 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
 
     const orders = parseOrdersFromPaste(text);
     if (orders.length === 0) {
-        preview.innerHTML = `<div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; font-size: 13px;">⚠️ لم يتم التعرف على أي طلب.</div>`;
+        preview.innerHTML = `<div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 10px; font-size: 13px;">⚠️ لم يتم التعرف على أي طلب. تأكد من وجود "اسم العميل :"</div>`;
         return;
     }
 
     const allProducts = window.allProducts || [];
-    let html = `<div style="background: #e8f5e9; color: #1e8449; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 10px;">
-        ✅ تم التعرف على ${orders.length} طلب
-    </div>`;
 
+    // ===== المرحلة 1: تحليل كل طلب =====
     orders.forEach((o, i) => {
-        const phone = o.phones[0] || null;
-        const phoneOk = !!phone;
-        const secondPhone = o.phones[1] ? ` (+${o.phones[1]})` : '';
+        o._idx = i + 1;
+        o._matched = [];
+        o._productStatus = [];
 
-        // مطابقة المنتج
-        const product = o.productName ? findProductByName(o.productName, allProducts) : null;
-        const productBadge = !o.productName
-            ? `<span style="background:#e74c3c; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">❌ مش محدد</span>`
-            : product
-                ? `<span style="background:#27ae60; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">✓ ${product.name}</span>`
-                : `<span style="background:#f39c12; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير معروف بالموقع</span>`;
+        // مطابقة المنتجات
+        (o.products || []).forEach(p => {
+            const m = findProductByName(p.name, allProducts);
+            o._matched.push(m);
+            o._productStatus.push(m ? 'ok' : 'warn');
+        });
 
+        // فحوصات ذكية
+        if (!o.phones.length) o._errors.push(`📱 رقم غير مصري: ${o.rawPhone || 'فاضي'}`);
+        if (o.phones.length >= 2) o._warnings.push(`📱 فيه رقمين: ${o.phones.join(' / ')}`);
+        if (!o.customerName || o.customerName.length < 2) o._errors.push('👤 الاسم قصير');
+        if (!o.gov && !o.govOriginal) o._errors.push('📍 المحافظة فاضية');
+        if (!o.city && !o.cityOriginal) o._errors.push('🏙️ المدينة فاضية');
+        if (o._cityUnrecognized) o._warnings.push(`🏙️ "${o.cityOriginal}" غير معروفة بالقائمة`);
+        if (!o.address || o.address.length < 2) o._errors.push('🏠 العنوان فاضي');
+        if (!o.products || o.products.length === 0) o._errors.push('📦 مفيش منتج');
+        if (!o.price || o.price <= 0) o._errors.push('💰 السعر غير صحيح');
+        if (!o._hasShipping) o._errors.push('🚚 الشحن غير محدد');
+
+        // فحص التعادل بين المنتجات/الأوزان/المقاسات
+        const np = (o.products || []).length;
+        const nw = (o.weights || []).length;
+        const ns = (o.sizes || []).length;
+        const noSizes = (o.sizes || []).filter(s => s).length;
+
+        // فقط لو فيه أوزان ومقاسات فعلية
+        const realWeights = (o.weights || []).filter(w => w && (w.weight || w.length || w.weightMax));
+        if (realWeights.length > 0 && np > 1 && realWeights.length !== np) {
+            o._warnings.push(`⚠️ عدد المنتجات (${np}) ≠ عدد الأوزان (${realWeights.length})`);
+        }
+        if (noSizes > 0 && np > 1 && noSizes !== np) {
+            o._warnings.push(`⚠️ عدد المنتجات (${np}) ≠ عدد المقاسات (${noSizes})`);
+        }
+
+        // فحص الوزن غير المعتاد
+        realWeights.forEach((w, idx) => {
+            if (w.weight && (w.weight < 30 || w.weight > 200)) {
+                o._warnings.push(`⚖️ الوزن غير معتاد (منتج ${idx+1}): ${w.weight} كجم`);
+            }
+        });
+
+        // فحص منتجات غير معروفة
+        o._productStatus.forEach((s, idx) => {
+            if (s === 'warn') o._warnings.push(`🛍️ "${o.products[idx].name}" غير موجود بالموقع`);
+        });
+
+        // الحالة النهائية
+        if (o._errors.length > 0) o._cardClass = 'error';
+        else if (o._warnings.length > 0) o._cardClass = 'warn';
+        else o._cardClass = 'valid';
+    });
+
+    // ===== المرحلة 2: الإحصائيات =====
+    const totalPrice = orders.reduce((s, o) => s + (o.price || 0) + (o.shipping || 0), 0);
+    const validCount = orders.filter(o => o._cardClass === 'valid').length;
+    const warnCount  = orders.filter(o => o._cardClass === 'warn').length;
+    const errCount   = orders.filter(o => o._cardClass === 'error').length;
+
+    let html = `
+        <div class="smart-preview-summary">
+            <div class="smart-stat total">
+                <div class="smart-stat-value">${orders.length}</div>
+                <div class="smart-stat-label">📋 إجمالي</div>
+            </div>
+            <div class="smart-stat valid">
+                <div class="smart-stat-value">${validCount}</div>
+                <div class="smart-stat-label">✅ جاهز</div>
+            </div>
+            <div class="smart-stat warn">
+                <div class="smart-stat-value">${warnCount}</div>
+                <div class="smart-stat-label">⚠️ تحذيرات</div>
+            </div>
+            <div class="smart-stat err">
+                <div class="smart-stat-value">${errCount}</div>
+                <div class="smart-stat-label">❌ أخطاء</div>
+            </div>
+            <div class="smart-stat total">
+                <div class="smart-stat-value">${totalPrice}</div>
+                <div class="smart-stat-label">💰 جنيه</div>
+            </div>
+        </div>
+    `;
+
+    // ===== المرحلة 3: بطاقة كل طلب =====
+    orders.forEach(o => {
+        const phoneOk = o.phones.length > 0;
         const phoneBadge = phoneOk
-            ? `<span style="background:#27ae60; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">✓ ${phone}${secondPhone}</span>`
-            : `<span style="background:#e74c3c; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير مصري: ${o.rawPhone || '—'}</span>`;
+            ? `<span class="smart-badge ok">📱 ${o.phones[0]}${o.phones[1] ? ' + ' + o.phones[1] : ''}</span>`
+            : `<span class="smart-badge err">📱 ${o.rawPhone || 'فاضي'}</span>`;
 
-                const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
-            ? `<span title="الأصل: ${o.govOriginal}" style="color:#8B6914;">📍 ${o.gov} (مصحّح)</span>`
-            : `📍 ${o.gov || o.govOriginal || '—'}`;
+        const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
+            ? `<span class="smart-badge info" title="الأصل: ${o.govOriginal}">📍 ${o.gov} (مصحّح)</span>`
+            : `<span class="smart-badge info">📍 ${o.gov || o.govOriginal || '—'}</span>`;
 
         const cityBadge = o._cityUnrecognized
-            ? `<span style="background:#f39c12; color:#fff; padding:1px 8px; border-radius:8px; font-size:9px; margin-right:4px;">⚠️ غير معروفة</span>`
+            ? `<span class="smart-badge warn">🏙️ ${o.cityOriginal} (غير معروفة)</span>`
+            : `<span class="smart-badge info">🏙️ ${o.city || o.cityOriginal || '—'}</span>`;
+
+        // شبكة المنتجات
+        const productsHtml = (o.products || []).map((p, idx) => {
+            const matched = o._matched[idx];
+            const w = (o.weights || [])[idx] || {};
+            const size = (o.sizes || [])[idx] || '';
+
+            const weightText = w.weight
+                ? (w.weightMax && w.weightMax !== w.weight ? `${w.weight}-${w.weightMax}` : `${w.weight}`)
+                : '';
+            const lengthText = w.length ? `${w.length}` : '';
+            const wl = [weightText, lengthText].filter(Boolean).join('/');
+
+            const metaParts = [];
+            if (size) metaParts.push(`📏 ${size}`);
+            if (wl) metaParts.push(`⚖️ ${wl}`);
+
+            const matchIcon = matched ? '✅' : '⚠️';
+
+            return `
+                <div class="smart-product-row">
+                    <div class="smart-product-idx">${idx + 1}</div>
+                    <div>
+                        <div class="smart-product-name">${matchIcon} ${p.name}</div>
+                        ${metaParts.length ? `<div class="smart-product-meta">${metaParts.join(' • ')}</div>` : ''}
+                    </div>
+                    <div class="smart-product-price">${p.price || o.price || 0} ج</div>
+                </div>
+            `;
+        }).join('');
+
+        const warningsHtml = o._warnings.length > 0
+            ? `<div class="smart-warning-list">${o._warnings.map(w => `⚠️ ${w}`).join('<br>')}</div>`
             : '';
 
+        const errorsHtml = o._errors.length > 0
+            ? `<div class="smart-error-list">${o._errors.map(e => `❌ ${e}`).join('<br>')}</div>`
+            : '';
+
+        const statusIcon = o._cardClass === 'valid' ? '✅'
+                         : o._cardClass === 'warn' ? '⚠️'
+                         : '❌';
+
         html += `
-        <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:8px; border-right:3px solid ${phoneOk ? '#27ae60' : '#e74c3c'}; text-align:right; font-size:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px; flex-wrap:wrap;">
-                <span style="font-weight:800; color:#0F7B65;">${i + 1}. ${o.customerName}</span>
-                ${phoneBadge}
+            <div class="smart-order-card ${o._cardClass}">
+                <div class="smart-order-header">
+                    <span class="smart-order-num">${statusIcon} طلب ${o._idx}</span>
+                    <span class="smart-order-name">${o.customerName || 'بدون اسم'}</span>
+                </div>
+                <div class="smart-badges">
+                    ${phoneBadge}
+                    ${govBadge}
+                    ${cityBadge}
+                </div>
+                <div class="smart-products-grid">
+                    ${productsHtml || '<div style="text-align:center; color:#999; padding:8px;">لا توجد منتجات</div>'}
+                </div>
+                <div class="smart-total-row">
+                    <span>💰 ${o.price || 0} + 🚚 ${o.shipping || 0}</span>
+                    <span>= ${(o.price || 0) + (o.shipping || 0)} جنيه</span>
+                </div>
+                ${warningsHtml}
+                ${errorsHtml}
             </div>
-                        <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'} ${cityBadge}</div>
-            <div style="color:#555; margin-bottom:4px;">🛍️ ${productBadge}</div>
-<div style="color:#555; margin-bottom:4px;">📦 المنتجات: ${
-    (o.products || []).map((p, idx) => `<b>م${idx+1}:</b> ${p.name}${p.price ? ` (${p.price}ج)` : ''}`).join(' • ') || '—'
-}</div>
-${(o.sizes && o.sizes.length > 0) ? 
-  `<div style="color:#555; margin-bottom:4px;">📏 المقاسات: ${o.sizes.join(' • ')}</div>` 
-  : ''}
-<div style="color:#555; margin-bottom:4px;">⚖️ الأوزان/الأطوال: ${
-    (o.weights || []).map((w, idx) => {
-        const range = w.weightMax && w.weightMax !== w.weight 
-            ? `من ${w.weight} إلى ${w.weightMax}` 
-            : (w.weight || '—');
-        return `م${idx+1}: ${range}${w.length ? ` / ${w.length}` : ''}`;
-    }).join(' • ') || '—'
-}</div>
-            <div style="color:#0F7B65; font-weight:700;">💰 ${o.price || 0} + 🚚 ${o.shipping || 0} = ${(o.price || 0) + (o.shipping || 0)} جنيه</div>
-        </div>`;
+        `;
     });
 
     preview.innerHTML = html;
@@ -2272,25 +2661,37 @@ if (product && product.stockBySize) {
     let totalCost = 0;
 
     for (let i = 0; i < products.length; i++) {
-        const p = products[i];
-        const wl = weights[i] || weights[0] || { weight: null, length: null };
-        const matched = findProductByName(p.name, allProducts);
+    const p = products[i];
+    const wl = weights[i] || { weight: null, weightMax: null, length: null };
+    const matched = findProductByName(p.name, allProducts);
 
-        orderDetails.push({
-            productId: matched?.id || null,
-            sku: matched?.sku || null,
-            name: p.name,
-            size: providedSizes[i] || providedSizes[0] || usedSize || 'غير محدد',
-            qty: 1,
-            price: p.price || order.price,
-            image: matched?.image || "",
-            costPrice: matched?.costPrice || 0,
-            customerWeight: wl.weight || null,
-            customerWeightMax: wl.weightMax || null,
-            customerLength: wl.length || null
-        });
-        totalCost += (matched?.costPrice || 0);
+    // ✅ المقاس لكل منتج على حدة
+    let productSize = null;
+    if (providedSizes.length > 0) {
+        productSize = providedSizes[i] || (providedSizes.length === 1 ? providedSizes[0] : null);
     }
+    if (!productSize) productSize = usedSize || 'غير محدد';
+
+    // ✅ الوزن/الطول لكل منتج على حدة
+    const productWeight    = wl.weight    || null;
+    const productWeightMax = wl.weightMax || null;
+    const productLength    = wl.length    || null;
+
+    orderDetails.push({
+        productId: matched?.id || null,
+        sku: matched?.sku || null,
+        name: p.name,
+        size: productSize,
+        qty: 1,
+        price: p.price || order.price,
+        image: matched?.image || "",
+        costPrice: matched?.costPrice || 0,
+        customerWeight: productWeight,
+        customerWeightMax: productWeightMax,
+        customerLength: productLength
+    });
+    totalCost += (matched?.costPrice || 0);
+}
 
     const finalTotal = order.price + order.shipping;
     const orderData = {
@@ -2472,6 +2873,72 @@ function loadOpenStates() {
         }
     } catch(e) {}
 }
+
+// ============================================================
+// 📧 فلتر الإيميلات
+// ============================================================
+let currentEmailFilter = 'all';
+
+window.applyEmailFilter = function(value) {
+    currentEmailFilter = value;
+    render();
+};
+
+function populateEmailFilter() {
+    const sel = document.getElementById('emailFilterSelect');
+    if (!sel) return;
+    const emails = [...new Set((window.orders || []).map(o => o.addedBy).filter(Boolean))].sort();
+    const current = sel.value || 'all';
+    sel.innerHTML = '<option value="all">📧 كل الإيميلات</option>' +
+        emails.map(e => `<option value="${e}">${e}</option>`).join('');
+    if (current === 'all' || emails.includes(current)) {
+        sel.value = current;
+        currentEmailFilter = current;
+    } else {
+        sel.value = 'all';
+        currentEmailFilter = 'all';
+    }
+}
+
+// ============================================================
+// 📆 تجميع بالأشهر
+// ============================================================
+let groupMode = 'day';
+let openMonthGroups = {};
+
+function saveOpenMonthGroups() {
+    try { localStorage.setItem('openMonthGroups', JSON.stringify(openMonthGroups)); } catch(e) {}
+}
+function loadOpenMonthGroups() {
+    try {
+        const s = localStorage.getItem('openMonthGroups');
+        if (s) openMonthGroups = JSON.parse(s);
+    } catch(e) {}
+}
+
+window.toggleGroupMode = function() {
+    groupMode = groupMode === 'day' ? 'month' : 'day';
+    const btn = document.getElementById('groupModeBtn');
+    if (btn) btn.innerHTML = groupMode === 'day' ? '📅 تجميع بالأيام' : '📆 تجميع بالأشهر';
+    render();
+};
+
+window.toggleMonthGroup = function(groupId) {
+    const content = document.getElementById(`month-content-${groupId}`);
+    const icon = document.getElementById(`month-icon-${groupId}`);
+    if (!content) return;
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    if (icon) icon.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+    openMonthGroups[groupId] = !isOpen;
+    saveOpenMonthGroups();
+};
+
+function formatMonthName(dateObj) {
+    const d = new Date(dateObj);
+    return d.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' });
+}
+
 // =================== دالة تحديث حالة فردية ===================
 window.update = async (id, status) => {
     const restrictedStatuses = ["undelivered", "rejected", "returned", "hold", "returned_confirmed"];
@@ -3349,28 +3816,19 @@ function orderMatchesSearch(o, searchRaw) {
 }
 
 function render() {
-    // ✅ التأكد من أن ordersData مصفوفة دائماً
     const ordersData = Array.isArray(window.orders) ? window.orders : [];
-    
     let date = document.getElementById("dateFilter").value;
     let search = document.getElementById("search").value.trim();
-   let filteredOrders = ordersData.filter(o => {
-    // 1️⃣ فلتر الحالة
-    if (currentFilter !== "all" && o.status !== currentFilter) return false;
-    
-    // 2️⃣ البحث الشامل (اسم / هاتف / رقم طلب / منتج / SKU / محافظة / مدينة)
-    if (search && !orderMatchesSearch(o, search)) return false;
-    
-    const d = o.createdAt?.toDate?.();
-    
-    // 3️⃣ فلتر التاريخ المخصص (dateFilter)
-    if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
-    
-    // 4️⃣ فلتر السليكت (اليوم/أمس/آخر 7 أيام/...)
-    if (!isDateInRange(d, currentDayFilter)) return false;
-    
-    return true;
-});
+
+    let filteredOrders = ordersData.filter(o => {
+        if (currentFilter !== "all" && o.status !== currentFilter) return false;
+        if (currentEmailFilter && currentEmailFilter !== 'all' && o.addedBy !== currentEmailFilter) return false;
+        if (search && !orderMatchesSearch(o, search)) return false;
+        const d = o.createdAt?.toDate?.();
+        if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
+        if (!isDateInRange(d, currentDayFilter)) return false;
+        return true;
+    });
 
     filteredOrders.sort((a, b) => {
         let dateA = a.createdAt?.toDate?.() || new Date(0);
@@ -3378,96 +3836,48 @@ function render() {
         return dateB - dateA;
     });
 
-    const groups = new Map();
-    for (let order of filteredOrders) {
-        const createdAt = order.createdAt?.toDate?.();
-        if (!createdAt) continue;
-        const key = createdAt.toDateString();
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(order);
-    }
+    // ✅ helper لبناء كارت الطلب
+    const buildCard = (o) => {
+        const isOpen = openStates[o.id] !== undefined ? openStates[o.id] : false;
+        let status = o.status || "new";
+        let statusText = {
+            new: 'جديد', confirmed: 'تم التأكيد', processing: 'قيد التجهيز',
+            shipped: 'جاري الشحن', delivered: 'تم التسليم', cancelled: 'لاغـي',
+            undelivered: 'لم يصل', rejected: 'رفض', returned: 'مرتجع',
+            hold: 'معلق', returned_confirmed: 'تم استلام المرتجع'
+        }[status] || status;
 
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0);
+        const detailsArray = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+        let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
 
-    let html = "";
-    let totalOrders = 0;
-    let groupIndex = 0;
+        let couponHtml = '';
+        if (o.coupon) {
+            couponHtml = `<div style="background:#fef9e6; padding:8px; border-radius:12px; margin-top:8px; text-align:center;">
+                خصم ${o.coupon.discountType === 'percentage' ? o.coupon.discountValue + '%' : o.coupon.discountValue + ' جنيه'} 
+                | قيمته: <span style="color:#e67e22;">${o.coupon.discountAmount} جنيه</span>
+                <br><small>الإجمالي بعد الخصم: ${o.finalTotal} جنيه</small>
+            </div>`;
+        }
 
-    for (let [dateKey, ordersInDay] of groups.entries()) {
-        const firstOrder = ordersInDay[0];
-        const createdAtDate = firstOrder.createdAt?.toDate?.();
-        if (!createdAtDate) continue;
+        const orderTime = o.createdAt?.toDate?.() ? formatOrderTime(o.createdAt.toDate()) : '';
 
-        const orderDateOnly = new Date(createdAtDate);
-        orderDateOnly.setHours(0, 0, 0, 0);
-        const isToday = (orderDateOnly.getTime() === todayDate.getTime());
+        let notesHtml = '';
+        if (o.notes) {
+            notesHtml = `<div style="margin-top:6px; font-size:12px; color:#e67e22; background:#fef9e6; padding:4px 8px; border-radius:8px;">📝 ملاحظة: ${o.notes}</div>`;
+        }
 
-        const dateHeader = formatOrderDate(createdAtDate);
-        const groupId = `group-${groupIndex++}`;
-        const isGroupOpen = openDayGroups[groupId] !== undefined ? openDayGroups[groupId] : isToday;
+        const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+        let detailsHtml = details.map(item => {
+            const sizeText = (item.size && item.size !== 'غير محدد')
+                ? `<span style="display:inline-block; background:#0F7B65; color:#fff; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">📏 مقاس: ${item.size}</span>`
+                : '';
+            const weightText = item.customerWeight
+                ? `⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : item.customerWeight} كجم`
+                : '';
+            const lengthText = item.customerLength ? `📐 ${item.customerLength} سم` : '';
+            const wlText = [weightText, lengthText].filter(Boolean).join(' | ');
 
-       html += `
-    <div class="day-group" data-group="${groupId}">
-        <div class="day-header" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px 0; padding: 5px 12px; background: #f5f7fa; border-radius: 30px;">
-            <span onclick="toggleDayGroup('${groupId}')" style="font-size: 14px; font-weight: 700; color: #0F7B65; cursor: pointer; flex: 1;">${dateHeader}</span>
-            <input type="checkbox" class="daySelectAll" data-group="${groupId}" onchange="toggleDaySelection('${groupId}', this.checked)" title="تحديد كل طلبات اليوم" style="width: 20px; height: 20px; accent-color: #0F7B65; cursor: pointer; margin: 0 8px;">
-            <i id="icon-${groupId}" class="fas fa-chevron-down" onclick="toggleDayGroup('${groupId}')" style="transition: transform 0.3s; color: #0F7B65; transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}; cursor: pointer;"></i>
-        </div>
-                <div id="group-content-${groupId}" class="group-content" style="display: ${isGroupOpen ? 'block' : 'none'};">
-        `;
-
-        for (let o of ordersInDay) {
-            totalOrders++;
-            const isOpen = openStates[o.id] !== undefined ? openStates[o.id] : false;
-            
-            let status = o.status || "new";
-            let statusText = {
-                new: 'جديد',
-                confirmed: 'تم التأكيد',
-                processing: 'قيد التجهيز',
-                shipped: 'جاري الشحن',
-                delivered: 'تم التسليم',
-                cancelled: 'لاغـي',
-                undelivered: 'لم يصل',
-                rejected: 'رفض',
-                returned: 'مرتجع',
-                hold: 'معلق',
-                returned_confirmed: 'تم استلام المرتجع'  
-            }[status] || status;
-
-            const detailsArray = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
-
-            let couponHtml = '';
-            if (o.coupon) {
-                couponHtml = `<div style="background:#fef9e6; padding:8px; border-radius:12px; margin-top:8px; text-align:center;">
-                    خصم ${o.coupon.discountType === 'percentage' ? o.coupon.discountValue + '%' : o.coupon.discountValue + ' جنيه'} 
-                    | قيمته: <span style="color:#e67e22;">${o.coupon.discountAmount} جنيه</span>
-                    <br><small>الإجمالي بعد الخصم: ${o.finalTotal} جنيه</small>
-                </div>`;
-            }
-
-            const orderTime = o.createdAt?.toDate?.() ? formatOrderTime(o.createdAt.toDate()) : '';
-
-            let notesHtml = '';
-            if (o.notes) {
-                notesHtml = `<div style="margin-top:6px; font-size:12px; color:#e67e22; background:#fef9e6; padding:4px 8px; border-radius:8px;">📝 ملاحظة: ${o.notes}</div>`;
-            }
-
-            // ✅ التأكد من أن orderDetails مصفوفة
-            const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-                      let detailsHtml = details.map(item => {
-                const sizeText = (item.size && item.size !== 'غير محدد') 
-                    ? `<span style="display:inline-block; background:#0F7B65; color:#fff; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">📏 مقاس: ${item.size}</span>` 
-                    : '';
-                const weightText = item.customerWeight 
-                    ? `⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : item.customerWeight} كجم` 
-                    : '';
-                const lengthText = item.customerLength ? `📐 ${item.customerLength} سم` : '';
-                const wlText = [weightText, lengthText].filter(Boolean).join(' | ');
-                
-                return `
+            return `
     <div style="display:flex; align-items:flex-start; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
         ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
        <div style="flex:1; font-size:12px; line-height:1.7;">
@@ -3478,34 +3888,23 @@ let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}
             ${wlText ? `<br>${wlText}` : ''}
        </div>
     </div>`;
-            }).join("");
+        }).join("");
 
-            // ✅ داخل حلقة for (let o of ordersInDay)
- 
-    const isFromCallCenter = o.source === 'callcenter';
-const isFromPaste      = o.source === 'paste';
-const addedByEmail = o.addedBy ? String(o.addedBy).split('@')[0] : '';
-const addedByFull  = o.addedBy || '';
+        const isFromCallCenter = o.source === 'callcenter';
+        const isFromPaste      = o.source === 'paste';
+        const addedByEmail = o.addedBy ? String(o.addedBy).split('@')[0] : '';
+        const addedByFull  = o.addedBy || '';
 
-// ✅ تحديد الكلاس للون الإيميل بس
-let sourceClass = '';
-let sourceIcon = '';
-if (addedByEmail) {
-    if (isFromCallCenter) {
-        sourceClass = 'badge-callcenter';
-        sourceIcon = '🎧';
-    } else if (isFromPaste) {
-        sourceClass = 'badge-paste';
-        sourceIcon = '📋';
-    } else {
-        sourceClass = 'badge-admin';
-        sourceIcon = '👤';
-    }
-}
-            // ✅ داخل حلقة for (let o of ordersInDay)
-            html += `
+        let sourceClass = '';
+        let sourceIcon = '';
+        if (addedByEmail) {
+            if (isFromCallCenter) { sourceClass = 'badge-callcenter'; sourceIcon = '🎧'; }
+            else if (isFromPaste) { sourceClass = 'badge-paste'; sourceIcon = '📋'; }
+            else { sourceClass = 'badge-admin'; sourceIcon = '👤'; }
+        }
+
+        return `
     <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''} ${isFromCallCenter ? 'from-callcenter' : ''}" style="position:relative;">
-        
         <div class="order-header">
             <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
             <div class="order-id-wrap">
@@ -3515,79 +3914,159 @@ if (addedByEmail) {
             <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
         </div>
 
-                    <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
-                        <div class="order-info">
-                            👤 ${o.customerName}<br>
-                            📞 ${o.phone}${o.secondaryPhone ? `<br>📞 ${o.secondaryPhone}` : ''}<br>
-                            📍 ${o.gov} - ${o.city}<br>
-                            ${o.address}<br><br>
-
-                            ${isFromCallCenter && addedByFull ? `
-                                <div style="background:#f5f0ff; border-right:3px solid #9b59b6; padding:6px 10px; border-radius:8px; margin:6px 0; font-size:11px; color:#6c3483; font-weight:700;">
-                                    🎧 <b>مصدر الطلب:</b> كول سينتر — أضيف بواسطة <span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${addedByFull}</span>
-                                </div>
-                            ` : ''}
-
-                            💎 تفاصيل الطلب:
-                            <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
-                                ${detailsHtml}
-                            </div>
-                            ${notesHtml}
-                        </div>
-
-                        ${couponHtml}
-
-                        <div class="order-summary">
-                            📦 ${o.quantity}<br>
-                            💰 ${o.price}<br>
-                            🚚 ${o.shipping}<br>
-                            💵 <b>${o.finalTotal}</b>
-
-                            <div class="actions" style="display: ${isOpen ? 'flex' : 'none'};">
-                                <a class="action-btn whatsapp" target="_blank" href="https://wa.me/2${o.phone}"><i class="fab fa-whatsapp"></i></a>
-                                <button class="action-btn copy" onclick='copyText(${JSON.stringify(msg)})'><i class="fas fa-copy"></i></button>
-                                <button class="action-btn" onclick="copyOrderConfirmation('${o.id}')" style="background:#0F7B65; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
-                                    <i class="fas fa-file-alt"></i> نسخ التأكيد
-                                </button>
-                                <button class="action-btn" onclick="sendWhatsAppLinks('${o.id}')" style="background:#25D366; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
-                                    <i class="fab fa-whatsapp"></i> تأكيد الطلب
-                                </button>
-                            </div>
-
-                            ⏰ ${orderTime}
-
-                            <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
-                                <button onclick="editOrder('${o.id}')" style="flex:1;min-width:45px;background:#ffc107;border:none;padding:6px;border-radius:8px;cursor:pointer;">✏️</button>
-                                <button onclick="deleteOrder('${o.id}')" style="flex:1;min-width:45px;background:#dc3545;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;">🗑️</button>
-                            </div>
-                        </div>
+        <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
+            <div class="order-info">
+                👤 ${o.customerName}<br>
+                📞 ${o.phone}${o.secondaryPhone ? `<br>📞 ${o.secondaryPhone}` : ''}<br>
+                📍 ${o.gov} - ${o.city}<br>
+                ${o.address}<br><br>
+                ${isFromCallCenter && addedByFull ? `
+                    <div style="background:#f5f0ff; border-right:3px solid #9b59b6; padding:6px 10px; border-radius:8px; margin:6px 0; font-size:11px; color:#6c3483; font-weight:700;">
+                        🎧 <b>مصدر الطلب:</b> كول سينتر — أضيف بواسطة <span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${addedByFull}</span>
                     </div>
+                ` : ''}
+                💎 تفاصيل الطلب:
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                    ${detailsHtml}
                 </div>
-            `;
+                ${notesHtml}
+            </div>
+
+            ${couponHtml}
+
+            <div class="order-summary">
+                📦 ${o.quantity}<br>
+                💰 ${o.price}<br>
+                🚚 ${o.shipping}<br>
+                💵 <b>${o.finalTotal}</b>
+                <div class="actions" style="display: ${isOpen ? 'flex' : 'none'};">
+                    <a class="action-btn whatsapp" target="_blank" href="https://wa.me/2${o.phone}"><i class="fab fa-whatsapp"></i></a>
+                    <button class="action-btn copy" onclick='copyText(${JSON.stringify(msg)})'><i class="fas fa-copy"></i></button>
+                    <button class="action-btn" onclick="copyOrderConfirmation('${o.id}')" style="background:#0F7B65; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
+                        <i class="fas fa-file-alt"></i> نسخ التأكيد
+                    </button>
+                    <button class="action-btn" onclick="sendWhatsAppLinks('${o.id}')" style="background:#25D366; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
+                        <i class="fab fa-whatsapp"></i> تأكيد الطلب
+                    </button>
+                </div>
+                ⏰ ${orderTime}
+                <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+                    <button onclick="editOrder('${o.id}')" style="flex:1;min-width:45px;background:#ffc107;border:none;padding:6px;border-radius:8px;cursor:pointer;">✏️</button>
+                    <button onclick="deleteOrder('${o.id}')" style="flex:1;min-width:45px;background:#dc3545;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;">🗑️</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+    };
+
+    // ===== البناء حسب الوضع =====
+    let html = "";
+    let totalOrders = 0;
+
+    if (groupMode === 'day') {
+        // تجميع بالأيام
+        const groups = new Map();
+        for (let order of filteredOrders) {
+            const createdAt = order.createdAt?.toDate?.();
+            if (!createdAt) continue;
+            const key = createdAt.toDateString();
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(order);
         }
 
-        html += `</div></div>`;
+        const todayDate = new Date();
+        todayDate.setHours(0, 0, 0, 0);
+        let groupIndex = 0;
+
+        for (let [dateKey, ordersInDay] of groups.entries()) {
+            const firstOrder = ordersInDay[0];
+            const createdAtDate = firstOrder.createdAt?.toDate?.();
+            if (!createdAtDate) continue;
+
+            const orderDateOnly = new Date(createdAtDate);
+            orderDateOnly.setHours(0, 0, 0, 0);
+            const isToday = (orderDateOnly.getTime() === todayDate.getTime());
+
+            const dateHeader = formatOrderDate(createdAtDate);
+            const groupId = `group-${groupIndex++}`;
+            const isGroupOpen = openDayGroups[groupId] !== undefined ? openDayGroups[groupId] : isToday;
+
+            html += `
+                <div class="day-group" data-group="${groupId}">
+                    <div class="day-header" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px 0; padding: 5px 12px; background: #f5f7fa; border-radius: 30px;">
+                        <span onclick="toggleDayGroup('${groupId}')" style="font-size: 14px; font-weight: 700; color: #0F7B65; cursor: pointer; flex: 1;">${dateHeader}</span>
+                        <input type="checkbox" class="daySelectAll" data-group="${groupId}" onchange="toggleDaySelection('${groupId}', this.checked)" title="تحديد كل طلبات اليوم" style="width: 20px; height: 20px; accent-color: #0F7B65; cursor: pointer; margin: 0 8px;">
+                        <i id="icon-${groupId}" class="fas fa-chevron-down" onclick="toggleDayGroup('${groupId}')" style="transition: transform 0.3s; color: #0F7B65; transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}; cursor: pointer;"></i>
+                    </div>
+                    <div id="group-content-${groupId}" class="group-content" style="display: ${isGroupOpen ? 'block' : 'none'};">
+            `;
+
+            for (let o of ordersInDay) {
+                totalOrders++;
+                html += buildCard(o);
+            }
+            html += `</div></div>`;
+        }
+    } else {
+        // ✅ تجميع بالأشهر (جديد)
+        const monthGroups = new Map();
+        for (let order of filteredOrders) {
+            const createdAt = order.createdAt?.toDate?.();
+            if (!createdAt) continue;
+            const key = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+            if (!monthGroups.has(key)) monthGroups.set(key, { date: createdAt, orders: [] });
+            monthGroups.get(key).orders.push(order);
+        }
+
+        const sortedMonthKeys = [...monthGroups.keys()].sort((a, b) => b.localeCompare(a));
+        const currentMonthKey = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+        let monthIndex = 0;
+
+        for (const monthKey of sortedMonthKeys) {
+            const { date, orders: monthOrders } = monthGroups.get(monthKey);
+            const monthName = formatMonthName(date);
+            const monthId = `month-${monthIndex++}`;
+            const isMonthOpen = openMonthGroups[monthId] !== undefined
+                ? openMonthGroups[monthId]
+                : (monthKey === currentMonthKey);
+
+            const monthTotal = monthOrders.reduce((s, o) => s + (o.finalTotal || 0), 0);
+
+            html += `
+                <div class="month-group" data-month-group="${monthId}">
+                    <div class="month-header" onclick="toggleMonthGroup('${monthId}')">
+                        <div class="month-header-left">
+                            <i id="month-icon-${monthId}" class="fas fa-chevron-down" style="transform: ${isMonthOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};"></i>
+                            <span>📆 ${monthName}</span>
+                        </div>
+                        <div class="month-header-right">
+                            <span class="month-count-badge">${monthOrders.length} طلب</span>
+                            <span class="month-total-badge">💰 ${monthTotal}</span>
+                        </div>
+                    </div>
+                    <div id="month-content-${monthId}" style="display: ${isMonthOpen ? 'block' : 'none'}; margin-top: 8px; padding: 0 4px;">
+            `;
+
+            for (let o of monthOrders) {
+                totalOrders++;
+                html += buildCard(o);
+            }
+            html += `</div></div>`;
+        }
     }
 
     document.getElementById("orders").innerHTML = html || "<div style='text-align:center; padding:40px;'>لا توجد طلبات</div>";
     document.getElementById("count").innerHTML = `📊 ${totalOrders}`;
     updateBulkBar();
-    // إعادة محاولة الاتصال عند الفشل
-function handleFirestoreError(error) {
-    console.error("❌ خطأ في Firestore:", error);
-    customAlert("⚠️ حدث خطأ في الاتصال بقاعدة البيانات، جاري إعادة المحاولة...", 'warning');
-    setTimeout(() => {
-        if (typeof load === 'function') load();
-    }, 3000);
-}
 
-    // ✅ إعادة تطبيق حالة الفتح لكل طلب
     document.querySelectorAll('#orders .order-body').forEach(el => {
         const id = el.id.replace('order-', '');
         if (openStates[id] !== undefined) {
             el.style.display = openStates[id] ? 'flex' : 'none';
         }
     });
+
+    try { populateEmailFilter(); } catch(e) {}
 
     enhanceAllOrderCards(orders);
 }
@@ -3650,6 +4129,7 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
 function load() {
     loadOpenStates();
     loadOpenDayGroups();
+    loadOpenMonthGroups();
     loadReviews();
     loadShippingRates();
 
