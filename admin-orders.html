@@ -1429,6 +1429,15 @@ function extractNumbers(str) {
     return m ? m.map(Number) : [];
 }
 
+// ===== تطبيع الفاصل: يقبل " - " أو "-" أو "،" أو "," =====
+function splitMultiValues(value) {
+    if (!value) return [];
+    return value
+        .split(/\s*[،,]\s*|\s+-\s+|\s*-\s+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+}
+
 // ===== تنظيف رقم الهاتف المصري =====
 function cleanEgyptianPhone(raw) {
     if (!raw) return null;
@@ -1508,11 +1517,11 @@ function matchCity(raw) {
     return null;
 }
 
-// ===== تحليل ذكي للوزن/الطول (يدعم النطاقات) =====
+// ===== تحليل ذكي للوزن/الطول (يدعم النطاقات والمسافات) =====
 function parseWeightLengthSmart(text) {
-    const cleaned = toEnglishDigits(text || '');
+    const cleaned = toEnglishDigits(text || '').trim();
 
-    // ⭐ النطاق: "من 80 الى 95 / 165"
+    // ⭐ النطاق مع/بدون مسافات: "من 80 الى 95 / 165" أو "من80الى95/165"
     const rangeFull = cleaned.match(/من\s*(\d+(?:\.\d+)?)\s*(?:الى|إلى|إلي|الي|to)\s*(\d+(?:\.\d+)?)\s*[\/\\]\s*(\d+(?:\.\d+)?)/);
     if (rangeFull) {
         return {
@@ -1522,7 +1531,7 @@ function parseWeightLengthSmart(text) {
         };
     }
 
-    // ⭐ النطاق بالشرطة: "80-95 / 165"
+    // ⭐ النطاق بالشرطة: "80-95 / 165" أو "80 - 95 / 165"
     const rangeDash = cleaned.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*[\/\\]\s*(\d+(?:\.\d+)?)/);
     if (rangeDash && !/من/.test(cleaned)) {
         return {
@@ -1581,36 +1590,46 @@ function parseProductLine(value) {
             const price = priceMatch ? parseFloat(priceMatch[1]) : null;
             let name = part.replace(/\(السعر\s*[:：]?\s*\d+(?:\.\d+)?\s*\)/g, '').trim();
             name = name.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
+            if (name) p// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) - نسخة محسّنة =====
+function parseProductLine(value) {
+    if (!value) return [];
+    const products = [];
+
+    // لو فيه "(السعر X)" → التنسيق الجديد
+    if (/السعر/.test(value)) {
+        const parts = splitMultiValues(value);
+        for (const part of parts) {
+            const priceMatch = part.match(/\(?\s*السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)?/);
+            const price = priceMatch ? parseFloat(priceMatch[1]) : null;
+            let name = part
+                .replace(/\(?\s*السعر\s*[:：]?\s*\d+(?:\.\d+)?\s*\)?/g, '')
+                .trim();
+            name = name.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
             if (name) products.push({ name, price });
         }
-        return products;
+        return products.length ? products : [{ name: value.trim(), price: null }];
     }
 
-    // لو فيه " - " → منتجات متعددة بدون أسعار
-    const parts = value.split(/\s+-\s+/);
+    // منتجات متعددة بدون أسعار
+    const parts = splitMultiValues(value);
     if (parts.length > 1) {
-        for (const p of parts) {
-            const trimmed = p.trim();
-            if (trimmed) products.push({ name: trimmed, price: null });
-        }
-        return products;
+        return parts.map(p => ({ name: p, price: null }));
     }
 
     return [{ name: value.trim(), price: null }];
 }
 
-// ===== تحليل سطر الأوزان/الأطوال (متعدد) =====
+// ===== تحليل سطر الأوزان/الأطوال (متعدد) - نسخة محسّنة =====
 function parseWeightsLengths(value) {
     if (!value) return [];
-    const parts = value.split(/\s+-\s+/);
+    const parts = splitMultiValues(value);
     return parts.map(p => parseWeightLengthSmart(p));
 }
 
-// ===== تحليل سطر المقاسات (متعدد) =====
+// ===== تحليل سطر المقاسات (متعدد) - نسخة محسّنة =====
 function parseSizes(value) {
     if (!value) return [];
-    const parts = value.split(/\s+-\s+/);
-    return parts.map(p => p.trim()).filter(Boolean);
+    return splitMultiValues(value);
 }
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
@@ -1636,24 +1655,28 @@ function parseOrdersFromPaste(text) {
 function parseOrderBlock(block) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
-   const order = {
-    rawPhone: '', phones: [],
-    customerName: '',
-    gov: '', govOriginal: '',
-    city: '', cityOriginal: '',
-    _cityUnrecognized: false,   // 👈 جديد
-    address: '',
-    productName: '',
-    products: [],
-    sizeRaw: '',
-    sizes: [],
-    weight: null, length: null,
-    price: 0, shipping: 0,
-    notes: '',
-    _errors: [], _warnings: [],
-    _product: null,
-    _duplicate: false, _duplicateOf: null
-};
+    const order = {
+        rawPhone: '', phones: [],
+        customerName: '',
+        gov: '', govOriginal: '',
+        city: '', cityOriginal: '',
+        _cityUnrecognized: false,
+        address: '',
+        productName: '',
+        products: [],
+        sizeRaw: '',
+        sizes: [],
+        weight: null, weightMax: null, length: null,
+        weights: [],
+        price: null,          // ✅ null بدل 0
+        shipping: 0,
+        _hasPrice: false,     // ✅ جديد
+        _hasShipping: false,  // ✅ موجود مسبقاً
+        notes: '',
+        _errors: [], _warnings: [],
+        _product: null,
+        _duplicate: false, _duplicateOf: null
+    };
 
     let wlBuffer = null;
     let lastKey = null;
@@ -1668,15 +1691,15 @@ function parseOrderBlock(block) {
             const key = normalizeArabic(km[1]);
             const value = km[2].trim();
 
-           // لو كنا في وضع WL، نحلل الـ buffer الأول
-if (wlBuffer !== null) {
-    const wls = parseWeightsLengths(wlBuffer);
-    order.weights = wls;
-    order.weight = wls[0]?.weight || null;
-    order.weightMax = wls[0]?.weightMax || null;
-    order.length = wls[0]?.length || null;
-    wlBuffer = null;
-}
+            // لو كنا في وضع WL، نحلل الـ buffer الأول
+            if (wlBuffer !== null) {
+                const wls = parseWeightsLengths(wlBuffer);
+                order.weights = wls;
+                order.weight = wls[0]?.weight || null;
+                order.weightMax = wls[0]?.weightMax || null;
+                order.length = wls[0]?.length || null;
+                wlBuffer = null;
+            }
 
             if (key.includes('اسم') && key.includes('عميل')) {
                 order.customerName = value;
@@ -1689,59 +1712,54 @@ if (wlBuffer !== null) {
                 order.govOriginal = value;
                 order.gov = matchGovernorate(value) || value;
                 lastKey = 'gov';
-           } else if (key.includes('مدين')) {
-    order.cityOriginal = value;
-    const c = matchCity(value);
-    order.city = c ? c.city : value;
-    order._cityUnrecognized = !c;   // 👈 جديد
-    lastKey = 'city';
-} else if (key.includes('عنوان')) {
+            } else if (key.includes('مدين')) {
+                order.cityOriginal = value;
+                const c = matchCity(value);
+                order.city = c ? c.city : value;
+                order._cityUnrecognized = !c;
+                lastKey = 'city';
+            } else if (key.includes('عنوان')) {
                 order.address = value;
                 lastKey = 'addr';
-           } else if (key.includes('منتج')) {
-    order.productsRaw = value;
-    order.products = parseProductLine(value);
-    order.productName = order.products[0]?.name || value;
-    lastKey = 'product';
-}
-// 👇👇👇 أضف هذا الفرع
-else if (key.includes('مقاس') || key.includes('قياس')) {
-    order.sizeRaw = value;
-    order.sizes = parseSizes(value);
-    lastKey = 'size';
-}
-// 👆👆👆
-else if (key.includes('وزن') || key.includes('طول')) {
-
+            } else if (key.includes('منتج')) {
+                order.productsRaw = value;
+                order.products = parseProductLine(value);
+                order.productName = order.products[0]?.name || value;
+                lastKey = 'product';
+            } else if (key.includes('مقاس') || key.includes('قياس')) {
+                order.sizeRaw = value;
+                order.sizes = parseSizes(value);
+                lastKey = 'size';
+            } else if (key.includes('وزن') || key.includes('طول')) {
                 if (lastKey === 'wl' && wlBuffer !== null) {
-                    wlBuffer += ' ' + line; // نضيف السطر كامل
+                    wlBuffer += ' ' + line;
                 } else {
                     wlBuffer = value;
                     lastKey = 'wl';
                 }
             } else if (key.includes('سعر')) {
-                order.price = parseFloat(toEnglishDigits(value)) || 0;
+                const p = parseFloat(toEnglishDigits(value));
+                order.price = isNaN(p) ? null : p;   // ✅ يقبل الصفر
+                order._hasPrice = true;              // ✅ جديد
                 lastKey = 'price';
             } else if (key.includes('شحن')) {
-    order.shipping = parseFloat(toEnglishDigits(value)) || 0;
-    order._hasShipping = true;   // 👈 جديد
-    lastKey = 'ship';
-    } else if (key.includes('ملاحظ')) {
+                const s = parseFloat(toEnglishDigits(value));
+                order.shipping = isNaN(s) ? 0 : s;
+                order._hasShipping = true;
+                lastKey = 'ship';
+            } else if (key.includes('ملاحظ')) {
                 order.notes = value;
                 lastKey = 'notes';
-                stopReading = true; // ⭐ نوقف عند ملاحظات
+                stopReading = true;
             } else {
-                // مفتاح غير معروف - نتجاهله
                 lastKey = 'unknown';
             }
         } else if (lastKey === 'wl' && wlBuffer !== null) {
-            // سطر امتداد في وضع الوزن/الطول
             wlBuffer += ' ' + line;
         }
-        // أي سطر تاني بدون مفتاح → نطنشه (زي تواريخ WhatsApp)
     }
 
-        // معالجة الـ buffer الأخير
+    // معالجة الـ buffer الأخير
     if (wlBuffer !== null) {
         const wls = parseWeightsLengths(wlBuffer);
         order.weights = wls;
@@ -1754,7 +1772,9 @@ else if (key.includes('وزن') || key.includes('طول')) {
 
     // لو مفيش منتجات، استخدم الاسم القديم
     if (!order.products || order.products.length === 0) {
-        order.products = order.productName ? [{ name: order.productName, price: order.price }] : [];
+        order.products = order.productName
+            ? [{ name: order.productName, price: order.price }]
+            : [];
     }
 
     return order;
@@ -1921,7 +1941,9 @@ ${(o.sizes && o.sizes.length > 0) ?
         return `م${idx+1}: ${range}${w.length ? ` / ${w.length}` : ''}`;
     }).join(' • ') || '—'
 }</div>
-            <div style="color:#0F7B65; font-weight:700;">💰 ${o.price || 0} + 🚚 ${o.shipping || 0} = ${(o.price || 0) + (o.shipping || 0)} جنيه</div>
+            <div style="color:#0F7B65; font-weight:700;">
+💰 ${o._hasPrice ? (o.price ?? 0) : '—'} + 🚚 ${o.shipping || 0} = ${(o.price || 0) + (o.shipping || 0)} جنيه
+</div>
         </div>`;
     });
 
@@ -2017,10 +2039,12 @@ window.processPastedOrders = async function() {
                 }
             }
 
-            // 8️⃣ السعر (مطلوب)
-            if (!o.price || o.price <= 0) {
-                o._errors.push('السعر غير صحيح');
-            }
+            // 8️⃣ السعر (مطلوب — ويُقبل الصفر)
+if (!o._hasPrice) {
+    o._errors.push('السعر غير محدد');
+} else if (o.price === null || o.price === undefined || isNaN(o.price) || o.price < 0) {
+    o._errors.push('السعر غير صحيح');
+}
 
             // 9️⃣ الشحن (مطلوب — حتى لو 0 لازم يكون مكتوب صراحة)
             if (!o._hasShipping) {
@@ -2166,6 +2190,12 @@ window.processPastedOrders = async function() {
 async function addPastedOrderToFirestore(order) {
     const product = order._product;
 
+    // ✅ حماية من null
+    const safePrice = (order.price === null || order.price === undefined || isNaN(order.price))
+        ? 0 : Number(order.price);
+    const safeShipping = (order.shipping === null || order.shipping === undefined || isNaN(order.shipping))
+        ? 0 : Number(order.shipping);
+
     // === 1. رقم الطلب ===
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -2203,65 +2233,60 @@ async function addPastedOrderToFirestore(order) {
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
 
-    // === 3. اختيار المقاس (من الطلب لو موجود، وإلا من المخزون) ===
-const providedSizes = (order.sizes && order.sizes.length > 0) ? order.sizes : [];
-const firstProvidedSize = providedSizes[0] || null;
-let usedSize = null;
-let newStockBySize = null;
+    // === 3. اختيار المقاس ===
+    const providedSizes = (order.sizes && order.sizes.length > 0) ? order.sizes : [];
+    const firstProvidedSize = providedSizes[0] || null;
+    let usedSize = null;
+    let newStockBySize = null;
 
-if (product && product.stockBySize) {
-    const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
-    const sb = { ...product.stockBySize };
-    let targetSize = null;
+    if (product && product.stockBySize) {
+        const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+        const sb = { ...product.stockBySize };
+        let targetSize = null;
 
-    // ✅ لو المستخدم حدد مقاس في الطلب
-    if (firstProvidedSize) {
-        const provided = String(firstProvidedSize).trim();
-        // دوّر عليه في المخزون (بدون حساسية لحالة الأحرف)
-        for (const key of Object.keys(sb)) {
-            if (key.toUpperCase() === provided.toUpperCase()) {
-                targetSize = key;
-                break;
+        if (firstProvidedSize) {
+            const provided = String(firstProvidedSize).trim();
+            for (const key of Object.keys(sb)) {
+                if (key.toUpperCase() === provided.toUpperCase()) {
+                    targetSize = key;
+                    break;
+                }
             }
+            if (!targetSize) targetSize = provided;
         }
-        // لو مش موجود في المخزون، استخدمه زي ما هو
-        if (!targetSize) targetSize = provided;
-    }
 
-    // ✅ لو مفيش مقاس محدد، اختر أول مقاس متاح من المخزون
-    if (!targetSize) {
-        for (const s of sizeOrder) {
-            const qty = sb[s];
-            if (qty !== undefined && qty !== null && qty >= 1) {
-                targetSize = s;
-                break;
-            }
-        }
-        // لو مفيش، دوّر على مقاس غير محدود
         if (!targetSize) {
             for (const s of sizeOrder) {
-                if (sb[s] === null || sb[s] === undefined) {
+                const qty = sb[s];
+                if (qty !== undefined && qty !== null && qty >= 1) {
                     targetSize = s;
                     break;
                 }
             }
+            if (!targetSize) {
+                for (const s of sizeOrder) {
+                    if (sb[s] === null || sb[s] === undefined) {
+                        targetSize = s;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (targetSize) {
+            usedSize = targetSize;
+            const qty = sb[targetSize];
+            if (qty !== undefined && qty !== null && qty >= 1) {
+                sb[targetSize] = qty - 1;
+                newStockBySize = sb;
+            }
         }
     }
 
-    if (targetSize) {
-        usedSize = targetSize;
-        const qty = sb[targetSize];
-        if (qty !== undefined && qty !== null && qty >= 1) {
-            sb[targetSize] = qty - 1;
-            newStockBySize = sb;
-        }
-    }
-}
-
-       // === 4. تفاصيل الطلب (متعدد المنتجات) ===
+    // === 4. تفاصيل الطلب (متعدد المنتجات) ===
     const products = (order.products && order.products.length > 0)
         ? order.products
-        : [{ name: order.productName, price: order.price }];
+        : [{ name: order.productName, price: safePrice }];
 
     const weights = (order.weights && order.weights.length > 0)
         ? order.weights
@@ -2282,7 +2307,7 @@ if (product && product.stockBySize) {
             name: p.name,
             size: providedSizes[i] || providedSizes[0] || usedSize || 'غير محدد',
             qty: 1,
-            price: p.price || order.price,
+            price: (p.price === null || p.price === undefined) ? safePrice : Number(p.price),
             image: matched?.image || "",
             costPrice: matched?.costPrice || 0,
             customerWeight: wl.weight || null,
@@ -2292,39 +2317,37 @@ if (product && product.stockBySize) {
         totalCost += (matched?.costPrice || 0);
     }
 
-    const finalTotal = order.price + order.shipping;
+    const finalTotal = safePrice + safeShipping;
     const orderData = {
-    orderID,
-    customerName: order.customerName,
-    phone: order.phones[0],
-    secondaryPhone: order.phones[1] || null,
-    gov: order.gov || order.govOriginal,
-    city: order.city || order.cityOriginal,
-    address: order.address,
-    orderDetails,
-    quantity: 1,
-    price: order.price,
-    shipping: order.shipping,
-    shippingCostPaid: order.shipping,
-    finalTotal: finalTotal,
-    status: "new",
-    date: dateStr,
-    notes: order.notes || '',
-    stockDeducted: !!newStockBySize,
-    stockRestored: false,
-    createdAt: serverTimestamp(),
-    originalCreatedAt: serverTimestamp(),
-    totalCost: totalCost,
-    profit: finalTotal - totalCost - order.shipping,
-    
-    // ✅ المصدر والإيميل
-    source: 'paste',                                 // ← paste orders
-    addedBy: window.currentUserEmail || 'unknown'    // ✅ الإيميل
-};
+        orderID,
+        customerName: order.customerName,
+        phone: order.phones[0],
+        secondaryPhone: order.phones[1] || null,
+        gov: order.gov || order.govOriginal,
+        city: order.city || order.cityOriginal,
+        address: order.address,
+        orderDetails,
+        quantity: 1,
+        price: safePrice,
+        shipping: safeShipping,
+        shippingCostPaid: safeShipping,
+        finalTotal: finalTotal,
+        status: "new",
+        date: dateStr,
+        notes: order.notes || '',
+        stockDeducted: !!newStockBySize,
+        stockRestored: false,
+        createdAt: serverTimestamp(),
+        originalCreatedAt: serverTimestamp(),
+        totalCost: totalCost,
+        profit: finalTotal - totalCost - safeShipping,
+        source: 'paste',
+        addedBy: window.currentUserEmail || 'unknown'
+    };
 
     await addDoc(collection(db, "orders"), orderData);
 
-       // === 5. تحديث المخزون والمبيعات لكل منتج ===
+    // === 5. تحديث المخزون والمبيعات ===
     for (const item of orderDetails) {
         if (!item.productId) continue;
         try {
@@ -2441,6 +2464,29 @@ window.openMsg = async (id) => {
   document.getElementById("messageView").innerHTML = `<div style="text-align:right"><div style="font-size:18px;font-weight:bold;">👤 ${m.name}</div><div style="color:#666;">📞 ${m.phone}</div><hr><div>💬 ${m.message}</div><a href="https://wa.me/2${m.phone}" target="_blank" style="display:block;margin-top:15px;background:#25D366;color:#fff;padding:10px;border-radius:10px;text-align:center;">💬 رد واتساب</a></div>`;
 };
 let openDayGroups = {};
+
+let openMonthGroups = {};
+
+function saveOpenMonthGroups() {
+    try { localStorage.setItem('openMonthGroups', JSON.stringify(openMonthGroups)); } catch(e) {}
+}
+function loadOpenMonthGroups() {
+    try {
+        const saved = localStorage.getItem('openMonthGroups');
+        if (saved) openMonthGroups = JSON.parse(saved);
+    } catch(e) {}
+}
+
+window.toggleMonthGroup = function(monthId) {
+    const content = document.getElementById(`month-content-${monthId}`);
+    const icon = document.getElementById(`month-icon-${monthId}`);
+    if (!content) return;
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    if (icon) icon.style.transform = isOpen ? 'rotate(-90deg)' : 'rotate(0deg)';
+    openMonthGroups[monthId] = !isOpen;
+    saveOpenMonthGroups();
+};
 
 function saveOpenDayGroups() {
     try {
@@ -3349,28 +3395,19 @@ function orderMatchesSearch(o, searchRaw) {
 }
 
 function render() {
-    // ✅ التأكد من أن ordersData مصفوفة دائماً
     const ordersData = Array.isArray(window.orders) ? window.orders : [];
-    
+
     let date = document.getElementById("dateFilter").value;
     let search = document.getElementById("search").value.trim();
-   let filteredOrders = ordersData.filter(o => {
-    // 1️⃣ فلتر الحالة
-    if (currentFilter !== "all" && o.status !== currentFilter) return false;
-    
-    // 2️⃣ البحث الشامل (اسم / هاتف / رقم طلب / منتج / SKU / محافظة / مدينة)
-    if (search && !orderMatchesSearch(o, search)) return false;
-    
-    const d = o.createdAt?.toDate?.();
-    
-    // 3️⃣ فلتر التاريخ المخصص (dateFilter)
-    if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
-    
-    // 4️⃣ فلتر السليكت (اليوم/أمس/آخر 7 أيام/...)
-    if (!isDateInRange(d, currentDayFilter)) return false;
-    
-    return true;
-});
+
+    let filteredOrders = ordersData.filter(o => {
+        if (currentFilter !== "all" && o.status !== currentFilter) return false;
+        if (search && !orderMatchesSearch(o, search)) return false;
+        const d = o.createdAt?.toDate?.();
+        if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
+        if (!isDateInRange(d, currentDayFilter)) return false;
+        return true;
+    });
 
     filteredOrders.sort((a, b) => {
         let dateA = a.createdAt?.toDate?.() || new Date(0);
@@ -3378,192 +3415,253 @@ function render() {
         return dateB - dateA;
     });
 
-    const groups = new Map();
+    // ═══════ تجميع على مستويين: شهر → يوم ═══════
+    const monthGroups = new Map();
     for (let order of filteredOrders) {
         const createdAt = order.createdAt?.toDate?.();
         if (!createdAt) continue;
-        const key = createdAt.toDateString();
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(order);
+        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+        if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, new Map());
+        const dayKey = createdAt.toDateString();
+        const daysMap = monthGroups.get(monthKey);
+        if (!daysMap.has(dayKey)) daysMap.set(dayKey, []);
+        daysMap.get(dayKey).push(order);
     }
 
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
 
     let html = "";
     let totalOrders = 0;
-    let groupIndex = 0;
+    let monthIndex = 0;
 
-    for (let [dateKey, ordersInDay] of groups.entries()) {
-        const firstOrder = ordersInDay[0];
-        const createdAtDate = firstOrder.createdAt?.toDate?.();
-        if (!createdAtDate) continue;
+    for (let [monthKey, daysMap] of monthGroups.entries()) {
+        const monthId = `month-${monthIndex++}`;
+        const [yyStr, mmStr] = monthKey.split('-');
+        const yy = parseInt(yyStr), mm = parseInt(mmStr);
+        const monthName = new Date(yy, mm - 1, 1)
+            .toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
 
-        const orderDateOnly = new Date(createdAtDate);
-        orderDateOnly.setHours(0, 0, 0, 0);
-        const isToday = (orderDateOnly.getTime() === todayDate.getTime());
+        const isCurrentMonth = (yy === currentYear && mm === currentMonth);
+        const isMonthOpen = openMonthGroups[monthId] !== undefined
+            ? openMonthGroups[monthId]
+            : isCurrentMonth;
 
-        const dateHeader = formatOrderDate(createdAtDate);
-        const groupId = `group-${groupIndex++}`;
-        const isGroupOpen = openDayGroups[groupId] !== undefined ? openDayGroups[groupId] : isToday;
+        let monthOrdersCount = 0;
+        for (const arr of daysMap.values()) monthOrdersCount += arr.length;
 
-       html += `
-    <div class="day-group" data-group="${groupId}">
-        <div class="day-header" style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px 0; padding: 5px 12px; background: #f5f7fa; border-radius: 30px;">
-            <span onclick="toggleDayGroup('${groupId}')" style="font-size: 14px; font-weight: 700; color: #0F7B65; cursor: pointer; flex: 1;">${dateHeader}</span>
-            <input type="checkbox" class="daySelectAll" data-group="${groupId}" onchange="toggleDaySelection('${groupId}', this.checked)" title="تحديد كل طلبات اليوم" style="width: 20px; height: 20px; accent-color: #0F7B65; cursor: pointer; margin: 0 8px;">
-            <i id="icon-${groupId}" class="fas fa-chevron-down" onclick="toggleDayGroup('${groupId}')" style="transition: transform 0.3s; color: #0F7B65; transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'}; cursor: pointer;"></i>
-        </div>
-                <div id="group-content-${groupId}" class="group-content" style="display: ${isGroupOpen ? 'block' : 'none'};">
+        html += `
+            <div class="month-group" data-month="${monthId}">
+                <div class="month-header"
+                     onclick="toggleMonthGroup('${monthId}')"
+                     style="display:flex; align-items:center; justify-content:space-between;
+                            margin:12px 0 6px 0; padding:8px 16px;
+                            background:linear-gradient(135deg,#0F7B65,#0a5f4f);
+                            border-radius:30px; cursor:pointer;
+                            box-shadow:0 3px 10px rgba(15,123,101,0.25);">
+                    <span style="font-size:15px; font-weight:800; color:#fff;">
+                        📅 ${monthName}
+                    </span>
+                    <span style="font-size:12px; background:rgba(255,255,255,0.2); color:#fff;
+                                 padding:3px 10px; border-radius:20px; margin-right:8px;">
+                        ${monthOrdersCount} طلب
+                    </span>
+                    <i id="month-icon-${monthId}" class="fas fa-chevron-down"
+                       style="transition: transform 0.3s; color:#fff;
+                              transform: ${isMonthOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};"></i>
+                </div>
+                <div id="month-content-${monthId}"
+                     style="display: ${isMonthOpen ? 'block' : 'none'};
+                            padding-right: 6px; margin-right: 4px;
+                            border-right: 3px solid rgba(15,123,101,0.15);">
         `;
 
-        for (let o of ordersInDay) {
-            totalOrders++;
-            const isOpen = openStates[o.id] !== undefined ? openStates[o.id] : false;
-            
-            let status = o.status || "new";
-            let statusText = {
-                new: 'جديد',
-                confirmed: 'تم التأكيد',
-                processing: 'قيد التجهيز',
-                shipped: 'جاري الشحن',
-                delivered: 'تم التسليم',
-                cancelled: 'لاغـي',
-                undelivered: 'لم يصل',
-                rejected: 'رفض',
-                returned: 'مرتجع',
-                hold: 'معلق',
-                returned_confirmed: 'تم استلام المرتجع'  
-            }[status] || status;
+        let groupIndex = 0;
+        for (let [dateKey, ordersInDay] of daysMap.entries()) {
+            const firstOrder = ordersInDay[0];
+            const createdAtDate = firstOrder.createdAt?.toDate?.();
+            if (!createdAtDate) continue;
 
-            const detailsArray = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
+            const orderDateOnly = new Date(createdAtDate);
+            orderDateOnly.setHours(0, 0, 0, 0);
+            const isToday = (orderDateOnly.getTime() === todayDate.getTime());
 
-            let couponHtml = '';
-            if (o.coupon) {
-                couponHtml = `<div style="background:#fef9e6; padding:8px; border-radius:12px; margin-top:8px; text-align:center;">
-                    خصم ${o.coupon.discountType === 'percentage' ? o.coupon.discountValue + '%' : o.coupon.discountValue + ' جنيه'} 
-                    | قيمته: <span style="color:#e67e22;">${o.coupon.discountAmount} جنيه</span>
-                    <br><small>الإجمالي بعد الخصم: ${o.finalTotal} جنيه</small>
-                </div>`;
-            }
+            const dateHeader = formatOrderDate(createdAtDate);
+            const groupId = `${monthId}-group-${groupIndex++}`;
+            const isGroupOpen = openDayGroups[groupId] !== undefined
+                ? openDayGroups[groupId]
+                : isToday;
 
-            const orderTime = o.createdAt?.toDate?.() ? formatOrderTime(o.createdAt.toDate()) : '';
-
-            let notesHtml = '';
-            if (o.notes) {
-                notesHtml = `<div style="margin-top:6px; font-size:12px; color:#e67e22; background:#fef9e6; padding:4px 8px; border-radius:8px;">📝 ملاحظة: ${o.notes}</div>`;
-            }
-
-            // ✅ التأكد من أن orderDetails مصفوفة
-            const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
-                      let detailsHtml = details.map(item => {
-                const sizeText = (item.size && item.size !== 'غير محدد') 
-                    ? `<span style="display:inline-block; background:#0F7B65; color:#fff; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">📏 مقاس: ${item.size}</span>` 
-                    : '';
-                const weightText = item.customerWeight 
-                    ? `⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : item.customerWeight} كجم` 
-                    : '';
-                const lengthText = item.customerLength ? `📐 ${item.customerLength} سم` : '';
-                const wlText = [weightText, lengthText].filter(Boolean).join(' | ');
-                
-                return `
-    <div style="display:flex; align-items:flex-start; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
-        ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
-       <div style="flex:1; font-size:12px; line-height:1.7;">
-            <b style="color:#0F7B65; font-size:13px;">${item.name || 'بدون اسم'}</b>
-            ${sizeText ? `<br>${sizeText}` : ''}
-            <br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65; font-size:11px;"><i class="fas fa-copy"></i> نسخ</button>
-            <br>🔢 العدد: <b>${item.qty || 1}</b> | 💰 السعر: <b>${item.price} EGP</b>
-            ${wlText ? `<br>${wlText}` : ''}
-       </div>
-    </div>`;
-            }).join("");
-
-            // ✅ داخل حلقة for (let o of ordersInDay)
- 
-    const isFromCallCenter = o.source === 'callcenter';
-const isFromPaste      = o.source === 'paste';
-const addedByEmail = o.addedBy ? String(o.addedBy).split('@')[0] : '';
-const addedByFull  = o.addedBy || '';
-
-// ✅ تحديد الكلاس للون الإيميل بس
-let sourceClass = '';
-let sourceIcon = '';
-if (addedByEmail) {
-    if (isFromCallCenter) {
-        sourceClass = 'badge-callcenter';
-        sourceIcon = '🎧';
-    } else if (isFromPaste) {
-        sourceClass = 'badge-paste';
-        sourceIcon = '📋';
-    } else {
-        sourceClass = 'badge-admin';
-        sourceIcon = '👤';
-    }
-}
-            // ✅ داخل حلقة for (let o of ordersInDay)
             html += `
-    <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''} ${isFromCallCenter ? 'from-callcenter' : ''}" style="position:relative;">
-        
-        <div class="order-header">
-            <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
-            <div class="order-id-wrap">
-                <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
-                ${addedByEmail ? `<div class="added-by-text ${sourceClass}" title="أضيف بواسطة: ${addedByFull}">${sourceIcon} ${addedByEmail}</div>` : ''}
-            </div>
-            <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
-        </div>
+                <div class="day-group" data-group="${groupId}">
+                    <div class="day-header" style="display:flex; align-items:center;
+                         justify-content:space-between; margin:8px 0 5px 0;
+                         padding:5px 12px; background:#f5f7fa; border-radius:30px;">
+                        <span onclick="toggleDayGroup('${groupId}')"
+                              style="font-size:14px; font-weight:700; color:#0F7B65;
+                                     cursor:pointer; flex:1;">${dateHeader}</span>
+                        <input type="checkbox" class="daySelectAll" data-group="${groupId}"
+                               onchange="toggleDaySelection('${groupId}', this.checked)"
+                               title="تحديد كل طلبات اليوم"
+                               style="width:20px; height:20px; accent-color:#0F7B65;
+                                      cursor:pointer; margin:0 8px;">
+                        <i id="icon-${groupId}" class="fas fa-chevron-down"
+                           onclick="toggleDayGroup('${groupId}')"
+                           style="transition: transform 0.3s; color:#0F7B65;
+                                  transform: ${isGroupOpen ? 'rotate(0deg)' : 'rotate(-90deg)'};
+                                  cursor:pointer;"></i>
+                    </div>
+                    <div id="group-content-${groupId}" class="group-content"
+                         style="display: ${isGroupOpen ? 'block' : 'none'};">
+            `;
 
-                    <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
-                        <div class="order-info">
-                            👤 ${o.customerName}<br>
-                            📞 ${o.phone}${o.secondaryPhone ? `<br>📞 ${o.secondaryPhone}` : ''}<br>
-                            📍 ${o.gov} - ${o.city}<br>
-                            ${o.address}<br><br>
+            for (let o of ordersInDay) {
+                totalOrders++;
+                const isOpen = openStates[o.id] !== undefined ? openStates[o.id] : false;
 
-                            ${isFromCallCenter && addedByFull ? `
-                                <div style="background:#f5f0ff; border-right:3px solid #9b59b6; padding:6px 10px; border-radius:8px; margin:6px 0; font-size:11px; color:#6c3483; font-weight:700;">
-                                    🎧 <b>مصدر الطلب:</b> كول سينتر — أضيف بواسطة <span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${addedByFull}</span>
-                                </div>
-                            ` : ''}
+                let status = o.status || "new";
+                let statusText = {
+                    new: 'جديد',
+                    confirmed: 'تم التأكيد',
+                    processing: 'قيد التجهيز',
+                    shipped: 'جاري الشحن',
+                    delivered: 'تم التسليم',
+                    cancelled: 'لاغـي',
+                    undelivered: 'لم يصل',
+                    rejected: 'رفض',
+                    returned: 'مرتجع',
+                    hold: 'معلق',
+                    returned_confirmed: 'تم استلام المرتجع'
+                }[status] || status;
 
-                            💎 تفاصيل الطلب:
-                            <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
-                                ${detailsHtml}
+                const detailsArray = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+                let msg = `GAMARK\nكود: ${o.orderID}\n👤 ${o.customerName}\n📞 ${o.phone}\n📍 ${o.gov} - ${o.city}\n${o.address}\n💎 ${detailsArray.map(i => `${i.name} (${i.size}) x${i.qty}`).join(', ')}\n💰 ${o.finalTotal} جنيه`;
+
+                let couponHtml = '';
+                if (o.coupon) {
+                    couponHtml = `<div style="background:#fef9e6; padding:8px; border-radius:12px; margin-top:8px; text-align:center;">
+                        خصم ${o.coupon.discountType === 'percentage' ? o.coupon.discountValue + '%' : o.coupon.discountValue + ' جنيه'}
+                        | قيمته: <span style="color:#e67e22;">${o.coupon.discountAmount} جنيه</span>
+                        <br><small>الإجمالي بعد الخصم: ${o.finalTotal} جنيه</small>
+                    </div>`;
+                }
+
+                const orderTime = o.createdAt?.toDate?.() ? formatOrderTime(o.createdAt.toDate()) : '';
+
+                let notesHtml = '';
+                if (o.notes) {
+                    notesHtml = `<div style="margin-top:6px; font-size:12px; color:#e67e22; background:#fef9e6; padding:4px 8px; border-radius:8px;">📝 ملاحظة: ${o.notes}</div>`;
+                }
+
+                const details = Array.isArray(o.orderDetails) ? o.orderDetails : [];
+                let detailsHtml = details.map(item => {
+                    const sizeText = (item.size && item.size !== 'غير محدد')
+                        ? `<span style="display:inline-block; background:#0F7B65; color:#fff; padding:2px 8px; border-radius:8px; font-size:11px; font-weight:700;">📏 مقاس: ${item.size}</span>`
+                        : '';
+                    const weightText = item.customerWeight
+                        ? `⚖️ ${item.customerWeightMax && item.customerWeightMax !== item.customerWeight ? `من ${item.customerWeight} إلى ${item.customerWeightMax}` : item.customerWeight} كجم`
+                        : '';
+                    const lengthText = item.customerLength ? `📐 ${item.customerLength} سم` : '';
+                    const wlText = [weightText, lengthText].filter(Boolean).join(' | ');
+
+                    return `
+                        <div style="display:flex; align-items:flex-start; gap:8px; background:#f9f9f9; padding:8px; border-radius:10px;">
+                            ${item.image ? `<img src="${item.image}" style="width:40px; height:40px; object-fit:cover; border-radius:8px; cursor:pointer;" onclick="event.stopPropagation(); window.openAdminLightbox('${item.image}')">` : '<div style="width:40px; height:40px; background:#eee; border-radius:8px; display:flex; align-items:center; justify-content:center;">📷</div>'}
+                            <div style="flex:1; font-size:12px; line-height:1.7;">
+                                <b style="color:#0F7B65; font-size:13px;">${item.name || 'بدون اسم'}</b>
+                                ${sizeText ? `<br>${sizeText}` : ''}
+                                <br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65; font-size:11px;"><i class="fas fa-copy"></i> نسخ</button>
+                                <br>🔢 العدد: <b>${item.qty || 1}</b> | 💰 السعر: <b>${item.price} EGP</b>
+                                ${wlText ? `<br>${wlText}` : ''}
                             </div>
-                            ${notesHtml}
+                        </div>`;
+                }).join("");
+
+                const isFromCallCenter = o.source === 'callcenter';
+                const isFromPaste = o.source === 'paste';
+                const addedByEmail = o.addedBy ? String(o.addedBy).split('@')[0] : '';
+                const addedByFull = o.addedBy || '';
+
+                let sourceClass = '';
+                let sourceIcon = '';
+                if (addedByEmail) {
+                    if (isFromCallCenter) {
+                        sourceClass = 'badge-callcenter';
+                        sourceIcon = '🎧';
+                    } else if (isFromPaste) {
+                        sourceClass = 'badge-paste';
+                        sourceIcon = '📋';
+                    } else {
+                        sourceClass = 'badge-admin';
+                        sourceIcon = '👤';
+                    }
+                }
+
+                html += `
+                    <div class="card ${status} ${o.exportedToOldExcel ? 'exported-old-excel' : ''} ${isFromCallCenter ? 'from-callcenter' : ''}" style="position:relative;">
+                        <div class="order-header">
+                            <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
+                            <div class="order-id-wrap">
+                                <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
+                                ${addedByEmail ? `<div class="added-by-text ${sourceClass}" title="أضيف بواسطة: ${addedByFull}">${sourceIcon} ${addedByEmail}</div>` : ''}
+                            </div>
+                            <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
                         </div>
 
-                        ${couponHtml}
+                        <div id="order-${o.id}" class="order-body" style="display: ${isOpen ? 'flex' : 'none'};">
+                            <div class="order-info">
+                                👤 ${o.customerName}<br>
+                                📞 ${o.phone}${o.secondaryPhone ? `<br>📞 ${o.secondaryPhone}` : ''}<br>
+                                📍 ${o.gov} - ${o.city}<br>
+                                ${o.address}<br><br>
 
-                        <div class="order-summary">
-                            📦 ${o.quantity}<br>
-                            💰 ${o.price}<br>
-                            🚚 ${o.shipping}<br>
-                            💵 <b>${o.finalTotal}</b>
+                                ${isFromCallCenter && addedByFull ? `
+                                    <div style="background:#f5f0ff; border-right:3px solid #9b59b6; padding:6px 10px; border-radius:8px; margin:6px 0; font-size:11px; color:#6c3483; font-weight:700;">
+                                        🎧 <b>مصدر الطلب:</b> كول سينتر — أضيف بواسطة <span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${addedByFull}</span>
+                                    </div>
+                                ` : ''}
 
-                            <div class="actions" style="display: ${isOpen ? 'flex' : 'none'};">
-                                <a class="action-btn whatsapp" target="_blank" href="https://wa.me/2${o.phone}"><i class="fab fa-whatsapp"></i></a>
-                                <button class="action-btn copy" onclick='copyText(${JSON.stringify(msg)})'><i class="fas fa-copy"></i></button>
-                                <button class="action-btn" onclick="copyOrderConfirmation('${o.id}')" style="background:#0F7B65; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
-                                    <i class="fas fa-file-alt"></i> نسخ التأكيد
-                                </button>
-                                <button class="action-btn" onclick="sendWhatsAppLinks('${o.id}')" style="background:#25D366; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
-                                    <i class="fab fa-whatsapp"></i> تأكيد الطلب
-                                </button>
+                                💎 تفاصيل الطلب:
+                                <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                                    ${detailsHtml}
+                                </div>
+                                ${notesHtml}
                             </div>
 
-                            ⏰ ${orderTime}
+                            ${couponHtml}
 
-                            <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
-                                <button onclick="editOrder('${o.id}')" style="flex:1;min-width:45px;background:#ffc107;border:none;padding:6px;border-radius:8px;cursor:pointer;">✏️</button>
-                                <button onclick="deleteOrder('${o.id}')" style="flex:1;min-width:45px;background:#dc3545;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;">🗑️</button>
+                            <div class="order-summary">
+                                📦 ${o.quantity}<br>
+                                💰 ${o.price}<br>
+                                🚚 ${o.shipping}<br>
+                                💵 <b>${o.finalTotal}</b>
+
+                                <div class="actions" style="display: ${isOpen ? 'flex' : 'none'};">
+                                    <a class="action-btn whatsapp" target="_blank" href="https://wa.me/2${o.phone}"><i class="fab fa-whatsapp"></i></a>
+                                    <button class="action-btn copy" onclick='copyText(${JSON.stringify(msg)})'><i class="fas fa-copy"></i></button>
+                                    <button class="action-btn" onclick="copyOrderConfirmation('${o.id}')" style="background:#0F7B65; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
+                                        <i class="fas fa-file-alt"></i> نسخ التأكيد
+                                    </button>
+                                    <button class="action-btn" onclick="sendWhatsAppLinks('${o.id}')" style="background:#25D366; color:#fff; border:none; border-radius:8px; cursor:pointer; flex:1; padding:6px;">
+                                        <i class="fab fa-whatsapp"></i> تأكيد الطلب
+                                    </button>
+                                </div>
+
+                                ⏰ ${orderTime}
+
+                                <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+                                    <button onclick="editOrder('${o.id}')" style="flex:1;min-width:45px;background:#ffc107;border:none;padding:6px;border-radius:8px;cursor:pointer;">✏️</button>
+                                    <button onclick="deleteOrder('${o.id}')" style="flex:1;min-width:45px;background:#dc3545;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;">🗑️</button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
+
+            html += `</div></div>`;
         }
 
         html += `</div></div>`;
@@ -3572,16 +3670,7 @@ if (addedByEmail) {
     document.getElementById("orders").innerHTML = html || "<div style='text-align:center; padding:40px;'>لا توجد طلبات</div>";
     document.getElementById("count").innerHTML = `📊 ${totalOrders}`;
     updateBulkBar();
-    // إعادة محاولة الاتصال عند الفشل
-function handleFirestoreError(error) {
-    console.error("❌ خطأ في Firestore:", error);
-    customAlert("⚠️ حدث خطأ في الاتصال بقاعدة البيانات، جاري إعادة المحاولة...", 'warning');
-    setTimeout(() => {
-        if (typeof load === 'function') load();
-    }, 3000);
-}
 
-    // ✅ إعادة تطبيق حالة الفتح لكل طلب
     document.querySelectorAll('#orders .order-body').forEach(el => {
         const id = el.id.replace('order-', '');
         if (openStates[id] !== undefined) {
@@ -3650,10 +3739,11 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
 function load() {
     loadOpenStates();
     loadOpenDayGroups();
+    loadOpenMonthGroups();   // ✅ جديد
     loadReviews();
     loadShippingRates();
 
-    // ===== مستمع الرسائل (تم تصحيحه) =====
+    // ===== مستمع الرسائل =====
     let initialLoadMessages = true;
     onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc")), (snap) => {
         snap.docChanges().forEach(change => {
@@ -3679,7 +3769,7 @@ function load() {
         badge.innerText = unread;
     });
 
-    // ===== مستمع الطلبات (تم تصحيحه) =====
+    // ===== مستمع الطلبات =====
     let initialLoad = true;
     onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), (snap) => {
         snap.docChanges().forEach(async (change) => {
@@ -3689,7 +3779,6 @@ function load() {
                 const customerName = orderData.customerName || 'عميل';
                 const orderID = orderData.orderID || 'طلب';
 
-                // 🔔 إشعار + صوت
                 sendNotification(`🛒 طلب جديد #${orderID}`, `من ${customerName} - ${orderData.phone || ''}`);
                 new Audio("https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3").play().catch(()=>{});
 
@@ -3718,7 +3807,6 @@ function load() {
             }
         });
 
-        // تحديث البيانات
         lastCount = snap.size;
         orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         window.orders = orders;
@@ -4737,6 +4825,15 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
             {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}
         ];
 
+                // ============ 📦 ضم الأعمدة G, H, J, N, O ============
+        // الفهارس صفرية: G=6, H=7, J=9, N=13, O=14
+        const groupedColumns = [6, 7, 9, 13, 14];
+        groupedColumns.forEach(idx => {
+            if (!ws['!cols'][idx]) ws['!cols'][idx] = { wch: 10 };
+            ws['!cols'][idx].hidden = true;
+            ws['!cols'][idx].level = 1;
+        });
+
         // ============ تطبيق التنسيقات ============
         const headerStyle = {
             font: { bold: true, sz: 11, name: 'Arial', color: { rgb: '000000' } },
@@ -4870,15 +4967,26 @@ window.copyToClipboard = function(text) {
     });
 };
 
-// إذا أردت سماع صوت مع كل طلب جديد (موجود بالفعل لكن نؤكد)
-// نضيف أيضاً مستمعاً لفتح مجموعة اليوم الحالي إذا كانت مغلقة
-
 function ensureTodayGroupOpen() {
-    const today = new Date().toDateString();
-    const groups = document.querySelectorAll('.day-group');
-    for (let group of groups) {
+    // ✅ فتح الشهر الحالي
+    const currentMonthName = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
+    document.querySelectorAll('.month-group').forEach(group => {
+        const headerSpan = group.querySelector('.month-header span');
+        if (headerSpan && headerSpan.textContent.includes(currentMonthName)) {
+            const monthId = group.getAttribute('data-month');
+            const content = document.getElementById(`month-content-${monthId}`);
+            const icon = document.getElementById(`month-icon-${monthId}`);
+            if (content && content.style.display === 'none') {
+                content.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    });
+
+    // ✅ فتح اليوم الحالي
+    document.querySelectorAll('.day-group').forEach(group => {
         const header = group.querySelector('.day-header');
-        const dateSpan = header.querySelector('span');
+        const dateSpan = header?.querySelector('span');
         if (dateSpan && dateSpan.textContent.includes('اليوم')) {
             const groupId = group.getAttribute('data-group');
             if (groupId) {
@@ -4889,9 +4997,8 @@ function ensureTodayGroupOpen() {
                     if (icon) icon.style.transform = 'rotate(0deg)';
                 }
             }
-            break;
         }
-    }
+    });
 }
 
 // استدعاء ensureTodayGroupOpen بعد كل رندر
