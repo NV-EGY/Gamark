@@ -1437,6 +1437,49 @@ function splitMultiValues(value) {
         .filter(Boolean);
 }
 
+// ===== تقسيم ذكي للمنتجات والمقاسات =====
+// يقبل "-" بدون مسافات كفاصل، لكن يحافظ على النطاقات الرقمية (80-95 / 80 - 95)
+function splitProductValues(value) {
+    if (!value) return [];
+    const parts = [];
+    let current = '';
+    const isDigit = c => c && /[0-9٠-٩]/.test(c);
+
+    for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+
+        // الفواصل العربية والإنجليزية
+        if (ch === '،' || ch === ',') {
+            if (current.trim()) parts.push(current.trim());
+            current = '';
+            continue;
+        }
+
+        if (ch === '-') {
+            const beforeChunk = current.trimEnd();
+            const afterChunk = value.slice(i + 1).trimStart();
+            const beforeIsDigit = isDigit(beforeChunk[beforeChunk.length - 1]);
+            const afterIsDigit = isDigit(afterChunk[0]);
+
+            // لو بين رقمين → نطاق، ما نقسمش
+            if (beforeIsDigit && afterIsDigit) {
+                current += ch;
+                continue;
+            }
+
+            // غير كده → فاصل منتج/مقاس جديد
+            if (current.trim()) parts.push(current.trim());
+            current = '';
+            continue;
+        }
+
+        current += ch;
+    }
+
+    if (current.trim()) parts.push(current.trim());
+    return parts;
+}
+
 // ===== تنظيف رقم الهاتف المصري =====
 function cleanEgyptianPhone(raw) {
     if (!raw) return null;
@@ -1582,7 +1625,7 @@ function parseProductLine(value) {
     const products = [];
 
     if (/السعر/.test(value)) {
-        const parts = splitMultiValues(value);
+        const parts = splitProductValues(value);
         for (const part of parts) {
             const priceMatch = part.match(/\(?\s*السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)?/);
             const price = priceMatch ? parseFloat(priceMatch[1]) : null;
@@ -1595,7 +1638,7 @@ function parseProductLine(value) {
         return products.length ? products : [{ name: value.trim(), price: null }];
     }
 
-    const parts = splitMultiValues(value);
+    const parts = splitProductValues(value);
     if (parts.length > 1) {
         return parts.map(p => ({ name: p, price: null }));
     }
@@ -1613,7 +1656,7 @@ function parseWeightsLengths(value) {
 // ===== تحليل سطر المقاسات (متعدد) - نسخة محسّنة =====
 function parseSizes(value) {
     if (!value) return [];
-    return splitMultiValues(value);
+    return splitProductValues(value);
 }
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
