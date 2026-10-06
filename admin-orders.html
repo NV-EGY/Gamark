@@ -1480,6 +1480,51 @@ function splitProductValues(value) {
     return parts;
 }
 
+// ===== تقسيم الأوزان/الأطوال =====
+// يقبل "60 / 120 -70/170" → ["60 / 120", "70/170"]
+// ويحافظ على النطاقات "80-95/165" → ["80-95/165"]
+function splitWeightValues(value) {
+    if (!value) return [];
+    const parts = [];
+    let current = '';
+
+    for (let i = 0; i < value.length; i++) {
+        const ch = value[i];
+
+        // الفواصل العربية والإنجليزية
+        if (ch === '،' || ch === ',') {
+            if (current.trim()) parts.push(current.trim());
+            current = '';
+            continue;
+        }
+
+        if (ch === '-') {
+            // ✅ لو الـ current فيه "/" → فاصل مؤكد (منتج جديد)
+            if (current.includes('/') || current.includes('\\')) {
+                if (current.trim()) parts.push(current.trim());
+                current = '';
+                continue;
+            }
+            // ✅ لو فيه مسافة حول الشرطة → فاصل
+            const before = value[i - 1];
+            const after = value[i + 1];
+            if (before === ' ' || before === '\t' || after === ' ' || after === '\t') {
+                if (current.trim()) parts.push(current.trim());
+                current = '';
+                continue;
+            }
+            // غير كده → نطاق (80-95)
+            current += ch;
+            continue;
+        }
+
+        current += ch;
+    }
+
+    if (current.trim()) parts.push(current.trim());
+    return parts;
+}
+
 // ===== تنظيف رقم الهاتف المصري =====
 function cleanEgyptianPhone(raw) {
     if (!raw) return null;
@@ -1601,22 +1646,22 @@ function parseWeightLengthSmart(text) {
     }
 
     const nums = extractNumbers(cleaned);
-    if (nums.length === 0) return { weight: null, weightMax: null, length: null };
-    if (nums.length === 1) {
-        const n = nums[0];
-        if (wm) return { weight: n, weightMax: null, length: null };
-        if (lm) return { weight: null, weightMax: null, length: n };
-        return n < 110
-            ? { weight: n, weightMax: null, length: null }
-            : { weight: null, weightMax: null, length: n };
-    }
+if (nums.length === 0) return { weight: null, weightMax: null, length: null };
+if (nums.length === 1) {
+    const n = nums[0];
+    if (wm) return { weight: n, weightMax: null, length: null };
+    if (lm) return { weight: null, weightMax: null, length: n };
+    return n < 110
+        ? { weight: n, weightMax: null, length: null }
+        : { weight: null, weightMax: null, length: n };
+}
 
-    const sorted = [...nums].sort((a, b) => a - b);
-    return {
-        weight: sorted[0],
-        weightMax: null,
-        length: sorted[sorted.length - 1]
-    };
+const sorted = [...nums].sort((a, b) => a - b);
+return {
+    weight: sorted[0],                          // ✅ الأصغر = الوزن
+    weightMax: null,
+    length: sorted[sorted.length - 1]           // ✅ الأكبر = الطول
+};
 }
 
 // ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) - نسخة محسّنة =====
@@ -1649,7 +1694,7 @@ function parseProductLine(value) {
 // ===== تحليل سطر الأوزان/الأطوال (متعدد) - نسخة محسّنة =====
 function parseWeightsLengths(value) {
     if (!value) return [];
-    const parts = splitMultiValues(value);
+    const parts = splitWeightValues(value);
     return parts.map(p => parseWeightLengthSmart(p));
 }
 
