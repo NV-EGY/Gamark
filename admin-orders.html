@@ -796,7 +796,6 @@
     box-shadow: 0 2px 6px rgba(33,115,70,0.4);
 }
 
-<style>
     table { 
         border-collapse: collapse; 
         direction: rtl;
@@ -1577,25 +1576,11 @@ function parseWeightLengthSmart(text) {
     };
 }
 
-// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) =====
+// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) - نسخة محسّنة =====
 function parseProductLine(value) {
     if (!value) return [];
     const products = [];
 
-    // لو فيه "(السعر X)" → التنسيق الجديد
-    if (/السعر/.test(value)) {
-        const parts = value.split(/\s+-\s+/);
-        for (const part of parts) {
-            const priceMatch = part.match(/\(السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)/);
-            const price = priceMatch ? parseFloat(priceMatch[1]) : null;
-            let name = part.replace(/\(السعر\s*[:：]?\s*\d+(?:\.\d+)?\s*\)/g, '').trim();
-            name = name.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
-            if (name) p// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) - نسخة محسّنة =====
-function parseProductLine(value) {
-    if (!value) return [];
-    const products = [];
-
-    // لو فيه "(السعر X)" → التنسيق الجديد
     if (/السعر/.test(value)) {
         const parts = splitMultiValues(value);
         for (const part of parts) {
@@ -1610,7 +1595,6 @@ function parseProductLine(value) {
         return products.length ? products : [{ name: value.trim(), price: null }];
     }
 
-    // منتجات متعددة بدون أسعار
     const parts = splitMultiValues(value);
     if (parts.length > 1) {
         return parts.map(p => ({ name: p, price: null }));
