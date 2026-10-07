@@ -3468,6 +3468,21 @@ function orderMatchesSearch(o, searchRaw) {
   return false;
 }
 
+// ═══════════════════════════════════════════════════════
+// ✅ دالة مساعدة: تحديد تاريخ عرض الطلب
+// - الطلبات المؤجلة → تاريخ النشر (deferredPublishedAt)
+// - الطلبات العادية → تاريخ الإنشاء (createdAt)
+// ═══════════════════════════════════════════════════════
+function getOrderDisplayDate(order) {
+    if (order.wasDeferred && order.deferredPublishedAt) {
+        const d = order.deferredPublishedAt?.toDate 
+            ? order.deferredPublishedAt.toDate() 
+            : new Date(order.deferredPublishedAt);
+        if (!isNaN(d.getTime())) return d;
+    }
+    return order.createdAt?.toDate?.() || null;
+}
+
 function render() {
     const ordersData = Array.isArray(window.orders) ? window.orders : [];
 
@@ -3477,31 +3492,31 @@ function render() {
     let filteredOrders = ordersData.filter(o => {
     if (o.status === 'deferred') return false; // ⏰ لا تظهر في الطلبات العادية
     if (currentFilter !== "all" && o.status !== currentFilter) return false;
-        if (search && !orderMatchesSearch(o, search)) return false;
-        const d = o.createdAt?.toDate?.();
-        if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
-        if (!isDateInRange(d, currentDayFilter)) return false;
-        return true;
-    });
+    if (search && !orderMatchesSearch(o, search)) return false;
+    const d = getOrderDisplayDate(o);  // ✅ استخدام التاريخ الذكي
+    if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
+    if (!isDateInRange(d, currentDayFilter)) return false;
+    return true;
+});
 
-    filteredOrders.sort((a, b) => {
-        let dateA = a.createdAt?.toDate?.() || new Date(0);
-        let dateB = b.createdAt?.toDate?.() || new Date(0);
-        return dateB - dateA;
-    });
+   filteredOrders.sort((a, b) => {
+    let dateA = getOrderDisplayDate(a) || new Date(0);
+    let dateB = getOrderDisplayDate(b) || new Date(0);
+    return dateB - dateA;
+});
 
     // ═══════ تجميع على مستويين: شهر → يوم ═══════
     const monthGroups = new Map();
-    for (let order of filteredOrders) {
-        const createdAt = order.createdAt?.toDate?.();
-        if (!createdAt) continue;
-        const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
-        if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, new Map());
-        const dayKey = createdAt.toDateString();
-        const daysMap = monthGroups.get(monthKey);
-        if (!daysMap.has(dayKey)) daysMap.set(dayKey, []);
-        daysMap.get(dayKey).push(order);
-    }
+for (let order of filteredOrders) {
+    const createdAt = getOrderDisplayDate(order);  // ✅ التاريخ الذكي
+    if (!createdAt) continue;
+    const monthKey = `${createdAt.getFullYear()}-${String(createdAt.getMonth() + 1).padStart(2, '0')}`;
+    if (!monthGroups.has(monthKey)) monthGroups.set(monthKey, new Map());
+    const dayKey = createdAt.toDateString();
+    const daysMap = monthGroups.get(monthKey);
+    if (!daysMap.has(dayKey)) daysMap.set(dayKey, []);
+    daysMap.get(dayKey).push(order);
+}
 
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
@@ -3556,8 +3571,8 @@ function render() {
         let groupIndex = 0;
         for (let [dateKey, ordersInDay] of daysMap.entries()) {
             const firstOrder = ordersInDay[0];
-            const createdAtDate = firstOrder.createdAt?.toDate?.();
-            if (!createdAtDate) continue;
+const createdAtDate = getOrderDisplayDate(firstOrder);  // ✅ التاريخ الذكي
+if (!createdAtDate) continue;
 
             const orderDateOnly = new Date(createdAtDate);
             orderDateOnly.setHours(0, 0, 0, 0);
@@ -3679,9 +3694,10 @@ function render() {
                         <div class="order-header">
                             <input type="checkbox" class="selectOrder" onchange="this.closest('.card').style.background = this.checked ? '#e6fff2' : '#fff'; updateBulkBar();">
                             <div class="order-id-wrap">
-                                <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
-                                ${addedByEmail ? `<div class="added-by-text ${sourceClass}" title="أضيف بواسطة: ${addedByFull}">${sourceIcon} ${addedByEmail}</div>` : ''}
-                            </div>
+    <span class="order-id" data-id="${o.id}" onclick="toggleOrder('${o.id}')">${o.orderID}</span>
+    ${addedByEmail ? `<div class="added-by-text ${sourceClass}" title="أضيف بواسطة: ${addedByFull}">${sourceIcon} ${addedByEmail}</div>` : ''}
+    ${o.wasDeferred ? `<div style="font-size:9px; color:#8B6914; font-weight:700; background:#fff8e1; padding:1px 6px; border-radius:8px; margin-top:2px;">⏰ كان مؤجل</div>` : ''}
+</div>
                             <span class="status ${status}" onclick="toggleOrder('${o.id}')">${statusText}</span>
                         </div>
 
@@ -3697,6 +3713,12 @@ function render() {
                                         🎧 <b>مصدر الطلب:</b> كول سينتر — أضيف بواسطة <span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${addedByFull}</span>
                                     </div>
                                 ` : ''}
+
+                                ${o.wasDeferred && o.deferredPublishedAt ? `
+    <div style="background:#fff8e1; border-right:3px solid #f39c12; padding:6px 10px; border-radius:8px; margin:6px 0; font-size:11px; color:#8B6914; font-weight:700;">
+        ⏰ <b>طلب مؤجل سابقاً</b> — تم نشره: ${(o.deferredPublishedAt?.toDate ? o.deferredPublishedAt.toDate() : new Date(o.deferredPublishedAt)).toLocaleString('ar-EG', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
+    </div>
+` : ''}
 
                                 💎 تفاصيل الطلب:
                                 <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
@@ -5250,11 +5272,13 @@ window.publishDeferredNow = async function(id) {
     if (!confirmed) return;
     try {
         await updateDoc(doc(db, "orders", id), {
-            status: 'new',
-            deferredUntil: null,
-            deferredNote: null,
-            publishedAt: serverTimestamp()
-        });
+    status: 'new',
+    deferredUntil: null,
+    deferredNote: null,
+    publishedAt: serverTimestamp(),
+    wasDeferred: true,                        // ✅ علامة
+    deferredPublishedAt: serverTimestamp()    // ✅ تاريخ النشر
+});
         customAlert('✅ تم نشر الطلب الآن', 'success');
         render();
         renderDeferredOrders();
@@ -5295,13 +5319,15 @@ async function processDueDeferredOrders() {
         console.log(`⏰ [Auto] نشر ${dueOrders.length} طلب مؤجل حان وقته`);
 
         for (const o of dueOrders) {
-            await updateDoc(doc(db, "orders", o.id), {
-                status: 'new',
-                deferredUntil: null,
-                deferredNote: null,
-                publishedAt: serverTimestamp()
-            });
-        }
+    await updateDoc(doc(db, "orders", o.id), {
+        status: 'new',
+        deferredUntil: null,
+        deferredNote: null,
+        publishedAt: serverTimestamp(),
+        wasDeferred: true,                        // ✅ علامة
+        deferredPublishedAt: serverTimestamp()    // ✅ تاريخ النشر
+    });
+}
 
         customAlert(`⏰ ${dueOrders.length} طلب مؤجل تم نشره تلقائياً`, 'success');
         sendNotification('⏰ نشر تلقائي', `${dueOrders.length} طلب مؤجل تم نقله للطلبات النشطة`);
