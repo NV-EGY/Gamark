@@ -984,6 +984,7 @@
     <button onclick="switchTab('orders')" id="tabOrdersBtn" style="background: #0F7B65; color: #fff; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">📦 الطلبات</button>
     <button onclick="switchTab('reviews')" id="tabReviewsBtn" style="background: #ccc; color: #333; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; position: relative;">⭐ التقييمات <span id="pendingReviewsBadge" style="background: #e74c3c; color: #fff; border-radius: 50%; padding: 2px 8px; font-size: 11px; margin-right: 5px; display: none;">0</span></button>
     <button onclick="switchTab('shipping')" id="tabShippingBtn" style="background: #ccc; color: #333; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold;">🚚 أسعار الشحن</button>
+    <button onclick="switchTab('deferred')" id="tabDeferredBtn" style="background: #ccc; color: #333; border: none; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; position: relative;">⏰ مؤجلة <span id="deferredCountBadge" style="background: #f39c12; color: #000; border-radius: 50%; padding: 2px 8px; font-size: 11px; margin-right: 5px; display: none;">0</span></button>
 </div>
   <div class="filters">
   <button onclick="setFilter(event, 'all')" class="filter-btn active" data-filter="all"><i class="fas fa-list"></i></button>
@@ -1115,6 +1116,7 @@
   <button class="bulk-status-btn delivered" onclick="applyBulkStatus('delivered')"><i class="fas fa-check-circle"></i> <span>تسليم</span></button>
   <button class="bulk-status-btn cancelled" onclick="applyBulkStatus('cancelled')"><i class="fas fa-ban"></i> <span>إلغاء</span></button>
   <button class="bulk-status-btn confirmed" onclick="applyBulkStatus('confirmed')"><i class="fas fa-check-double"></i> <span>تأكيد</span></button>
+  <button class="bulk-status-btn" onclick="deferSelectedOrders()" style="background:#f39c12; color:#000;"><i class="fas fa-clock"></i> <span>تأجيل</span></button>
   <button class="clear-selection-btn" onclick="clearAllSelections()"><i class="fas fa-times"></i> <span>إلغاء</span></button>
   
 </div>
@@ -3473,7 +3475,8 @@ function render() {
     let search = document.getElementById("search").value.trim();
 
     let filteredOrders = ordersData.filter(o => {
-        if (currentFilter !== "all" && o.status !== currentFilter) return false;
+    if (o.status === 'deferred') return false; // ⏰ لا تظهر في الطلبات العادية
+    if (currentFilter !== "all" && o.status !== currentFilter) return false;
         if (search && !orderMatchesSearch(o, search)) return false;
         const d = o.createdAt?.toDate?.();
         if (date && d && d.toDateString() !== new Date(date).toDateString()) return false;
@@ -3724,6 +3727,7 @@ function render() {
                                 ⏰ ${orderTime}
 
                                 <div style="display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;">
+                                    <button onclick="openDeferModal(['${o.id}'])" style="flex:1;min-width:45px;background:#f39c12;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;" title="تأجيل">⏰</button>
                                     <button onclick="editOrder('${o.id}')" style="flex:1;min-width:45px;background:#ffc107;border:none;padding:6px;border-radius:8px;cursor:pointer;">✏️</button>
                                     <button onclick="deleteOrder('${o.id}')" style="flex:1;min-width:45px;background:#dc3545;color:#fff;border:none;padding:6px;border-radius:8px;cursor:pointer;">🗑️</button>
                                 </div>
@@ -3749,6 +3753,18 @@ function render() {
             el.style.display = openStates[id] ? 'flex' : 'none';
         }
     });
+
+    // ⏰ تحديث عداد الطلبات المؤجلة
+const deferredCount = ordersData.filter(o => o.status === 'deferred').length;
+const deferredBadge = document.getElementById('deferredCountBadge');
+if (deferredBadge) {
+    if (deferredCount > 0) {
+        deferredBadge.style.display = 'inline-block';
+        deferredBadge.textContent = deferredCount;
+    } else {
+        deferredBadge.style.display = 'none';
+    }
+}
 
     enhanceAllOrderCards(orders);
 }
@@ -3811,9 +3827,10 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
 function load() {
     loadOpenStates();
     loadOpenDayGroups();
-    loadOpenMonthGroups();   // ✅ جديد
+    loadOpenMonthGroups();
     loadReviews();
     loadShippingRates();
+    startDeferredChecker(); // ⏰ بدء فاحص الطلبات المؤجلة
 
     // ===== مستمع الرسائل =====
     let initialLoadMessages = true;
@@ -3990,12 +4007,15 @@ window.switchTab = function(tab) {
     const ordersBtn = document.getElementById("tabOrdersBtn");
     const reviewsBtn = document.getElementById("tabReviewsBtn");
     const shippingBtn = document.getElementById("tabShippingBtn");
+    const deferredBtn = document.getElementById("tabDeferredBtn");
+    const deferredPanel = document.getElementById("deferredPanel");
     const filtersDiv = document.querySelector('.filters');
     
     // إخفاء الكل
     ordersDiv.style.display = "none";
     reviewsPanel.style.display = "none";
     if(shippingPanel) shippingPanel.style.display = "none";
+    if(deferredPanel) deferredPanel.style.display = "none";
     
     // إعادة تعيين ألوان الأزرار
     ordersBtn.style.background = "#ccc";
@@ -4003,9 +4023,13 @@ window.switchTab = function(tab) {
     reviewsBtn.style.background = "#ccc";
     reviewsBtn.style.color = "#333";
     if(shippingBtn) {
-        shippingBtn.style.background = "#ccc";
-        shippingBtn.style.color = "#333";
-    }
+    shippingBtn.style.background = "#ccc";
+    shippingBtn.style.color = "#333";
+}
+if(deferredBtn) {
+    deferredBtn.style.background = "#ccc";
+    deferredBtn.style.color = "#333";
+}
     
     if (tab === 'orders') {
         ordersDiv.style.display = "flex";
@@ -4022,16 +4046,24 @@ window.switchTab = function(tab) {
         renderReviews();
     }
     else if (tab === 'shipping') {
-        if(shippingPanel) shippingPanel.style.display = "block";
-        if (filtersDiv) filtersDiv.style.display = "none";
-        if(shippingBtn) {
-            shippingBtn.style.background = "#0F7B65";
-            shippingBtn.style.color = "#fff";
-        }
-        // ✅ أهم شيء: تحديث الجدول والقائمة عند فتح التبويب
-        renderShippingRates();
-        populateGovSelect();   // تأكيد ملء المحافظات
+    if(shippingPanel) shippingPanel.style.display = "block";
+    if (filtersDiv) filtersDiv.style.display = "none";
+    if(shippingBtn) {
+        shippingBtn.style.background = "#0F7B65";
+        shippingBtn.style.color = "#fff";
     }
+    renderShippingRates();
+    populateGovSelect();
+}
+else if (tab === 'deferred') {
+    if(deferredPanel) deferredPanel.style.display = "block";
+    if (filtersDiv) filtersDiv.style.display = "none";
+    if(deferredBtn) {
+        deferredBtn.style.background = "#0F7B65";
+        deferredBtn.style.color = "#fff";
+    }
+    renderDeferredOrders();
+}
 };
 
 window.setReviewFilter = function(filter) {
@@ -4897,14 +4929,25 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
             {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}
         ];
 
-                // ============ 📦 ضم الأعمدة G, H, J, N, O ============
-        // الفهارس صفرية: G=6, H=7, J=9, N=13, O=14
-        const groupedColumns = [6, 7, 9, 13, 14];
-        groupedColumns.forEach(idx => {
-            if (!ws['!cols'][idx]) ws['!cols'][idx] = { wch: 10 };
-            ws['!cols'][idx].hidden = true;
-            ws['!cols'][idx].level = 1;
-        });
+       // ============ 📦 ضم الأعمدة G, H, J, N, O ============
+// الفهارس صفرية: G=6, H=7, J=9, N=13, O=14
+const groupedColumns = [6, 7, 9, 13, 14];
+groupedColumns.forEach(idx => {
+    if (!ws['!cols'][idx]) ws['!cols'][idx] = { wch: 10 };
+    ws['!cols'][idx].hidden = true;
+    ws['!cols'][idx].level = 1;
+    ws['!cols'][idx].MDW = 0;         // ✅ ضمان الإخفاء على كل التطبيقات
+    ws['!cols'][idx].collapsed = true; // ✅ ضمان الطي
+});
+
+// ✅ إعدادات الـ outline لضمان ظهور أزرار الطي على Excel PC
+ws['!outline'] = { above: false, left: true };
+
+// ✅ ضبط بيانات الورقة لضمان اتجاه RTL على كل التطبيقات
+if (!ws['!sheetViews']) ws['!sheetViews'] = [];
+ws['!sheetViews'] = [{
+    RTL: true
+}];
 
         // ============ تطبيق التنسيقات ============
         const headerStyle = {
@@ -5108,6 +5151,254 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// ═══════════════════════════════════════════════════════
+// ⏰ نظام الطلبات المؤجلة
+// ═══════════════════════════════════════════════════════
+
+let deferTargetOrderIds = [];
+let deferredCheckerInterval = null;
+
+window.openDeferModal = function(orderIds = null) {
+    if (Array.isArray(orderIds) && orderIds.length > 0) {
+        deferTargetOrderIds = orderIds;
+        const firstOrder = orders.find(x => x.id === orderIds[0]);
+        document.getElementById('deferTargetInfo').textContent = orderIds.length === 1
+            ? `📦 سيتم تأجيل: ${firstOrder?.orderID || ''} (${firstOrder?.customerName || ''})`
+            : `📦 سيتم تأجيل ${orderIds.length} طلب`;
+    } else {
+        deferTargetOrderIds = [];
+        document.getElementById('deferTargetInfo').innerHTML = 
+            `ℹ️ لإضافة طلب مؤجل: اختر طلبات من قائمة الطلبات أولاً ثم اضغط "تأجيل" من الشريط السفلي.`;
+    }
+
+    // افتراضي: بعد ساعة من الآن
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mi = String(now.getMinutes()).padStart(2, '0');
+    
+    document.getElementById('deferDate').value = `${yyyy}-${mm}-${dd}`;
+    document.getElementById('deferTime').value = `${hh}:${mi}`;
+    document.getElementById('deferNote').value = '';
+
+    document.getElementById('deferModalOverlay').classList.add('active');
+};
+
+window.closeDeferModal = function() {
+    document.getElementById('deferModalOverlay').classList.remove('active');
+};
+
+window.saveDeferredOrders = async function() {
+    const dateStr = document.getElementById('deferDate').value;
+    const timeStr = document.getElementById('deferTime').value;
+    const note = document.getElementById('deferNote').value.trim();
+
+    if (!dateStr || !timeStr) {
+        customAlert('⚠️ يرجى تحديد التاريخ والوقت', 'warning');
+        return;
+    }
+
+    const targetDate = new Date(`${dateStr}T${timeStr}:00`);
+    if (isNaN(targetDate.getTime())) {
+        customAlert('⚠️ تاريخ أو وقت غير صحيح', 'error');
+        return;
+    }
+    if (targetDate <= new Date()) {
+        customAlert('⚠️ الوقت يجب أن يكون في المستقبل', 'warning');
+        return;
+    }
+
+    if (deferTargetOrderIds.length === 0) {
+        customAlert('ℹ️ لم يتم تحديد أي طلب. اختر طلبات من القائمة ثم اضغط "تأجيل"', 'info');
+        return;
+    }
+
+    try {
+        for (const id of deferTargetOrderIds) {
+            await updateDoc(doc(db, "orders", id), {
+                status: 'deferred',
+                deferredUntil: targetDate,
+                deferredNote: note || null,
+                deferredAt: serverTimestamp()
+            });
+        }
+
+        customAlert(`✅ تم تأجيل ${deferTargetOrderIds.length} طلب`, 'success');
+        closeDeferModal();
+        clearAllSelections();
+    } catch (e) {
+        console.error(e);
+        customAlert('❌ خطأ: ' + e.message, 'error');
+    }
+};
+
+window.deferSelectedOrders = function() {
+    const selected = Array.from(document.querySelectorAll('.selectOrder:checked'));
+    if (selected.length === 0) {
+        customAlert('⚠️ اختر طلب واحد على الأقل أولاً', 'warning');
+        return;
+    }
+    const ids = selected.map(cb => cb.closest('.card').querySelector('.order-id')?.getAttribute('data-id')).filter(Boolean);
+    window.openDeferModal(ids);
+};
+
+window.publishDeferredNow = async function(id) {
+    const confirmed = await window.customConfirm('نشر الطلب الآن في قائمة الطلبات النشطة؟');
+    if (!confirmed) return;
+    try {
+        await updateDoc(doc(db, "orders", id), {
+            status: 'new',
+            deferredUntil: null,
+            deferredNote: null,
+            publishedAt: serverTimestamp()
+        });
+        customAlert('✅ تم نشر الطلب الآن', 'success');
+        render();
+        renderDeferredOrders();
+    } catch (e) {
+        customAlert('❌ خطأ: ' + e.message, 'error');
+    }
+};
+
+window.undeferOrder = async function(id) {
+    const confirmed = await window.customConfirm('إلغاء التأجيل وإعادة الطلب للطلبات النشطة الآن؟');
+    if (!confirmed) return;
+    try {
+        await updateDoc(doc(db, "orders", id), {
+            status: 'new',
+            deferredUntil: null,
+            deferredNote: null
+        });
+        customAlert('✅ تم إلغاء التأجيل', 'success');
+        render();
+        renderDeferredOrders();
+    } catch (e) {
+        customAlert('❌ خطأ: ' + e.message, 'error');
+    }
+};
+
+window.deleteDeferredOrder = async function(id) {
+    const confirmed = await window.customConfirm('⚠️ هل أنت متأكد من حذف الطلب المؤجل نهائياً؟');
+    if (!confirmed) return;
+    try {
+        await deleteDoc(doc(db, "orders", id));
+        customAlert('🗑️ تم الحذف', 'success');
+        render();
+        renderDeferredOrders();
+    } catch (e) {
+        customAlert('❌ خطأ: ' + e.message, 'error');
+    }
+};
+
+// ⏰ فاحص دوري - يشتغل كل 30 ثانية
+async function processDueDeferredOrders() {
+    try {
+        const now = new Date();
+        const dueOrders = (window.orders || []).filter(o =>
+            o.status === 'deferred' &&
+            o.deferredUntil &&
+            new Date(o.deferredUntil) <= now
+        );
+
+        if (dueOrders.length === 0) return;
+
+        console.log(`⏰ [Auto] نشر ${dueOrders.length} طلب مؤجل حان وقته`);
+
+        for (const o of dueOrders) {
+            await updateDoc(doc(db, "orders", o.id), {
+                status: 'new',
+                deferredUntil: null,
+                deferredNote: null,
+                publishedAt: serverTimestamp()
+            });
+        }
+
+        customAlert(`⏰ ${dueOrders.length} طلب مؤجل تم نشره تلقائياً`, 'success');
+        sendNotification('⏰ نشر تلقائي', `${dueOrders.length} طلب مؤجل تم نقله للطلبات النشطة`);
+    } catch (e) {
+        console.error('❌ فاحص الطلبات المؤجلة:', e);
+    }
+}
+
+function startDeferredChecker() {
+    if (deferredCheckerInterval) clearInterval(deferredCheckerInterval);
+    deferredCheckerInterval = setInterval(processDueDeferredOrders, 30000); // كل 30 ثانية
+    setTimeout(processDueDeferredOrders, 5000); // فحص أولي بعد 5 ثواني
+}
+
+function renderDeferredOrders() {
+    const container = document.getElementById('deferredList');
+    if (!container) return;
+
+    const deferred = (window.orders || []).filter(o => o.status === 'deferred');
+    deferred.sort((a, b) => new Date(a.deferredUntil) - new Date(b.deferredUntil));
+
+    if (deferred.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">✨ لا توجد طلبات مؤجلة حالياً</div>';
+        return;
+    }
+
+    container.innerHTML = deferred.map(o => {
+        const dueDate = new Date(o.deferredUntil);
+        const now = new Date();
+        const diffMs = dueDate - now;
+        const diffMin = Math.round(diffMs / 60000);
+        const diffHr = Math.round(diffMs / 3600000);
+        const diffDay = Math.round(diffMs / 86400000);
+
+        let timeLeft = '';
+        if (diffMs < 0) timeLeft = '⏰ حان الوقت — جاري النشر التلقائي...';
+        else if (diffMin < 1) timeLeft = '⏳ أقل من دقيقة';
+        else if (diffMin < 60) timeLeft = `⏳ بعد ${diffMin} دقيقة`;
+        else if (diffHr < 24) timeLeft = `⏳ بعد ${diffHr} ساعة`;
+        else timeLeft = `⏳ بعد ${diffDay} يوم`;
+
+        const dateStr = dueDate.toLocaleString('ar-EG', {
+            weekday: 'long', year: 'numeric', month: 'long',
+            day: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+
+        const detailsCount = Array.isArray(o.orderDetails) ? o.orderDetails.length : 0;
+
+        return `
+            <div style="background:#fff; border-radius:16px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05); border-right:4px solid #f39c12;">
+                <div style="display:flex; justify-content:space-between; align-items:start; flex-wrap:wrap; gap:10px;">
+                    <div style="flex:1; min-width:220px;">
+                        <div style="font-weight:800; font-size:15px; color:#0F7B65; margin-bottom:6px;">
+                            📦 ${o.orderID || '-'}
+                        </div>
+                        <div style="font-size:13px; color:#666; margin-bottom:4px;">
+                            👤 ${o.customerName || '-'}
+                        </div>
+                        <div style="font-size:12px; color:#888; margin-bottom:4px;">
+                            📞 ${o.phone || '-'} | 💰 ${o.finalTotal || 0} جنيه | 💎 ${detailsCount} منتج
+                        </div>
+                        <div style="background:#fff8e1; padding:8px 12px; border-radius:10px; margin-top:8px; font-size:12px; color:#8B6914; font-weight:700;">
+                            ⏰ موعد النشر: ${dateStr}<br>
+                            <span style="color:#e67e22;">${timeLeft}</span>
+                        </div>
+                        ${o.deferredNote ? `<div style="margin-top:6px; font-size:12px; color:#666; background:#f8f9fa; padding:6px 10px; border-radius:8px;">📝 ${o.deferredNote}</div>` : ''}
+                    </div>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button onclick="publishDeferredNow('${o.id}')" style="background:#2ecc71; color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px; font-weight:700;">
+                            <i class="fas fa-paper-plane"></i> نشر الآن
+                        </button>
+                        <button onclick="undeferOrder('${o.id}')" style="background:#3498db; color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px;">
+                            <i class="fas fa-undo"></i> إلغاء التأجيل
+                        </button>
+                        <button onclick="deleteDeferredOrder('${o.id}')" style="background:#e74c3c; color:#fff; border:none; padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
  // ============================================================
 // ✅ تحديد كل طلبات اليوم
 // ============================================================
@@ -5287,6 +5578,53 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
   <button id="oldExcelConfirmBtn" onclick="exportOldExcel()" style="color: #217346; font-weight: 800; flex: 1 1 120px;">📥 تصدير Excel</button>
 </div>
   </div>
+</div>
+<!-- ⏰ لوحة الطلبات المؤجلة -->
+<div id="deferredPanel" style="display: none; padding: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="color: #0F7B65; margin: 0;">⏰ الطلبات المؤجلة</h3>
+        <button onclick="openDeferModal()" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: #fff; border: none; padding: 10px 20px; border-radius: 30px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(243,156,18,0.4);">
+            <i class="fas fa-plus"></i> إضافة طلب مؤجل
+        </button>
+    </div>
+    <p style="font-size: 12px; color: #888; text-align: center; margin-bottom: 15px;">
+        ℹ️ اختر طلبات من الطلبات واضغط "تأجيل" من الشريط السفلي، أو اضغط "إضافة طلب مؤجل" لتحديد الموعد.
+    </p>
+    <div id="deferredList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+</div>
+
+<!-- ⏰ مودال التأجيل -->
+<div id="deferModalOverlay" class="custom-confirm-overlay" style="z-index: 10000005;">
+    <div class="custom-confirm-box" style="max-width: 440px;">
+        <div class="confirm-header" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+            <i class="fas fa-clock" style="color: #fff;"></i>
+            <h3 style="color: #fff;">⏰ تأجيل الطلبات</h3>
+        </div>
+        <div class="confirm-message" style="text-align: right; padding: 20px; direction: rtl;">
+            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">
+                اختر التاريخ والوقت الذي تريد أن تنتقل فيه الطلبات تلقائياً للطلبات النشطة:
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📅 التاريخ</label>
+                    <input type="date" id="deferDate" class="form-control" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">⏰ الوقت</label>
+                    <input type="time" id="deferTime" class="form-control" style="width: 100%;">
+                </div>
+            </div>
+            <div style="margin-top: 12px;">
+                <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📝 ملاحظة (اختياري)</label>
+                <input type="text" id="deferNote" class="form-control" style="width: 100%;" placeholder="مثال: ينشر يوم الجمعة صباحاً">
+            </div>
+            <div id="deferTargetInfo" style="margin-top: 14px; padding: 12px; background: #f0f7ff; border-radius: 10px; font-size: 13px; color: #0F7B65; font-weight: 700; text-align: center;"></div>
+        </div>
+        <div class="confirm-buttons">
+            <button onclick="closeDeferModal()" style="color: #e74c3c;">إلغاء</button>
+            <button onclick="saveDeferredOrders()" style="color: #0F7B65; font-weight: 800;">✅ تأجيل</button>
+        </div>
+    </div>
 </div>
 </body>
 </html>
