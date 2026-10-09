@@ -7,8 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="منتجات VANTÉ">
-<meta name="application-name" content="منتجات VANTÉ">
+<meta name="apple-mobile-web-app-title" content="منتجات GAMARK">
+<meta name="application-name" content="منتجات GAMARK">
 <meta name="theme-color" content="#D4AF37">
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
 <link rel="icon" type="image/png" sizes="16x16" href="images/favicon.png">
@@ -912,15 +912,19 @@ h2 {
 </div>
 <div style="display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; align-items: center;">
     <label style="font-weight: bold;">تصفية حسب القسم:</label>
-    <select id="filterCategorySelect" style="width: auto; padding: 8px 16px;">
-        <option value="all">كل الأقسام</option>
-        <option value="necklaces">سلاسل & كوليهات</option>
-        <option value="bracelets">أساور & غوايش</option>
-        <option value="rings">دبل & خواتم</option>
-        <option value="earrings">حلقان</option>
-        <option value="sets">أطقم</option>
-        <option value="anklets">خلخال</option>
-    </select>
+    <select id="filterCategorySelect">
+    <option value="all">كل الأقسام</option>
+    <optgroup label="👩 حريمي">
+        <option value="women_waist">حزام بطن</option>
+        <option value="women_corset_belly_back">كورسيه بطن وضهر</option>
+        <option value="women_shorts_belly">شورت وبطن</option>
+        <option value="women_full_corset">كورسيه كامل</option>
+    </optgroup>
+    <optgroup label="👨 رجالي">
+        <option value="men_vest_corset">كورسيه فانيله</option>
+        <option value="men_shorts">شورت رجالي</option>
+    </optgroup>
+</select>
 </div>
 <div class="stock-stats" id="stockStats"></div>
 
@@ -944,15 +948,21 @@ h2 {
     </div>
    
     <div class="form-row">
-        <div class="form-group full-width"><label><i class="fas fa-layer-group"></i> القسم</label><select id="category">
-            <option value="">-- اختر القسم --</option>
-            <option value="waist">مشدات البطن</option>
-            <option value="fullbody">مشدات كامل الجسم</option>
-            <option value="thigh">مشدات الفخذ</option>
-            <option value="arm">مشدات الذراع</option>
-            <option value="sets">أطقم مشدات</option>
-            <option value="belts">أحزمة البطن</option>
-        </select></div>
+        <div class="form-group full-width"><label><i class="fas fa-layer-group"></i> القسم</label>
+            <select id="category">
+    <option value="">-- اختر القسم --</option>
+    <optgroup label="👩 قسم حريمي">
+        <option value="women_waist">حزام بطن</option>
+        <option value="women_corset_belly_back">كورسيه بطن وضهر</option>
+        <option value="women_shorts_belly">شورت وبطن</option>
+        <option value="women_full_corset">كورسيه كامل</option>
+    </optgroup>
+    <optgroup label="👨 قسم رجالي">
+        <option value="men_vest_corset">كورسيه فانيله</option>
+        <option value="men_shorts">شورت رجالي</option>
+    </optgroup>
+</select>
+</div>
     </div>
     <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; border-bottom: 1px solid #e0e6ed; padding-bottom: 8px;">
         <button type="button" class="tool-btn" data-command="bold" title="غامق" onclick="formatDoc('bold')"><i class="fas fa-bold"></i></button>
@@ -1207,12 +1217,12 @@ function scrollToElement(elementId, delay = 300) {
 }
 // ========== نظام SKU ==========
 const categoryCodes = {
-    'waist': 'WS',
-    'fullbody': 'FB',
-    'thigh': 'TH',
-    'arm': 'AR',
-    'sets': 'ST',
-    'belts': 'BL'
+    'women_waist': 'WWS',
+    'women_corset_belly_back': 'WCB',
+    'women_shorts_belly': 'WSB',
+    'women_full_corset': 'WFC',
+    'men_vest_corset': 'MVC',
+    'men_shorts': 'MSS'
 };
 
 async function getNextSequenceNumber(categoryCode) {
@@ -2062,7 +2072,7 @@ currentSort = 'newest';
 updateSortUI();
 
 window.generateMissingSKUs = async function() {
-    if (!confirm("⚠️ سيتم توليد كود SKU لكل المنتجات التي لا تملك SKU حالياً. هل تريد المتابعة؟")) return;
+    if (!customConfirm("⚠️ سيتم توليد كود SKU لكل المنتجات التي لا تملك SKU حالياً. هل تريد المتابعة؟")) return;
     
     const btn = document.querySelector('#productsListSection button.primary-btn');
     const originalText = btn.innerHTML;
@@ -2286,13 +2296,13 @@ function convertProductsToCSV(products) {
         return [
             p.sku || p.id || `prod-${index + 1}`,  // ✅ نستخدم SKU في خانة الـ ID
             (p.name || 'منتج بدون اسم').replace(/,/g, ' '),
-            ((p.description || 'منتج فاخر من VANTÉ').replace(/<[^>]*>/g, '').substring(0, 500)).replace(/,/g, ' '),
+            ((p.description || 'منتج فاخر من GAMARK').replace(/<[^>]*>/g, '').substring(0, 500)).replace(/,/g, ' '),
             availability,
             'new',
             p.price || 0,
             productLink,
             p.image || '',
-            'VANTÉ',
+            'GAMARK',
             p.categoryLabel || p.category || 'عام',
             'Jewelry & Watches > Jewelry'
         ];
@@ -2316,7 +2326,7 @@ function convertProductsToCSV(products) {
 /**
  * تحميل ملف CSV
  */
-function downloadCSV(csv, filename = 'vante-catalog.csv') {
+function downloadCSV(csv, filename = 'GAMARK-catalog.csv') {
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
