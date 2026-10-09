@@ -3696,17 +3696,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <nav class="menu">
     <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">الصفحة الرئيسية</a>
     <div class="menu-item desktop-dropdown">
-        <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-        <div id="collectionsSubDesktop" class="collections-sub desktop-sub">
-            <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a>
-            <a href="?category=waist" data-category="waist" onclick="event.preventDefault(); window.setCategory('waist')">مشدات البطن</a>
-            <a href="?category=fullbody" data-category="fullbody" onclick="event.preventDefault(); window.setCategory('fullbody')">مشدات كامل الجسم</a>
-            <a href="?category=thigh" data-category="thigh" onclick="event.preventDefault(); window.setCategory('thigh')">مشدات الفخذ</a>
-            <a href="?category=arm" data-category="arm" onclick="event.preventDefault(); window.setCategory('arm')">مشدات الذراع</a>
-            <a href="?category=sets" data-category="sets" onclick="event.preventDefault(); window.setCategory('sets')">أطقم مشدات</a>
-            <a href="?category=belts" data-category="belts" onclick="event.preventDefault(); window.setCategory('belts')">أحزمة البطن</a>
-        </div>
+    <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
+    <div class="collections-sub desktop-sub">
+        <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a>
+        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👩 حريمي</div>
+        <a href="?category=women_waist" data-category="women_waist" onclick="event.preventDefault(); window.setCategory('women_waist')">حزام بطن</a>
+        <a href="?category=women_corset_belly_back" data-category="women_corset_belly_back" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back')">كورسيه بطن وضهر</a>
+        <a href="?category=women_shorts_belly" data-category="women_shorts_belly" onclick="event.preventDefault(); window.setCategory('women_shorts_belly')">شورت وبطن</a>
+        <a href="?category=women_full_corset" data-category="women_full_corset" onclick="event.preventDefault(); window.setCategory('women_full_corset')">كورسيه كامل</a>
+        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👨 رجالي</div>
+        <a href="?category=men_vest_corset" data-category="men_vest_corset" onclick="event.preventDefault(); window.setCategory('men_vest_corset')">كورسيه فانيله</a>
+        <a href="?category=men_shorts" data-category="men_shorts" onclick="event.preventDefault(); window.setCategory('men_shorts')">شورت رجالي</a>
     </div>
+</div>
     <a href="#" onclick="openContactModal(event); return false;">تواصل مع المسئول</a>
     <a href="#" onclick="openInfoModal(); return false;">دليل المتسوق</a>
 </nav>
@@ -4137,12 +4139,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h3>التسوق</h3>
       <ul>
         <li><a href="#" onclick="event.preventDefault(); window.setCategory('all')">الأقسام</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('necklaces')">سلاسل & كوليهات</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('bracelets')">أساور & غوايش</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('rings')">خواتم & دبل</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('earrings')">حلقان</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('sets')">أطقم</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('anklets')">خلخال</a></li>
+        <li><a href="#" onclick="event.preventDefault(); window.setCategory('women_waist')">👩 حزام بطن</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back')">👩 كورسيه بطن وضهر</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_shorts_belly')">👩 شورت وبطن</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_full_corset')">👩 كورسيه كامل</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('men_vest_corset')">👨 كورسيه فانيله</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('men_shorts')">👨 شورت رجالي</a></li>
       </ul>
     </div>
     <div class="footer-column">
@@ -4558,12 +4560,12 @@ function suggestionClickHandler(e) {
 
 // ===== البحث عن الأقسام بالكلمات المفتاحية =====
 const categoryKeywords = {
-    waist: ["بطن", "وسط", "خصر", "مشد بطن", "waist", "بطن وخصر"],
-    fullbody: ["كامل الجسم", "بودي", "full body", "شيبوير", "كامل"],
-    thigh: ["فخذ", "فخد", "أرجل", "thigh", "ساق"],
-    arm: ["ذراع", "دراع", "أرms", "arm", "كتف"],
-    sets: ["طقم", "طقم كامل", "sets", "مجموعة"],
-    belts: ["حزام", "أحزمة", "belt"]
+    women_waist: ["حزام بطن", "حزام", "belt", "waist belt"],
+    women_corset_belly_back: ["كورسيه بطن وضهر", "بطن وضهر", "بطن وظهر", "corset belly back"],
+    women_shorts_belly: ["شورت وبطن", "شورت بطن", "shorts belly"],
+    women_full_corset: ["كورسيه كامل", "كورسيه كامله", "full corset", "كورسيه"],
+    men_vest_corset: ["كورسيه فانيله", "فانيله", "vest corset", "كورسيه رجالي"],
+    men_shorts: ["شورت رجالي", "شورت رجال", "men shorts", "shorts"]
 };
 
 function getCategoryFromSearch(searchTerm) {
@@ -4619,12 +4621,12 @@ function updateCategoryFilterUI() {
 
   const categories = [
     { id: "all", label: "كل الأقسام" },
-    { id: "waist", label: "مشدات البطن" },
-    { id: "fullbody", label: "مشدات كامل الجسم" },
-    { id: "thigh", label: "مشدات الفخذ" },
-    { id: "arm", label: "مشدات الذراع" },
-    { id: "sets", label: "أطقم مشدات" },
-    { id: "belts", label: "أحزمة البطن" }
+    { id: "women_waist", label: "👩 حزام بطن" },
+    { id: "women_corset_belly_back", label: "👩 كورسيه بطن وضهر" },
+    { id: "women_shorts_belly", label: "👩 شورت وبطن" },
+    { id: "women_full_corset", label: "👩 كورسيه كامل" },
+    { id: "men_vest_corset", label: "👨 كورسيه فانيله" },
+    { id: "men_shorts", label: "👨 شورت رجالي" }
 ];
   container.innerHTML = categories.map(cat => `
     <label class="filter-option ${currentCategory === cat.id ? 'active' : ''}"
@@ -6879,21 +6881,16 @@ const infoContent = {
     </div>
 `,
     packaging: `
-        <h4>🎁 تغليف فاخر</h4>
-        <p>نحرص على تقديم تجربة فاخرة منذ لحظة استلامك للطلب:</p>
-        <ul>
-            <li>✨ <strong>علبة فاخرة بملمس مخملي فاخر ولمسات سوداء راقية</strong> تمنح إحساسًا بالترف الحقيقي.</li>
-            <li>🎨 <strong>تصميم داخلي أنيق</strong> يثبت القطعة بأمان ويبرز جمالها بطريقة احترافية.</li>
-            <li>🛡️ <strong>خامات قوية عالية الجودة</strong> لحماية المجوهرات من الخدوش والصدمات أثناء النقل.</li>
-            <li>✨ <strong>تفاصيل دقيقة وتشطيب فاخر</strong> يعكسان هوية GAMARK الراقية.</li>
-            <li>🎁 <strong>تجربة فتح مميزة</strong> تضيف لمسة فخامة مثالية للهدايا والمناسبات الخاصة.</li>
-        </ul>
-        <p style="color: #D4AF37; font-weight: bold; text-align: center; margin: 20px 0;">✨ لأن كل قطعة مميزة… تستحق تغليفًا يليق بها.</p>
-        <div class="size-img-placeholder">
-            <i class="fas fa-gift" style="font-size: 48px; color: #D4AF37; margin-bottom: 10px;"></i>
-            <p>صورة توضيحية للبوكس الفاخر <img src="images/luxury-packaging.jpg" alt="تغليف GAMARK الفاخر" style="max-width:100%; border-radius: 12px; margin-top: 10px;"></p>
-        </div>
-    `,
+    <h4>🎁 تغليف فاخر</h4>
+    <p>كل مشد من GAMARK بيوصلك في تغليف فاخر يحافظ على المنتج ويعطيك تجربة راقية:</p>
+    <ul>
+        <li>✨ <strong>علبة أنيقة بتصميم عصري</strong> تناسب هدية أو استخدام شخصي.</li>
+        <li>🛡️ <strong>تغليف محكم</strong> يحمي المشد من التلف أثناء الشحن.</li>
+        <li>📦 <strong>كيس حماية داخلي</strong> يحفظ المشد نظيف وآمن.</li>
+        <li>🎀 <strong>لمسة نهائية فاخرة</strong> تعكس هوية GAMARK.</li>
+    </ul>
+    <p style="color: #D4AF37; font-weight: bold; text-align: center; margin: 20px 0;">✨ لأن كل قطعة تستحق تغليف يليق بها.</p>
+`,
     faq: `
         <div class="faq-item">
             <div class="faq-question">❓ هل المنتجات أصلية؟ <i class="fas fa-chevron-down"></i></div>
