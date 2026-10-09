@@ -81,10 +81,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "GAMARK",
-  "alternateName": "فانتي",
   "url": "https://vante.sbs/",
-  "description": "متجر إلكتروني متخصص في الإكسسوارات الحريمي الفاخرة المصنوعة من الدهب الاستانلس والستانلس ستيل. يشمل تشكيلة واسعة من الخواتم والسلاسل والأساور والحلقان.",
-  "keywords": "فانتي, GAMARK, دهب استانلس, اكسسوارات حريمي, خواتم, سلاسل, أساور, حلقان",
+  "description": "متجر إلكتروني متخصص في مشدات الكورسيه الفاخرة للرجال والنساء.",
+  "keywords": "مشدات كورسيه, كورسيه بطن وضهر, كورسيه كامل, شورت رجالي, حزام بطن",
   "potentialAction": {
     "@type": "SearchAction",
     "target": "https://vante.sbs/?search={search_term_string}",
@@ -5379,21 +5378,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </a>
 
     <!-- الأقسام (Collapsible) -->
-    <div class="menu-item">
-      <a href="#" class="collection-toggle mobile-menu-link" onclick="toggleCollections(event)">
-        <span><i class="fas fa-th-large"></i> الأقسام</span>
-        <i class="fas fa-chevron-down arrow-icon"></i>
-      </a>
-      <div id="collectionsSub" class="collections-sub">
-        <a href="?category=all" data-category="all" onclick="handleMenuClick(event, 'all', this)">كل الأقسام</a>
-        <a href="?category=waist" data-category="waist" onclick="handleMenuClick(event, 'waist', this)">مشدات البطن</a>
-        <a href="?category=fullbody" data-category="fullbody" onclick="handleMenuClick(event, 'fullbody', this)">مشدات كامل الجسم</a>
-        <a href="?category=thigh" data-category="thigh" onclick="handleMenuClick(event, 'thigh', this)">مشدات الفخذ</a>
-        <a href="?category=arm" data-category="arm" onclick="handleMenuClick(event, 'arm', this)">مشدات الذراع</a>
-        <a href="?category=sets" data-category="sets" onclick="handleMenuClick(event, 'sets', this)">أطقم مشدات</a>
-        <a href="?category=belts" data-category="belts" onclick="handleMenuClick(event, 'belts', this)">أحزمة البطن</a>
-      </div>
+    <div class="menu-item desktop-dropdown">
+    <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
+    <div class="collections-sub desktop-sub">
+        <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a>
+        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👩 حريمي</div>
+        <a href="?category=women_waist" data-category="women_waist" onclick="event.preventDefault(); window.setCategory('women_waist')">حزام بطن</a>
+        <a href="?category=women_corset_belly_back" data-category="women_corset_belly_back" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back')">كورسيه بطن وضهر</a>
+        <a href="?category=women_shorts_belly" data-category="women_shorts_belly" onclick="event.preventDefault(); window.setCategory('women_shorts_belly')">شورت وبطن</a>
+        <a href="?category=women_full_corset" data-category="women_full_corset" onclick="event.preventDefault(); window.setCategory('women_full_corset')">كورسيه كامل</a>
+        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👨 رجالي</div>
+        <a href="?category=men_vest_corset" data-category="men_vest_corset" onclick="event.preventDefault(); window.setCategory('men_vest_corset')">كورسيه فانيله</a>
+        <a href="?category=men_shorts" data-category="men_shorts" onclick="event.preventDefault(); window.setCategory('men_shorts')">شورت رجالي</a>
     </div>
+</div>
 
     <!-- تواصل مع المسئول -->
     <a href="#" class="mobile-menu-link"
@@ -5467,14 +5465,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <span id="filterLabel">الأقسام</span>
     <i class="fas fa-chevron-down"></i>
 </div>
-        <div class="filter-options" id="filterOptions">
+     <div class="filter-options" id="filterOptions">
     <div class="filter-option active" data-category="all">كل الأقسام</div>
-<div class="filter-option" data-category="waist">مشدات البطن</div>
-<div class="filter-option" data-category="fullbody">مشدات كامل الجسم</div>
-<div class="filter-option" data-category="thigh">مشدات الفخذ</div>
-<div class="filter-option" data-category="arm">مشدات الذراع</div>
-<div class="filter-option" data-category="sets">أطقم مشدات</div>
-<div class="filter-option" data-category="belts">أحزمة البطن</div>
+    <div style="font-size:11px; color:#D4AF37; padding:8px 16px 4px; font-weight:800; border-top:1px solid #eee;">👩 حريمي</div>
+    <div class="filter-option" data-category="women_waist">حزام بطن</div>
+    <div class="filter-option" data-category="women_corset_belly_back">كورسيه بطن وضهر</div>
+    <div class="filter-option" data-category="women_shorts_belly">شورت وبطن</div>
+    <div class="filter-option" data-category="women_full_corset">كورسيه كامل</div>
+    <div style="font-size:11px; color:#D4AF37; padding:8px 16px 4px; font-weight:800; border-top:1px solid #eee;">👨 رجالي</div>
+    <div class="filter-option" data-category="men_vest_corset">كورسيه فانيله</div>
+    <div class="filter-option" data-category="men_shorts">شورت رجالي</div>
 </div>
         </div>
     </div>
@@ -5933,12 +5933,12 @@ window.openAccount = function() {
 // ========== البحث الذكي عن الأقسام (الكلمات المفتاحية) ==========
 // ✅ استبدلها بالكامل
 const categoryKeywords = {
-    waist: ["بطن", "وسط", "خصر", "مشد بطن", "waist", "بطن وخصر"],
-    fullbody: ["كامل الجسم", "بودي", "full body", "شيبوير", "كامل"],
-    thigh: ["فخذ", "فخد", "أرجل", "thigh", "ساق"],
-    arm: ["ذراع", "دراع", "أرms", "arm", "كتف"],
-    sets: ["طقم", "طقم كامل", "sets", "مجموعة"],
-    belts: ["حزام", "أحزمة", "belt"]
+    women_waist: ["حزام بطن", "حزام", "belt", "waist belt"],
+    women_corset_belly_back: ["كورسيه بطن وضهر", "بطن وضهر", "بطن وظهر", "corset belly back"],
+    women_shorts_belly: ["شورت وبطن", "شورت بطن", "shorts belly"],
+    women_full_corset: ["كورسيه كامل", "كورسيه كامله", "full corset", "كورسيه"],
+    men_vest_corset: ["كورسيه فانيله", "فانيله", "vest corset", "كورسيه رجالي"],
+    men_shorts: ["شورت رجالي", "شورت رجال", "men shorts", "shorts"]
 };
 
 // دالة لاستخراج القسم المطلوب من كلمات البحث
@@ -9343,12 +9343,12 @@ sortOptions.forEach(opt => {
     <h3>التسوق</h3>
     <ul>
         <li><a href="#" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('waist')">مشدات البطن</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('fullbody')">مشدات كامل الجسم</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('thigh')">مشدات الفخذ</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('arm')">مشدات الذراع</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('sets')">أطقم مشدات</a></li>
-        <li><a href="#" onclick="event.preventDefault(); window.setCategory('belts')">أحزمة البطن</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_waist')">👩 حزام بطن</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back')">👩 كورسيه بطن وضهر</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_shorts_belly')">👩 شورت وبطن</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('women_full_corset')">👩 كورسيه كامل</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('men_vest_corset')">👨 كورسيه فانيله</a></li>
+<li><a href="#" onclick="event.preventDefault(); window.setCategory('men_shorts')">👨 شورت رجالي</a></li>
     </ul>
 </div>
         <div class="footer-column">
