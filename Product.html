@@ -1908,18 +1908,22 @@ button:active,
 
         <a href="index.html?category=all" data-category="all" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=all';">الصفحة الرئيسية</a>
 
-        <div class="menu-item">
-            <a href="#" class="collection-toggle" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-            <div id="collectionsSub" class="collections-sub">
-                <a href="index.html?category=all" data-category="all" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=all';">كل الأقسام</a>
-                <a href="index.html?category=necklaces" data-category="necklaces" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=necklaces';">سلاسل & كوليهات</a>
-                <a href="index.html?category=bracelets" data-category="bracelets" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=bracelets';">أساور & غوايش</a>
-                <a href="index.html?category=rings" data-category="rings" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=rings';">دبل & خواتم</a>
-                <a href="index.html?category=earrings" data-category="earrings" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=earrings';">حلقان</a>
-                <a href="index.html?category=sets" data-category="sets" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=sets';">اطقم</a>
-                <a href="index.html?category=anklets" data-category="anklets" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=anklets';">خلخال</a>
-            </div>
-        </div>
+       <div class="menu-item">
+    <a href="#" class="collection-toggle" onclick="event.preventDefault(); toggleCollections(event)">
+        الأقسام <i class="fas fa-chevron-down"></i>
+    </a>
+    <div id="collectionsSub" class="collections-sub">
+        <a href="index.html?category=all" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=all';">🏠 كل الأقسام</a>
+        <div style="font-size:12px; color:#D4AF37; padding:10px 22px 4px; font-weight:800; letter-spacing:0.5px;">👩 حريمي</div>
+        <a href="index.html?category=women_waist" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=women_waist';">حزام بطن</a>
+        <a href="index.html?category=women_corset_belly_back" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=women_corset_belly_back';">كورسيه بطن وضهر</a>
+        <a href="index.html?category=women_shorts_belly" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=women_shorts_belly';">شورت وبطن</a>
+        <a href="index.html?category=women_full_corset" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=women_full_corset';">كورسيه كامل</a>
+        <div style="font-size:12px; color:#D4AF37; padding:10px 22px 4px; font-weight:800; letter-spacing:0.5px;">👨 رجالي</div>
+        <a href="index.html?category=men_vest_corset" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=men_vest_corset';">كورسيه فانيله</a>
+        <a href="index.html?category=men_shorts" onclick="event.preventDefault(); closeMobileMenu(); window.location.href='index.html?category=men_shorts';">شورت رجالي</a>
+    </div>
+</div>
 
         <a href="#" onclick="openContactModal(event); closeMobileMenu(); return false;">تواصل مع المسئول</a>
         <a href="#" onclick="openInfoModal(); closeMobileMenu(); return false;">دليل المتسوق</a>
@@ -3431,7 +3435,19 @@ window.addToCartFromPage = function() {
         return;
     }
     
-    const size = selectedSize || sizes[0] || '7';
+    // ✅ الأولوية: اختيار العميل → المقاس المتاح الأول
+let size = '';
+const userSizeEl = document.getElementById('customerSize');
+const userPickedSize = userSizeEl ? userSizeEl.value : '';
+if (userPickedSize && stockBySize[userPickedSize] !== 0) {
+  size = userPickedSize;
+} else if (selectedSize) {
+  size = selectedSize;
+} else if (availableSizes.length > 0) {
+  size = availableSizes[0];
+} else {
+  size = 'غير محدد';
+}
     
     // التحقق من المخزون للمقاس المختار
     if (selectedSize) {
