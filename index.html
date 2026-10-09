@@ -5377,19 +5377,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <i class="fas fa-home"></i> الصفحة الرئيسية
     </a>
 
-    <!-- الأقسام (Collapsible) -->
-    <div class="menu-item desktop-dropdown">
-    <a href="#" onclick="toggleCollections(event)">الأقسام <i class="fas fa-chevron-down"></i></a>
-    <div class="collections-sub desktop-sub">
-        <a href="?category=all" data-category="all" onclick="event.preventDefault(); window.setCategory('all')">كل الأقسام</a>
-        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👩 حريمي</div>
-        <a href="?category=women_waist" data-category="women_waist" onclick="event.preventDefault(); window.setCategory('women_waist')">حزام بطن</a>
-        <a href="?category=women_corset_belly_back" data-category="women_corset_belly_back" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back')">كورسيه بطن وضهر</a>
-        <a href="?category=women_shorts_belly" data-category="women_shorts_belly" onclick="event.preventDefault(); window.setCategory('women_shorts_belly')">شورت وبطن</a>
-        <a href="?category=women_full_corset" data-category="women_full_corset" onclick="event.preventDefault(); window.setCategory('women_full_corset')">كورسيه كامل</a>
-        <div style="font-size:11px; color:#D4AF37; padding:6px 0 2px; font-weight:800;">👨 رجالي</div>
-        <a href="?category=men_vest_corset" data-category="men_vest_corset" onclick="event.preventDefault(); window.setCategory('men_vest_corset')">كورسيه فانيله</a>
-        <a href="?category=men_shorts" data-category="men_shorts" onclick="event.preventDefault(); window.setCategory('men_shorts')">شورت رجالي</a>
+    <div class="menu-item">
+    <a href="#" class="collection-toggle" onclick="event.preventDefault(); toggleCollections(event)">
+        الأقسام <i class="fas fa-chevron-down"></i>
+    </a>
+    <div id="collectionsSub" class="collections-sub">
+        <a href="?category=all" onclick="event.preventDefault(); window.setCategory('all'); closeMobileMenu();">🏠 كل الأقسام</a>
+        <div style="font-size:12px; color:#D4AF37; padding:10px 22px 4px; font-weight:800; letter-spacing:0.5px;">👩 حريمي</div>
+        <a href="?category=women_waist" onclick="event.preventDefault(); window.setCategory('women_waist'); closeMobileMenu();">حزام بطن</a>
+        <a href="?category=women_corset_belly_back" onclick="event.preventDefault(); window.setCategory('women_corset_belly_back'); closeMobileMenu();">كورسيه بطن وضهر</a>
+        <a href="?category=women_shorts_belly" onclick="event.preventDefault(); window.setCategory('women_shorts_belly'); closeMobileMenu();">شورت وبطن</a>
+        <a href="?category=women_full_corset" onclick="event.preventDefault(); window.setCategory('women_full_corset'); closeMobileMenu();">كورسيه كامل</a>
+        <div style="font-size:12px; color:#D4AF37; padding:10px 22px 4px; font-weight:800; letter-spacing:0.5px;">👨 رجالي</div>
+        <a href="?category=men_vest_corset" onclick="event.preventDefault(); window.setCategory('men_vest_corset'); closeMobileMenu();">كورسيه فانيله</a>
+        <a href="?category=men_shorts" onclick="event.preventDefault(); window.setCategory('men_shorts'); closeMobileMenu();">شورت رجالي</a>
     </div>
 </div>
 
@@ -5685,6 +5686,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7B4B8A; font-size: 12px; font-weight: 800; pointer-events: none; background: #f0e6f5; padding: 4px 10px; border-radius: 8px; letter-spacing: 0.5px;">سم</span>
         </div>
     </div>
+
+    <!-- 📏 المقاس (اختياري) -->
+<div style="margin-bottom: 14px;">
+    <label for="customerSize" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #555; margin-bottom: 8px; cursor: pointer;">
+        <i class="fas fa-tag" style="color: #5D3A7A; font-size: 14px;"></i>
+        <span>المقاس (إذا كنت تعرفه)</span>
+        <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800; letter-spacing: 0.5px;">اختياري</span>
+    </label>
+    <select id="customerSize" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; cursor: pointer; outline: none;">
+        <option value="">سيتم تحديده بواسطة المختص</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+        <option value="2XL">2XL</option>
+        <option value="3XL">3XL</option>
+        <option value="4XL">4XL</option>
+    </select>
+</div>
 
     <!-- 💡 Hint -->
     <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: linear-gradient(135deg, #fff8e6, #fff4d9); border-radius: 12px; border-right: 3px solid #D4A017;">
@@ -7461,63 +7481,62 @@ if (typeof updateCart === 'function') updateCart();
     return true;
 };
 
-  window.addToCartFromCard = function(productId, name, price, image) {
-  const product = window.allProducts.find(p => p.id === productId);
+ window.addToCartFromCard = function(productId, name, price, image) {
+  const product = allProducts.find(p => p.id === productId);
   const cached = window._sizeDataCache[productId] || {};
   const customerWeight = cached.weight || null;
   const customerLength = cached.length || null;
-  
+  const customerSize = cached.size || null;
+
   // ✅ التحقق من الوزن
   if (!customerWeight || customerWeight < 20 || customerWeight > 250) {
     customAlert("⚠️ يرجى إدخال بيانات المقاس أولاً", 'warning');
     openSizeDataModal(productId, name);
     return false;
   }
-  
-  // ✅ تحديد المقاس تلقائياً
-  let size = "";
-  if (product && product.stockBySize) {
+
+  // ✅ تحديد المقاس: من العميل أو تلقائي
+  let size = customerSize || "";
+  if (!size && product && product.stockBySize) {
     const availableSizes = Object.entries(product.stockBySize)
       .filter(([s, q]) => q === null || q === undefined || q > 0)
       .map(([s]) => s);
     if (availableSizes.length > 0) size = availableSizes[0];
   }
   if (!size) size = "غير محدد";
-  
+
   // ✅ فحص المخزون
   if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
     const stockForSize = product.stockBySize[size];
     if (stockForSize === 0) {
-      customAlert(`❌ عذراً، المنتج غير متوفر حالياً`, 'error');
+      customAlert(`❌ عذراً، مقاس ${size} غير متوفر حالياً`, 'error');
       return false;
     }
     if (stockForSize !== null && stockForSize !== undefined && stockForSize > 0) {
       const currentInCart = cart.reduce((sum, item) =>
-        (item.name === name) ? sum + item.qty : sum, 0);
+        (item.name === name && item.size === size) ? sum + item.qty : sum, 0);
       if (currentInCart + 1 > stockForSize) {
-        customAlert(`❌ الكمية المتاحة هي ${stockForSize} قطعة فقط.`, 'error');
+        customAlert(`❌ الكمية المتاحة لمقاس ${size} هي ${stockForSize} قطعة فقط.`, 'error');
         return false;
       }
     }
   }
-  
+
   const comparePrice = product?.comparePrice || null;
   const sku = product?.sku || null;
-  
+
   const addResult = window.addToCart(
     name, Number(price), size, image, comparePrice, productId, sku,
     customerWeight, customerLength
   );
-  
+
   if (addResult !== false) {
-    // مسح البيانات المخزنة مؤقتًا بعد الإضافة
     delete window._sizeDataCache[productId];
     const btn = document.querySelector(`.size-data-btn[data-product-id="${productId}"]`);
     if (btn) {
       btn.classList.remove('filled');
       btn.innerHTML = '📏 بيانات المقاس';
     }
-    
     updateCart();
     setTimeout(() => window.openCart(), 50);
   }
@@ -7530,22 +7549,24 @@ let _currentSizeDataProductId = null;
 
 window.openSizeDataModal = function(productId, productName) {
   _currentSizeDataProductId = productId;
-  
+
   const modal = document.getElementById('sizeDataModal');
   const nameEl = document.getElementById('sizeModalProductName');
   const weightEl = document.getElementById('sizeModalWeight');
   const lengthEl = document.getElementById('sizeModalLength');
-  
+  const sizeEl = document.getElementById('sizeModalSize');
+
   nameEl.textContent = '📦 ' + (productName || 'المنتج');
-  
+
   const cached = window._sizeDataCache[productId] || {};
   weightEl.value = cached.weight || '';
   lengthEl.value = cached.length || '';
+  if (sizeEl) sizeEl.value = cached.size || '';
   weightEl.style.borderColor = '#D4A017';
-  
+
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-  
+
   setTimeout(() => weightEl.focus(), 250);
 };
 
@@ -7559,12 +7580,14 @@ window.closeSizeDataModal = function() {
 
 window.saveSizeData = function() {
   if (!_currentSizeDataProductId) return;
-  
+
   const weightEl = document.getElementById('sizeModalWeight');
   const lengthEl = document.getElementById('sizeModalLength');
+  const sizeEl = document.getElementById('sizeModalSize');
   const weight = parseFloat(weightEl.value);
   const length = parseFloat(lengthEl.value) || null;
-  
+  const size = (sizeEl?.value || '').trim() || null;
+
   if (!weight || weight < 20 || weight > 250) {
     customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
     weightEl.focus();
@@ -7572,15 +7595,16 @@ window.saveSizeData = function() {
     setTimeout(() => weightEl.style.borderColor = '#D4A017', 2000);
     return;
   }
-  
-  window._sizeDataCache[_currentSizeDataProductId] = { weight, length };
-  
+
+  window._sizeDataCache[_currentSizeDataProductId] = { weight, length, size };
+
   const btn = document.querySelector(`.size-data-btn[data-product-id="${_currentSizeDataProductId}"]`);
   if (btn) {
     btn.classList.add('filled');
-    btn.innerHTML = `📏 <span>${weight} كجم${length ? ' · ' + length + ' سم' : ''}</span>`;
+    const sizeText = size ? ` · مقاس ${size}` : '';
+    btn.innerHTML = `📏 <span>${weight} كجم${length ? ' · ' + length + ' سم' : ''}${sizeText}</span>`;
   }
-  
+
   customAlert('✅ تم حفظ بيانات المقاس', 'success');
   closeSizeDataModal();
 };
@@ -10138,6 +10162,24 @@ if (typeof window.customAlert === 'undefined') {
         <span class="unit-tag">سم</span>
       </div>
     </div>
+    <div class="size-modal-field optional">
+  <label>
+    📏 المقاس (إذا كنت تعرفه)
+    <span class="badge">اختياري</span>
+  </label>
+  <div class="input-wrap">
+    <select id="sizeModalSize" style="width: 100%; padding: 13px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; outline: none; box-sizing: border-box; cursor: pointer;">
+      <option value="">سيتم تحديده بواسطة المختص</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="2XL">2XL</option>
+      <option value="3XL">3XL</option>
+      <option value="4XL">4XL</option>
+    </select>
+  </div>
+</div>
     
     <div class="size-modal-actions">
       <button class="save-btn" onclick="saveSizeData()">💾 حفظ البيانات</button>
