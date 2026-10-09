@@ -1800,10 +1800,10 @@ function parseOrderBlock(block) {
                 order.products = parseProductLine(value);
                 order.productName = order.products[0]?.name || value;
                 lastKey = 'product';
-            } else if (key.includes('مقاس') || key.includes('قياس')) {
-                order.sizeRaw = value;
-                order.sizes = parseSizes(value);
-                lastKey = 'size';
+            } else if (key === 'مقاس' || key.includes('المقاس') || key === 'قياس') {
+            order.sizeRaw = value;
+             order.sizes = parseSizes(value);
+             lastKey = 'size';
             } else if (key.includes('وزن') || key.includes('طول')) {
                 if (lastKey === 'wl' && wlBuffer !== null) {
                     wlBuffer += ' ' + line;
@@ -2096,22 +2096,31 @@ window.processPastedOrders = async function() {
             }
 
             // 7️⃣ الوزن/الطول أو المقاس (واحد منهم على الأقل إلزامي)
-            const hasWeightOrLength = 
-                (o.weight !== null && o.weight !== undefined && !isNaN(o.weight) && o.weight > 0) ||
-                (o.length !== null && o.length !== undefined && !isNaN(o.length) && o.length > 0) ||
-                (o.weightMax !== null && o.weightMax !== undefined && !isNaN(o.weightMax) && o.weightMax > 0);
-            const hasSize = o.sizes && o.sizes.length > 0 && o.sizes.some(s => s && String(s).trim());
+            // 7️⃣ المقاس أو الوزن/الطول (واحد منهم على الأقل إلزامي)
+const hasSize = o.sizes && o.sizes.length > 0 && o.sizes.some(s => s && String(s).trim());
+const hasWeightOrLength = 
+    (o.weight !== null && o.weight !== undefined && !isNaN(o.weight) && o.weight > 0) ||
+    (o.length !== null && o.length !== undefined && !isNaN(o.length) && o.length > 0) ||
+    (o.weightMax !== null && o.weightMax !== undefined && !isNaN(o.weightMax) && o.weightMax > 0);
 
-            if (!hasWeightOrLength && !hasSize) {
-                o._errors.push('يجب تحديد الوزن/الطول أو المقاس');
-            } else {
-                // تحذير الوزن غير المعتاد (فقط لو الوزن موجود)
-                if (hasWeightOrLength && o.weight !== null && o.weight !== undefined) {
-                    if (o.weight < 30 || o.weight > 200) {
-                        o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم`);
-                    }
-                }
-            }
+if (!hasSize && !hasWeightOrLength) {
+    o._errors.push('يجب تحديد المقاس أو الوزن/الطول');
+} else {
+    // تحذير الوزن غير المعتاد (فقط لو الوزن موجود)
+    if (hasWeightOrLength && o.weight !== null && o.weight !== undefined) {
+        if (o.weight < 30 || o.weight > 200) {
+            o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم`);
+        }
+    }
+    // تحذير المقاس غير المعتاد
+    if (hasSize) {
+        const validSizes = ['S','M','L','XL','2XL','3XL','XXL','XXXL'];
+        const invalidSizes = o.sizes.filter(s => s && String(s).trim() && !validSizes.includes(String(s).trim().toUpperCase()));
+        if (invalidSizes.length > 0) {
+            o._warnings.push(`مقاسات غير معتادة: ${invalidSizes.join(', ')}`);
+        }
+    }
+}
 
             // 8️⃣ السعر (مطلوب — ويُقبل الصفر)
 if (!o._hasPrice) {
@@ -2307,55 +2316,49 @@ async function addPastedOrderToFirestore(order) {
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
 
-    // === 3. اختيار المقاس ===
-    const providedSizes = (order.sizes && order.sizes.length > 0) ? order.sizes : [];
-    const firstProvidedSize = providedSizes[0] || null;
-    let usedSize = null;
-    let newStockBySize = null;
+   // === 3. اختيار المقاس ===
+const providedSizes = (order.sizes && order.sizes.length > 0)
+    ? order.sizes.map(s => String(s).trim()).filter(Boolean)
+    : [];
+const firstProvidedSize = providedSizes[0] || null;
+let usedSize = null;
+let newStockBySize = null;
 
-    if (product && product.stockBySize) {
-        const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
-        const sb = { ...product.stockBySize };
-        let targetSize = null;
+// ✅ لو المقاس مكتوب صراحة، نستخدمه
+if (firstProvidedSize) {
+    usedSize = firstProvidedSize.toUpperCase();
+}
 
-        if (firstProvidedSize) {
-            const provided = String(firstProvidedSize).trim();
-            for (const key of Object.keys(sb)) {
-                if (key.toUpperCase() === provided.toUpperCase()) {
-                    targetSize = key;
-                    break;
-                }
-            }
-            if (!targetSize) targetSize = provided;
+// ✅ لو مفيش مقاس مكتوب بس فيه منتج → نختار أول مقاس متوفر
+if (!usedSize && product && product.stockBySize) {
+    const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+    const sb = product.stockBySize;
+    for (const s of sizeOrder) {
+        const qty = sb[s];
+        if (qty !== undefined && qty !== null && qty >= 1) {
+            usedSize = s;
+            break;
         }
-
-        if (!targetSize) {
-            for (const s of sizeOrder) {
-                const qty = sb[s];
-                if (qty !== undefined && qty !== null && qty >= 1) {
-                    targetSize = s;
-                    break;
-                }
-            }
-            if (!targetSize) {
-                for (const s of sizeOrder) {
-                    if (sb[s] === null || sb[s] === undefined) {
-                        targetSize = s;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (targetSize) {
-            usedSize = targetSize;
-            const qty = sb[targetSize];
-            if (qty !== undefined && qty !== null && qty >= 1) {
-                sb[targetSize] = qty - 1;
-                newStockBySize = sb;
+    }
+    if (!usedSize) {
+        for (const s of sizeOrder) {
+            if (sb[s] === null || sb[s] === undefined) {
+                usedSize = s;
+                break;
             }
         }
     }
+}
+
+// ✅ خصم المخزون
+if (product && product.stockBySize && usedSize) {
+    const sb = { ...product.stockBySize };
+    const qty = sb[usedSize];
+    if (qty !== undefined && qty !== null && qty >= 1) {
+        sb[usedSize] = qty - 1;
+        newStockBySize = sb;
+    }
+}
 
     // === 4. تفاصيل الطلب (متعدد المنتجات) ===
     const products = (order.products && order.products.length > 0)
@@ -2376,18 +2379,18 @@ async function addPastedOrderToFirestore(order) {
         const matched = findProductByName(p.name, allProducts);
 
         orderDetails.push({
-            productId: matched?.id || null,
-            sku: matched?.sku || null,
-            name: p.name,
-            size: providedSizes[i] || providedSizes[0] || usedSize || 'غير محدد',
-            qty: 1,
-            price: (p.price === null || p.price === undefined) ? safePrice : Number(p.price),
-            image: matched?.image || "",
-            costPrice: matched?.costPrice || 0,
-            customerWeight: wl.weight || null,
-            customerWeightMax: wl.weightMax || null,
-            customerLength: wl.length || null
-        });
+    productId: matched?.id || null,
+    sku: matched?.sku || null,
+    name: p.name,
+    size: providedSizes[i] || providedSizes[0] || usedSize || 'غير محدد',
+    qty: 1,
+    price: (p.price === null || p.price === undefined) ? safePrice : Number(p.price),
+    image: matched?.image || "",
+    costPrice: matched?.costPrice || 0,
+    customerWeight: wl.weight || null,
+    customerWeightMax: wl.weightMax || null,
+    customerLength: wl.length || null
+});
         totalCost += (matched?.costPrice || 0);
     }
 
@@ -5425,6 +5428,142 @@ function renderDeferredOrders() {
     }).join('');
 }
 
+// ============================================================
+// ➕ إضافة طلب يدوي (نفس صيغة اللصق)
+// ============================================================
+window.openManualOrderModal = function() {
+    const modal = document.getElementById('manualOrderModal');
+    // تعبئة المحافظات
+    const govSelect = document.getElementById('mOrderGov');
+    govSelect.innerHTML = '<option value="">-- اختر --</option>' + 
+        Object.keys(govData).map(g => `<option value="${g}">${g}</option>`).join('');
+    
+    // ربط حدث تغيير المحافظة
+    govSelect.onchange = function() {
+        const citySelect = document.getElementById('mOrderCity');
+        const gov = this.value;
+        if (!gov || !govData[gov]) {
+            citySelect.innerHTML = '<option value="">-- اختر المحافظة --</option>';
+            return;
+        }
+        citySelect.innerHTML = '<option value="">-- اختر --</option>' + 
+            govData[gov].map(c => `<option value="${c}">${c}</option>`).join('');
+    };
+    
+    // تفريغ الحقول
+    ['mOrderName','mOrderPhone','mOrderPhone2','mOrderAddress','mOrderProduct','mOrderPrice','mOrderWeight','mOrderLength','mOrderNotes'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    document.getElementById('mOrderShipping').value = '70';
+    document.getElementById('mOrderSize').value = '';
+    document.getElementById('mOrderCity').innerHTML = '<option value="">-- اختر المحافظة --</option>';
+    
+    modal.classList.add('active');
+};
+
+window.closeManualOrderModal = function() {
+    document.getElementById('manualOrderModal').classList.remove('active');
+};
+
+window.saveManualOrder = async function() {
+    const btn = document.getElementById('mOrderSaveBtn');
+    
+    // جمع البيانات
+    const name = document.getElementById('mOrderName').value.trim();
+    const phone = document.getElementById('mOrderPhone').value.trim();
+    const phone2 = document.getElementById('mOrderPhone2').value.trim();
+    const gov = document.getElementById('mOrderGov').value;
+    const city = document.getElementById('mOrderCity').value;
+    const address = document.getElementById('mOrderAddress').value.trim();
+    const productName = document.getElementById('mOrderProduct').value.trim();
+    const price = parseFloat(document.getElementById('mOrderPrice').value) || 0;
+    const shipping = parseFloat(document.getElementById('mOrderShipping').value) || 0;
+    const size = document.getElementById('mOrderSize').value;
+    const weight = parseFloat(document.getElementById('mOrderWeight').value) || null;
+    const length = parseFloat(document.getElementById('mOrderLength').value) || null;
+    const notes = document.getElementById('mOrderNotes').value.trim();
+
+    // التحقق
+    const errors = [];
+    if (!name || name.length < 2) errors.push('الاسم');
+    const phoneClean = cleanEgyptianPhone(phone);
+    if (!phoneClean) errors.push('رقم هاتف صحيح');
+    if (!gov) errors.push('المحافظة');
+    if (!city) errors.push('المدينة');
+    if (!address) errors.push('العنوان');
+    if (!productName) errors.push('المنتج');
+    if (!price || price <= 0) errors.push('السعر');
+
+    // ✅ لازم مقاس أو وزن/طول
+    const hasSize = !!size;
+    const hasWeightOrLength = !!weight || !!length;
+    if (!hasSize && !hasWeightOrLength) {
+        errors.push('المقاس أو الوزن/الطول');
+    }
+
+    if (errors.length > 0) {
+        customAlert('⚠️ الحقول المطلوبة: ' + errors.join('، '), 'warning');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+
+    try {
+        // تحويل البيانات لصيغة متوافقة مع addPastedOrderToFirestore
+        const orderPayload = {
+            customerName: name,
+            phones: [phoneClean, phone2 ? cleanEgyptianPhone(phone2) : null].filter(Boolean),
+            gov: gov,
+            govOriginal: gov,
+            city: city,
+            cityOriginal: city,
+            _cityUnrecognized: false,
+            address: address,
+            productName: productName,
+            products: [{ name: productName, price: price }],
+            sizeRaw: size,
+            sizes: size ? [size] : [],
+            weight: weight,
+            weightMax: null,
+            length: length,
+            weights: (weight || length) ? [{ weight, weightMax: null, length }] : [],
+            price: price,
+            shipping: shipping,
+            _hasPrice: true,
+            _hasShipping: true,
+            notes: notes,
+            _errors: [],
+            _warnings: [],
+            _product: null,
+            _duplicate: false,
+            _duplicateOf: null
+        };
+
+        // مطابقة المنتج
+        const matched = findProductByName(productName, window.allProducts || []);
+        if (matched) {
+            orderPayload._product = matched;
+            orderPayload.productName = matched.name;
+        }
+
+        // استدعاء دالة الإضافة (نفس المستخدمة في اللصق)
+        await addPastedOrderToFirestore(orderPayload);
+
+        customAlert('✅ تم إضافة الطلب بنجاح!', 'success');
+        closeManualOrderModal();
+        sendNotification('➕ طلب يدوي جديد', `من ${name}`);
+
+    } catch (e) {
+        console.error(e);
+        customAlert('❌ خطأ: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '✅ حفظ الطلب';
+    }
+};
+
  // ============================================================
 // ✅ تحديد كل طلبات اليوم
 // ============================================================
@@ -5509,9 +5648,6 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
       <h3 style="color: #fff;">📋 لصق طلبات</h3>
     </div>
 
-    <!-- 🔔 منطقة الأليرت (فوق كل المحتوى) -->
-    <div id="pasteAlertsZone" style="display: none; padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid #eee; max-height: 180px; overflow-y: auto;"></div>
-
     <div style="padding: 20px; overflow-y: auto; flex: 1;">
       <p style="font-size: 13px; color: #666; margin-bottom: 12px; text-align: right;">
         الصق الطلبات (كل طلب يبدأ بـ "اسم العميل") — النظام بيتجاهل أي حاجة خارج الطلب.
@@ -5519,17 +5655,24 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
       <details style="margin-bottom: 12px; cursor: pointer;">
         <summary style="font-size: 12px; color: #0F7B65; font-weight: 700; padding: 6px 0;">📖 عرض الشكل المطلوب</summary>
         <div style="background: #f8f9fa; border-radius: 10px; padding: 10px; margin-top: 8px; font-size: 11px; font-family: monospace; direction: rtl; text-align: right; color: #555; line-height: 1.8;">
-          اسم العميل : ...<br>
-          التليفون : ...<br>
-          المحافظة : ...<br>
-          المدينة : ...<br>
-          العنوان : ...<br>
-          المنتج : ...<br>
-          الوزن/الطول : 60 / 120<br>
-          السعر : 300<br>
-          الشحن : 50<br>
-          ملاحظات :
-        </div>
+  اسم العميل : ...<br>
+  التليفون : ...<br>
+  المحافظة : ...<br>
+  المدينة : ...<br>
+  العنوان : ...<br>
+  المنتج : ...<br>
+  <span style="background:#fff8e1; padding:2px 6px; border-radius:6px; color:#8B6914; font-weight:700;">المقاس : L</span> <span style="color:#888; font-size:10px;">← مقاس الكورسيه نفسه (S / M / L / XL / 2XL / 3XL) — مش مقاس اللبس العادي</span><br>
+  <span style="color:#888;">الوزن/الطول : 60 / 120  (اختياري لو المقاس مذكور)</span><br>
+  السعر : 300<br>
+  الشحن : 50<br>
+  ملاحظات :
+</div>
+<div style="background:#e8f5e9; border-right:3px solid #2ecc71; padding:8px 10px; border-radius:8px; margin-top:8px; font-size:11px; color:#1e8449; line-height:1.6;">
+  <b>✅ قواعد المقاس:</b><br>
+  • لو كتبت <b>المقاس فقط</b> → الطلب يتضاف عادي بدون وزن/طول.<br>
+  • لو كتبت <b>المقاس + الوزن/الطول</b> → كلهم يتسجلوا.<br>
+  • المقاس ده <b>مقاس الكورسيه</b> نفسه، مش مقاس اللبس الطبيعي بتاع العميل.
+</div>
       </details>
 
       <textarea id="pasteOrdersTextarea" placeholder="الصق الطلبات هنا..."
@@ -5559,6 +5702,13 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
     </div>
   </div>
 </div>
+
+<div class="icon-btn" onclick="openManualOrderModal()" 
+     style="width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#0F7B65;color:#fff;cursor:pointer;" 
+     title="إضافة طلب يدوي">
+    ➕
+</div>
+
 <!-- ===== مودال تصدير Excel قديم ===== -->
 <div id="oldExcelModal" class="custom-confirm-overlay" style="z-index: 10000002;">
   <div class="custom-confirm-box" style="max-width: 440px;">
@@ -5648,6 +5798,113 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
             <button onclick="saveDeferredOrders()" style="color: #0F7B65; font-weight: 800;">✅ تأجيل</button>
         </div>
     </div>
+</div>
+<!-- ➕ مودال إضافة طلب يدوي -->
+<div id="manualOrderModal" class="custom-confirm-overlay" style="padding: 20px; z-index: 10000003;">
+  <div class="custom-confirm-box" style="max-width: 620px; width: 100%; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column;">
+    <div class="confirm-header" style="background: linear-gradient(135deg, #0F7B65, #0a5f4f);">
+      <i class="fas fa-plus-circle" style="color: #fff;"></i>
+      <h3 style="color: #fff;">➕ إضافة طلب يدوي</h3>
+    </div>
+
+    <div style="padding: 20px; overflow-y: auto; flex: 1; direction: rtl;">
+
+      <!-- بيانات العميل -->
+      <div style="background: #f0f7ff; border-radius: 12px; padding: 14px; margin-bottom: 14px; border-right: 4px solid #3498db;">
+        <h4 style="color: #0F7B65; margin-bottom: 10px; font-size: 14px;">👤 بيانات العميل</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">الاسم الكامل *</label>
+            <input id="mOrderName" class="form-control" style="width: 100%;" placeholder="اسم العميل">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📱 الهاتف الأساسي *</label>
+            <input id="mOrderPhone" class="form-control" style="width: 100%;" placeholder="01xxxxxxxxx">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📱 رقم إضافي</label>
+            <input id="mOrderPhone2" class="form-control" style="width: 100%;" placeholder="اختياري">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">المحافظة *</label>
+            <select id="mOrderGov" class="form-control" style="width: 100%;">
+              <option value="">-- اختر --</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">المدينة *</label>
+            <select id="mOrderCity" class="form-control" style="width: 100%;">
+              <option value="">-- اختر المحافظة --</option>
+            </select>
+          </div>
+          <div style="grid-column: span 2;">
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">العنوان بالتفصيل *</label>
+            <input id="mOrderAddress" class="form-control" style="width: 100%;" placeholder="الشارع - رقم المنزل - الدور">
+          </div>
+        </div>
+      </div>
+
+      <!-- بيانات المنتج -->
+      <div style="background: #fff8e1; border-radius: 12px; padding: 14px; margin-bottom: 14px; border-right: 4px solid #D4AF37;">
+        <h4 style="color: #0F7B65; margin-bottom: 10px; font-size: 14px;">💎 بيانات المنتج</h4>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div style="grid-column: span 2;">
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">اسم المنتج *</label>
+            <input id="mOrderProduct" class="form-control" style="width: 100%;" placeholder="مثال: كورسيه بطن وضهر">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">💰 السعر *</label>
+            <input id="mOrderPrice" type="number" class="form-control" style="width: 100%;" placeholder="0">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">🚚 الشحن *</label>
+            <input id="mOrderShipping" type="number" class="form-control" style="width: 100%;" value="70">
+          </div>
+        </div>
+      </div>
+
+      <!-- المقاس والقياسات -->
+      <div style="background: #f0fff4; border-radius: 12px; padding: 14px; margin-bottom: 14px; border-right: 4px solid #2ecc71;">
+        <h4 style="color: #0F7B65; margin-bottom: 6px; font-size: 14px;">📏 المقاس والقياسات</h4>
+        <div style="background: #fff; border-right: 3px solid #f39c12; padding: 8px 10px; border-radius: 8px; margin-bottom: 10px; font-size: 11px; color: #8B6914;">
+          💡 <b>المقاس ده مقاس الكورسيه نفسه</b> (S / M / L / XL / 2XL / 3XL) — مش مقاس اللبس العادي. ولو كتبته مش محتاج وزن/طول، ولو كتبت وزن/طول مش محتاج مقاس. أي واحد كفاية.
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📏 المقاس</label>
+            <select id="mOrderSize" class="form-control" style="width: 100%;">
+              <option value="">-- اختياري --</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="2XL">2XL</option>
+              <option value="3XL">3XL</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">⚖️ الوزن (كجم)</label>
+            <input id="mOrderWeight" type="number" step="0.1" class="form-control" style="width: 100%;" placeholder="اختياري">
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📐 الطول (سم)</label>
+            <input id="mOrderLength" type="number" step="0.1" class="form-control" style="width: 100%;" placeholder="اختياري">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; border-radius: 12px; padding: 14px; border-right: 4px solid #6c757d;">
+        <label style="font-size: 12px; font-weight: 700; display: block; margin-bottom: 4px;">📝 ملاحظات</label>
+        <textarea id="mOrderNotes" rows="2" class="form-control" style="width: 100%; resize: vertical;" placeholder="اختياري"></textarea>
+      </div>
+
+    </div>
+
+    <div class="confirm-buttons" style="border-top: 1px solid #eee;">
+      <button onclick="closeManualOrderModal()" style="color: #e74c3c;">إلغاء</button>
+      <button onclick="saveManualOrder()" id="mOrderSaveBtn" style="color: #0F7B65; font-weight: 800;">✅ حفظ الطلب</button>
+    </div>
+  </div>
 </div>
 </body>
 </html>
