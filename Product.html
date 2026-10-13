@@ -1886,9 +1886,8 @@ button:active,
     padding-right: 12px !important;
 }
 
-/* ===== اختيار الألوان ===== */
 .colors-selector {
-    margin: 14px 0 18px;
+    margin: 18px 0 0 0;
     padding: 14px 16px;
     background: #faf8fb;
     border-radius: 16px;
@@ -1898,7 +1897,7 @@ button:active,
     font-size: 13px;
     font-weight: 800;
     color: #5D3A7A;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -1907,11 +1906,15 @@ button:active,
     color: #D4A017;
     font-weight: 900;
     margin-right: auto;
+    background: linear-gradient(135deg, #fff8e6, #fff4d9);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 12px;
 }
 .colors-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
 }
 .color-swatch {
     width: 42px;
@@ -2081,8 +2084,17 @@ button:active,
                 <button class="gallery-nav-btn prev" onclick="navigateGallery(-1)">‹</button>
                 <button class="gallery-nav-btn next" onclick="navigateGallery(1)">›</button>
             </div>
-            <div class="thumbnails" id="thumbnails"></div>
-        </div>
+           <div class="thumbnails" id="thumbnails"></div>
+
+<!-- ✅ الألوان تحت الصورة مباشرة -->
+<div class="colors-selector" id="colorsSelector" style="display:none; margin-top: 18px;">
+    <div class="colors-title">
+        🎨 اللون:
+        <span class="selected-color-name" id="selectedColorName">—</span>
+    </div>
+    <div class="colors-list" id="colorsList"></div>
+</div>
+</div>
         
         <!-- ===== معلومات المنتج ===== -->
         <div class="product-info-page">
@@ -2098,14 +2110,6 @@ button:active,
             <!-- ===== النجوم للتقييم (في الصفحة) ===== -->
             <div style="text-align:center; margin: 10px 0 5px;">
 
-          <!-- ✅ اختيار اللون -->
-<div class="colors-selector" id="colorsSelector" style="display:none;">
-    <div class="colors-title">
-        🎨 اللون:
-        <span class="selected-color-name" id="selectedColorName">—</span>
-    </div>
-    <div class="colors-list" id="colorsList"></div>
-</div>      
               <!-- المقاسات وزر الإضافة (في الأعلى) -->
 <div class="size-selector">
     <div class="size-options" id="sizeOptions"></div>
