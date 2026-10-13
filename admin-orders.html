@@ -2107,9 +2107,9 @@ if (!hasSize && !hasWeightOrLength) {
 } else {
     // تحذير الوزن غير المعتاد (فقط لو الوزن موجود)
     if (hasWeightOrLength && o.weight !== null && o.weight !== undefined) {
-        if (o.weight < 30 || o.weight > 200) {
-            o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم`);
-        }
+       if (o.weight < 50 || o.weight > 200) {
+    o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم (المعتاد: 50 - 200)`);
+}
     }
     // تحذير المقاس غير المعتاد
     if (hasSize) {
@@ -5758,12 +5758,17 @@ window.saveManualOrder = async function() {
     if (!city) errors.push('المدينة');
     if (!address) errors.push('العنوان');
 
-    // التحقق: الوزن أو المقاس لكل منتج
-    const hasAnyWeightOrSize = products.some(p => p.weight || p.size);
-    if (!hasAnyWeightOrSize) {
-        errors.push('الوزن أو المقاس لأي منتج');
-    }
+   // التحقق: الوزن أو المقاس لكل منتج
+const hasAnyWeightOrSize = products.some(p => p.weight || p.size);
+if (!hasAnyWeightOrSize) {
+    errors.push('الوزن أو المقاس لأي منتج');
+}
 
+// ✅ تحقق من أن الوزن (لو مذكور) بين 50 و 200 كجم
+const invalidWeights = products.filter(p => p.weight && (p.weight < 50 || p.weight > 200));
+if (invalidWeights.length > 0) {
+    errors.push('وزن غير صحيح (يجب أن يكون بين 50 - 200 كجم)');
+}
     if (errors.length > 0) {
         customAlert('⚠️ الحقول المطلوبة: ' + errors.join('، '), 'warning');
         return;
