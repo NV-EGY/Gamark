@@ -1481,7 +1481,8 @@ body.modal-open{
     background: #fff; border-radius: 28px;
     z-index: 99999; opacity: 0; visibility: hidden;
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 35px 70px rgba(0,0,0,0.25); overflow: hidden;
+    box-shadow: 0 35px 70px rgba(0,0,0,0.25);
+    overflow-y: auto;   /* ✅ بدلاً من hidden */
 }
 #productModal.active {
     opacity: 1; visibility: visible;
@@ -3815,11 +3816,12 @@ body.modal-open{
 #productModal .modal-footer {
     position: sticky;
     bottom: 0;
-    
+    background: #fff;              /* ✅ خلفية بيضاء */
+    border-top: 1px solid #eee;    /* ✅ فاصل */
     padding: 15px 20px;
     display: flex;
     gap: 12px;
-    
+    z-index: 10;                   /* ✅ فوق المحتوى */
 }
 #productModal .modal-footer .btn-primary,
 #productModal .modal-footer .btn-secondary {
@@ -3849,8 +3851,10 @@ body.modal-open{
     }
 }
 /* منع تغطية النص بواسطة الشريط الثابت */
-#productModal .modal-content {
-    padding-bottom: 90px;
+#productModal .modal-content{
+    max-height: none;    /* ✅ كان 85vh */
+    overflow: visible;   /* ✅ كان auto */
+    padding: 20px;
 }
 .sort-icon-btn {
     background: #111;
