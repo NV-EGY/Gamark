@@ -6087,34 +6087,36 @@ window.openSizeDataModal = function(productId, productName, callback) {
     window._sizeModalCallback = callback || null;
 
     const modal = document.getElementById('sizeDataModal');
-    const nameEl = document.getElementById('sizeModalProductName');
+    if (!modal) { console.error('❌ sizeDataModal غير موجود'); return; }
+
+    const nameEl   = document.getElementById('sizeModalProductName');
     const weightEl = document.getElementById('sizeModalWeight');
     const lengthEl = document.getElementById('sizeModalLength');
-    const sizeEl = document.getElementById('sizeModalSize');
-
-    // ✅ حماية من العناصر غير الموجودة
-    if (!modal) { console.error('❌ sizeDataModal غير موجود'); return; }
+    const sizeEl   = document.getElementById('sizeModalSize');
 
     if (nameEl) nameEl.textContent = '📦 ' + (productName || 'المنتج');
 
+    // استرجاع البيانات من الكاش إن وجدت
     const cached = window._sizeDataCache[productId] || {};
-    if (weightEl) {
-        weightEl.value = cached.weight || '';
-        weightEl.style.borderColor = '#D4A017';
-    }
+    if (weightEl) weightEl.value = cached.weight || '';
     if (lengthEl) lengthEl.value = cached.length || '';
-    if (sizeEl) sizeEl.value = cached.size || '';
+    if (sizeEl)   sizeEl.value   = cached.size   || '';
 
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
-    setTimeout(() => {
-        if (sizeEl) sizeEl.focus();
-    }, 250);
+    setTimeout(() => { if (weightEl) weightEl.focus(); }, 250);
+};
+
+window.closeSizeDataModal = function() {
+    const modal = document.getElementById('sizeDataModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    _currentSizeDataProductId = null;
+    window._sizeModalCallback = null;
 };
 
 window.saveSizeData = function() {
-    // ✅ في بداية saveSizeData
     const modal = document.getElementById('sizeDataModal');
     if (!modal || !modal.classList.contains('active')) return;
     if (!_currentSizeDataProductId) return;
@@ -6127,15 +6129,15 @@ window.saveSizeData = function() {
     const length = lengthEl ? (parseFloat(lengthEl.value) || null) : null;
     const size   = sizeEl ? (sizeEl.value || '').trim() : '';
 
-    // ✅ في الـ sizeDataModal في index/desktop، المقاس مطلوب (مش اختياري)
-    if (!size) {
-        customAlert("⚠️ يرجى اختيار المقاس أولاً", 'warning');
-        if (sizeEl) sizeEl.focus();
+    // ✅ شرط أساسي: (الوزن أو المقاس) — الطول لوحده لا يكفي
+    if (!weight && !size) {
+        customAlert("⚠️ يرجى إدخال الوزن أو اختيار المقاس", 'warning');
+        if (weightEl) weightEl.focus();
         return;
     }
 
-    if (weight && (weight < 20 || weight > 250)) {
-        customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
+    if (weight && (weight < 50 || weight > 200)) {
+        customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
         if (weightEl) weightEl.focus();
         return;
     }
@@ -6143,16 +6145,18 @@ window.saveSizeData = function() {
     const data = { weight, length, size };
     window._sizeDataCache[_currentSizeDataProductId] = data;
 
+    // تحديث زر "بيانات المقاس" على الكارت
     const btn = document.querySelector(`.size-data-btn[data-product-id="${_currentSizeDataProductId}"]`);
     if (btn) {
         btn.classList.add('filled');
-        let displayText = 'مقاس ' + size;
-        if (weight) displayText += ' · ' + weight + ' كجم';
-        if (length) displayText += ' · ' + length + ' سم';
+        let displayText = '';
+        if (weight) displayText += weight + ' كجم';
+        if (size)   displayText += (displayText ? ' · ' : '') + 'مقاس ' + size;
+        if (!displayText && length) displayText = length + ' سم';
         btn.innerHTML = `📏 <span>${displayText}</span>`;
     }
 
-    // ✅ جديد: استدعاء الـ callback إن وجد
+    // ✅ استدعاء الـ callback إن وجد
     if (window._sizeModalCallback) {
         const cb = window._sizeModalCallback;
         window._sizeModalCallback = null;
@@ -6161,11 +6165,11 @@ window.saveSizeData = function() {
         return;
     }
 
-    // ✅ جديد: fallback — إضافة مباشرة للسلة
+    // ✅ fallback — إضافة مباشرة للسلة (لو موجودة)
     if (window.addProductToCartWithData) {
         const productId = _currentSizeDataProductId;
         closeSizeDataModal();
-        window.addProductToCartWithData(productId, size, weight, length, null);
+        window.addProductToCartWithData(productId, size || 'غير محدد', weight, length, null);
         return;
     }
 
@@ -7943,31 +7947,11 @@ if (typeof window.openInfoModal !== 'function') {
     </div>
     <div class="size-modal-product-name" id="sizeModalProductName">📦 المنتج</div>
 
-    <!-- 📏 المقاس (مطلوب) -->
+    <!-- ⚖️ الوزن (مطلوب) -->
     <div class="size-modal-field">
       <label>
-        📏 المقاس
+        ⚖️ الوزن
         <span class="badge" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;">مطلوب *</span>
-      </label>
-      <div class="input-wrap">
-        <select id="sizeModalSize" style="width: 100%; padding: 13px 16px; border: 2px solid #D4A017; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fffdf5; color: #2D2D2D; outline: none; box-sizing: border-box; cursor: pointer;">
-          <option value="">اختر المقاس</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="2XL">2XL</option>
-          <option value="3XL">3XL</option>
-          <option value="4XL">4XL</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- ⚖️ الوزن (اختياري) -->
-    <div class="size-modal-field optional">
-      <label>
-        ⚖️ الوزن (اختياري)
-        <span class="badge">إن أردت</span>
       </label>
       <div class="input-wrap">
         <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="20" max="250">
@@ -7975,7 +7959,7 @@ if (typeof window.openInfoModal !== 'function') {
       </div>
     </div>
 
-    <!-- 📐 الطول (اختياري) ✅ ده اللي كان ناقص -->
+    <!-- 📐 الطول (اختياري) -->
     <div class="size-modal-field optional">
       <label>
         📐 الطول (اختياري)
@@ -7984,6 +7968,26 @@ if (typeof window.openInfoModal !== 'function') {
       <div class="input-wrap">
         <input type="number" id="sizeModalLength" placeholder="مثال: 165" step="0.1" inputmode="decimal">
         <span class="unit-tag">سم</span>
+      </div>
+    </div>
+
+    <!-- 📏 المقاس (اختياري - لو تعرفه) -->
+    <div class="size-modal-field optional">
+      <label>
+        📏 المقاس (إذا كنت تعرفه)
+        <span class="badge">اختياري</span>
+      </label>
+      <div class="input-wrap">
+        <select id="sizeModalSize" style="width: 100%; padding: 13px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; outline: none; box-sizing: border-box; cursor: pointer;">
+          <option value="">سيتم تحديده بواسطة المختص</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="2XL">2XL</option>
+          <option value="3XL">3XL</option>
+          <option value="4XL">4XL</option>
+        </select>
       </div>
     </div>
 
