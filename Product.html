@@ -3680,14 +3680,15 @@ window.saveSizeData = function() {
         return;
     }
 
+    // ✅ إذا تم إدخال الوزن، يجب أن يكون بين 50 و 200 كجم
     if (weight && (weight < 50 || weight > 200)) {
-         customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
+        customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
         if (weightEl) weightEl.focus();
         return;
     }
 
     // ✅ إضافة للسلة مباشرة
-    addProductToCartWithData(_currentSizeDataProductId, size, weight, length, selectedColor); // ✅
+    addProductToCartWithData(_currentSizeDataProductId, size, weight, length, selectedColor);
     closeSizeDataModal();
 };
 
@@ -4871,7 +4872,7 @@ window.discountAmount = discountAmount;
         <span class="badge">إن أردت</span>
       </label>
       <div class="input-wrap">
-        <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="20" max="250">
+        <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="50" max="200">
         <span class="unit-tag">كجم</span>
       </div>
     </div>
