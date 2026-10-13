@@ -2024,82 +2024,117 @@ button, input, select { font-family: inherit; outline: none; }
   .carousel-btn { display: none; }
 }
 
-/* ===== BEST SELLER CARD (نفس تصميم Product.html) ===== */
+/* ===== معرض الأكثر مبيعاً - ألوان متناسقة ===== */
 .best-seller-card {
-  flex: 0 0 200px;
-  background: #fff;
-  border-radius: 20px;
-  padding: 14px 12px 16px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.04);
-  border: 1px solid #f5f5f5;
-  scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
+    position: relative;
+    flex: 0 0 auto;
+    width: 180px;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAF8FB 100%);
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(93, 58, 122, 0.06);
+    border: 1.5px solid #E8E0ED;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    cursor: pointer;
 }
+
 .best-seller-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 20px 45px rgba(0,0,0,0.08);
-  border-color: #D4AF37;
+    transform: translateY(-8px);
+    box-shadow: 0 20px 45px rgba(93, 58, 122, 0.15);
+    border-color: #D4A017;
 }
+
 .best-seller-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 14px;
-  background: #f5f5f5;
-  margin-bottom: 10px;
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 16px;
+    margin-bottom: 10px;
+    background: #F0E6F5;
+    border: 1px solid rgba(232, 224, 237, 0.5);
 }
+
 .best-seller-card .name {
-  font-size: 15px;
-  font-weight: 700;
-  margin: 6px 0 4px;
-  color: #111;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  min-height: 42px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: #2D2D2D;
+    text-align: center;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 38px;
 }
-.best-seller-card .price-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 6px;
-}
-.best-seller-card .price-wrapper .old-price {
-  font-size: 13px;
-  color: #999;
-  text-decoration: line-through;
-}
+
 .best-seller-card .price-wrapper .current-price {
-  font-size: 17px;
-  font-weight: 900;
-  color: #D4AF37;
+    font-size: 16px;
+    font-weight: 900;
+    color: #5D3A7A;
 }
+
+.best-seller-card .price-wrapper .old-price {
+    font-size: 12px;
+    color: #999;
+    text-decoration: line-through;
+}
+
+/* الشارة - ألوان متناسقة */
 .best-seller-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: linear-gradient(90deg, #FFD700, #FFF, #FFD700);
-  background-size: 200% 100%;
-  animation: badgeShimmer 2s infinite linear;
-  color: #000;
-  padding: 3px 10px;
-  border-radius: 30px;
-  font-size: 10px;
-  font-weight: 800;
-  box-shadow: 0 0 8px rgba(255,215,0,0.4);
-  letter-spacing: 0.5px;
-  white-space: nowrap;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #5D3A7A 0%, #7B4B8A 100%);
+    color: #FFFFFF;
+    padding: 4px 12px;
+    border-radius: 30px;
+    font-size: 10px;
+    font-weight: 800;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(93, 58, 122, 0.35);
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    border: 1px solid rgba(212, 160, 23, 0.4);
 }
-@keyframes badgeShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+
+/* خلفية المعرض */
+.best-sellers {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAF8FB 100%);
+    border-radius: 24px;
+    padding: 30px 20px;
+    margin: 30px auto 40px;
+    box-shadow: 0 4px 20px rgba(93, 58, 122, 0.04);
+}
+
+/* شريط التنقل - بلون البراند */
+.carousel-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #5D3A7A;
+    background: #FFFFFF;
+    color: #5D3A7A;
+    font-size: 22px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(93, 58, 122, 0.1);
+}
+
+.carousel-btn:hover {
+    background: linear-gradient(135deg, #D4A017, #E8B923);
+    color: #1A1A1A;
+    transform: scale(1.08);
+    border-color: #D4A017;
+    box-shadow: 0 6px 20px rgba(212, 160, 23, 0.35);
 }
 
 /* ===== مودال التقييم (نسخة متطابقة مع Product.html) ===== */
@@ -2208,37 +2243,7 @@ button, input, select { font-family: inherit; outline: none; }
 #reviewInputArea {
     display: none; /* ✅ مخفي افتراضياً */
 }
-.load-more-btn {
-    background: transparent;
-    border: 2px solid #D4AF37;
-    color: #D4AF37;
-    padding: 14px 40px;
-    border-radius: 50px;
-    font-size: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    font-family: 'Cairo', sans-serif;
-}
-.load-more-btn:hover {
-    background: #D4AF37;
-    color: #000;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
-}
-.load-more-btn i {
-    transition: transform 0.3s ease;
-}
-.load-more-btn:hover i {
-    transform: translateY(2px);
-}
-.load-more-container {
-    text-align: center;
-    margin-top: 30px;
-}
+
 .btn-be-first-review {
     margin-top: 12px;
     padding: 12px 30px;
@@ -3805,6 +3810,193 @@ body {
   .dm-measurements .dm-grid { grid-template-columns: 1fr; }
 }
 
+/* ============================================================
+   ✅ إصلاح wrapper المحتوى الرئيسي - ياخد العمود الثاني
+   ============================================================ */
+@media (min-width: 1025px) {
+    .desktop-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+
+    /* العمود الثاني: يحتوي على المنتجات + زر التحميل + العداد */
+    .products-main-area {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        min-width: 0; /* مهم للـ grid عشان المحتوى ميدفعش */
+        width: 100%;
+    }
+}
+
+/* على الموبايل والتابلت - يبقى block عادي */
+@media (max-width: 1024px) {
+    .products-main-area {
+        display: block;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ✅ زر "عرض المزيد" - أبيض بخلفية بيضاء ونص/حدود بينك
+   ══════════════════════════════════════════════════════════════ */
+.load-more-container {
+    display: none;
+    text-align: center;
+    margin: 45px auto 20px;
+    padding: 0 10px;
+    width: 100%;
+    grid-column: 1 / -1;
+}
+
+.load-more-container.show {
+    display: block;
+}
+
+.load-more-btn {
+    width: 100%;
+    max-width: 550px;
+    padding: 18px 40px;
+    background: #FFFFFF;
+    color: #E91E63;
+    border: 2.5px solid #E91E63;
+    border-radius: 60px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    box-shadow: 
+        0 6px 20px rgba(233, 30, 99, 0.15),
+        0 2px 6px rgba(233, 30, 99, 0.08);
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+}
+
+/* شريط بينك فاتح يتحرك عند hover */
+.load-more-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(233, 30, 99, 0.12), transparent);
+    transition: left 0.6s ease;
+}
+
+.load-more-btn:hover::before {
+    left: 100%;
+}
+
+/* عند الـ hover - يتحول لخلفية بينك ونص أبيض */
+.load-more-btn:hover {
+    background: linear-gradient(135deg, #E91E63 0%, #F06292 100%);
+    color: #FFFFFF;
+    border-color: #E91E63;
+    transform: translateY(-4px);
+    box-shadow: 
+        0 16px 40px rgba(233, 30, 99, 0.4),
+        0 8px 20px rgba(233, 30, 99, 0.25);
+}
+
+.load-more-btn:active {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 8px 20px rgba(233, 30, 99, 0.35);
+}
+
+.load-more-btn i {
+    font-size: 18px;
+    transition: transform 0.3s ease;
+    color: currentColor;
+}
+
+.load-more-btn:hover i {
+    transform: translateY(4px);
+}
+
+/* ✅ عداد المنتجات - بلون بينك فاتح */
+.products-counter {
+    text-align: center;
+    margin: 20px auto 10px;
+    font-size: 14px;
+    color: #C2185B;
+    font-weight: 700;
+    padding: 10px 24px;
+    background: linear-gradient(135deg, #FFF0F5 0%, #FCE4EC 100%);
+    border-radius: 30px;
+    display: inline-block;
+    width: fit-content;
+    border: 1.5px solid #F8BBD0;
+    box-shadow: 0 3px 10px rgba(233, 30, 99, 0.08);
+}
+
+/* على الموبايل - تصغير */
+@media (max-width: 768px) {
+    .load-more-container {
+        margin: 25px auto 15px;
+        padding: 0 12px;
+    }
+    .load-more-btn {
+        width: 100%;
+        max-width: 100%;
+        padding: 15px 24px;
+        font-size: 15px;
+        border-radius: 50px;
+        border-width: 2px;
+    }
+    .load-more-btn i {
+        font-size: 15px;
+    }
+    .products-counter {
+        font-size: 12px;
+        padding: 8px 18px;
+    }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   عداد المنتجات - تحت زر عرض المزيد
+   ══════════════════════════════════════════════════════════════ */
+.products-counter {
+    text-align: center;
+    margin: 20px auto 10px;
+    font-size: 14px;
+    color: #777;
+    font-weight: 600;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, #FAF8FB 0%, #F0E6F5 100%);
+    border-radius: 30px;
+    display: inline-block;
+    width: fit-content;
+    border: 1px solid #E8E0ED;
+}
+
+/* على الموبايل - تصغير */
+@media (max-width: 768px) {
+    .load-more-container {
+        margin: 25px auto 15px;
+        padding: 0 12px;
+    }
+    .load-more-btn {
+        width: 100%;
+        max-width: 100%;
+        padding: 14px 24px;
+        font-size: 15px;
+        border-radius: 50px;
+    }
+    .load-more-btn i {
+        font-size: 15px;
+    }
+}
+
 </style>
 
 <!-- نهاية أنماط CSS -->
@@ -3970,20 +4162,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </aside>
 
-     <!-- شريط الفلترة العلوي (موجود في index.html) يمكن إخفاؤه أو تركه -->
-    <div class="filter-bar" style="display: none;">
-      <!-- يمكن إخفاء الفلترة العلوية لأن لدينا شريط جانبي -->
-    </div>
+       <!-- ===== MAIN CONTENT WRAPPER (العمود الثاني في الـ grid) ===== -->
+    <main class="products-main-area">
+      
+      <!-- شريط الفلترة العلوي (مخفي) -->
+      <div class="filter-bar" style="display: none;"></div>
 
-    <div class="products" id="productsContainer"></div>
+      <!-- شبكة المنتجات -->
+      <div class="products" id="productsContainer"></div>
 
-    <!-- زر تحميل المزيد -->
-    <div class="load-more-container" id="loadMoreContainer" style="display: none; text-align: center; margin-top: 30px;">
-      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreProducts()">
-    <i class="fas fa-arrow-down"></i> عرض المزيد (<span id="remainingCount">0</span> متبقي)
-</button>
-    </div>
-    <div class="products-counter" id="productsCounter" style="text-align: center; margin-top: 20px; font-size: 15px; color: #555;"></div>
+      <!-- زر تحميل المزيد -->
+      <div class="load-more-container" id="loadMoreContainer" style="display: none;">
+        <button class="load-more-btn" id="loadMoreBtn" onclick="loadMoreProducts()">
+          <i class="fas fa-arrow-down"></i> عرض المزيد (متبقي <span id="remainingCount">0</span> منتج)
+        </button>
+      </div>
+
+      <!-- عداد المنتجات -->
+      <div class="products-counter" id="productsCounter"></div>
 
     </main>
 </div>
@@ -5073,20 +5269,22 @@ function renderProducts() {
 
   // تحديث زر تحميل المزيد
   const loadMoreContainer = document.getElementById("loadMoreContainer");
-  const remainingCountSpan = document.getElementById("remainingCount");
-  if (loadMoreContainer) {
-    if (displayedProductsCount < totalProducts) {
-      loadMoreContainer.style.display = "block";
-      const remaining = totalProducts - displayedProductsCount;
-      if (remainingCountSpan) remainingCountSpan.innerText = remaining;
-      const loadBtn = document.getElementById("loadMoreBtn");
-      if (loadBtn) {
-        loadBtn.innerHTML = `<i class="fas fa-arrow-down"></i> عرض المزيد (متبقى ${remaining} منتج)`;
-      }
-    } else {
-      loadMoreContainer.style.display = "none";
+const remainingCountSpan = document.getElementById("remainingCount");
+if (loadMoreContainer) {
+  if (displayedProductsCount < totalProducts) {
+    loadMoreContainer.style.display = "block";
+    loadMoreContainer.classList.add("show");
+    const remaining = totalProducts - displayedProductsCount;
+    if (remainingCountSpan) remainingCountSpan.innerText = remaining;
+    const loadBtn = document.getElementById("loadMoreBtn");
+    if (loadBtn) {
+      loadBtn.innerHTML = `<i class="fas fa-arrow-down"></i> عرض المزيد (متبقي ${remaining} منتج)`;
     }
+  } else {
+    loadMoreContainer.style.display = "none";
+    loadMoreContainer.classList.remove("show");
   }
+}
 
   if (limitedProducts.length === 0) {
     container.innerHTML = `<div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; min-height:20vh; text-align:center; font-size:18px; color:#888;">لا توجد منتجات في هذا القسم</div>`;
