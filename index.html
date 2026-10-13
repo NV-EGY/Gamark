@@ -7595,6 +7595,13 @@ window._sizeDataCache = window._sizeDataCache || {};
 let _currentSizeDataProductId = null;
 
 window.openSizeDataModal = function(productId, productName, callback) {
+    window.closeSizeDataModal = function() {
+    const modal = document.getElementById('sizeDataModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    _currentSizeDataProductId = null;
+    window._sizeModalCallback = null;
+};
     _currentSizeDataProductId = productId;
     window._sizeModalCallback = callback || null;
 
