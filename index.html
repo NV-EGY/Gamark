@@ -7473,11 +7473,10 @@ document.head.appendChild(style);
         return;
     }
 
-    if (customerWeight && (customerWeight < 20 || customerWeight > 250)) {
-        customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
-        return;
-    }
-
+   if (customerWeight && (customerWeight < 50 || customerWeight > 200)) {
+    customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
+    return;
+}
     // تحديد المقاس النهائي
     let size = customerSize || "";
     if (!size && product && product.stockBySize) {
@@ -7611,15 +7610,38 @@ if (typeof updateCart === 'function') updateCart();
   const customerWeight = cached.weight || null;
   const customerLength = cached.length || null;
   const customerSize = cached.size || null;
+  const customerColor = cached.color || null;   // ✅ اللون المحفوظ
 
-  // ✅ التحقق من الوزن
-  if (!customerWeight || customerWeight < 20 || customerWeight > 250) {
-    customAlert("⚠️ يرجى إدخال بيانات المقاس أولاً", 'warning');
+  // ✅ التحقق من الوزن (50 - 200 كجم)
+if (!customerWeight || customerWeight < 50 || customerWeight > 200) {
+    customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
     openSizeDataModal(productId, name);
     return false;
+}
+
+  // ✅ اختيار اللون الافتراضي لو مفيش لون مختار
+  let selectedColorName = customerColor;
+  let selectedColorImage = null;
+
+  if (product && product.colors && product.colors.length > 0) {
+    if (selectedColorName) {
+      // لو العميل اختار لون يدوياً
+      const found = product.colors.find(c => c.name === selectedColorName);
+      if (found) selectedColorImage = found.image || null;
+    } else {
+      // ✅ اللون الافتراضي = أول لون متوفر
+      const defaultColor = product.colors.find(c => 
+        c.stock === null || c.stock === undefined || c.stock > 0
+      ) || product.colors[0];
+      
+      if (defaultColor) {
+        selectedColorName = defaultColor.name;
+        selectedColorImage = defaultColor.image || null;
+      }
+    }
   }
 
-  // ✅ تحديد المقاس: من العميل أو تلقائي
+  // ✅ تحديد المقاس
   let size = customerSize || "";
   if (!size && product && product.stockBySize) {
     const availableSizes = Object.entries(product.stockBySize)
@@ -7649,9 +7671,12 @@ if (typeof updateCart === 'function') updateCart();
   const comparePrice = product?.comparePrice || null;
   const sku = product?.sku || null;
 
+  // ✅ تمرير اللون إلى addToCart
   const addResult = window.addToCart(
     name, Number(price), size, image, comparePrice, productId, sku,
-    customerWeight, customerLength
+    customerWeight, customerLength,
+    selectedColorName,       // ✅ اسم اللون
+    selectedColorImage       // ✅ صورة اللون
   );
 
   if (addResult !== false) {
@@ -7688,10 +7713,83 @@ window.openSizeDataModal = function(productId, productName) {
   if (sizeEl) sizeEl.value = cached.size || '';
   weightEl.style.borderColor = '#D4A017';
 
+  // ✅ إظهار الألوان إذا كان المنتج له ألوان
+  const product = window.allProducts?.find(p => p.id === productId);
+  const colors = product?.colors || [];
+  const colorField = document.getElementById('sizeModalColorField');
+  const colorsList = document.getElementById('sizeModalColorsList');
+
+  if (colors.length > 0 && colorField && colorsList) {
+    colorField.style.display = 'block';
+
+    // اللون المختار الحالي أو الافتراضي
+    const currentColor = cached.color 
+      || colors.find(c => c.stock === null || c.stock === undefined || c.stock > 0)?.name 
+      || colors[0].name;
+
+    colorsList.innerHTML = colors.map(c => {
+      const isActive = c.name === currentColor;
+      const isOut = c.stock === 0;
+      return `
+        <div onclick="${isOut ? '' : `selectSizeModalColor('${c.name.replace(/'/g, "\\'")}')`}"
+             data-color-name="${c.name}"
+             style="width:42px; height:42px; border-radius:50%;
+                    background:${c.hex || '#ccc'};
+                    border:3px solid #fff;
+                    box-shadow:0 3px 10px rgba(0,0,0,0.12),
+                               0 0 0 ${isActive ? '3px #5D3A7A' : '1.5px #e8dff0'};
+                    cursor:${isOut ? 'not-allowed' : 'pointer'};
+                    opacity:${isOut ? '0.35' : '1'};
+                    display:flex; align-items:center; justify-content:center;
+                    transition:all 0.25s;
+                    position:relative;"
+             title="${c.name}${isOut ? ' (نفذ)' : ''}">
+          ${isActive ? '<span style="color:#fff; font-weight:900; font-size:16px; text-shadow:0 0 4px #000;">✓</span>' : ''}
+        </div>`;
+    }).join('');
+
+    // ✅ حفظ اللون الافتراضي تلقائياً
+    if (!cached.color) {
+      window._sizeDataCache[productId] = {
+        ...cached,
+        color: currentColor
+      };
+    }
+  } else if (colorField) {
+    colorField.style.display = 'none';
+  }
+
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-
   setTimeout(() => weightEl.focus(), 250);
+};
+
+// ✅ دالة اختيار اللون داخل المودال
+window.selectSizeModalColor = function(colorName) {
+  if (!_currentSizeDataProductId) return;
+
+  const product = window.allProducts?.find(p => p.id === _currentSizeDataProductId);
+  const color = product?.colors?.find(c => c.name === colorName);
+  if (!color || color.stock === 0) return;
+
+  // تحديث الكاش
+  const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
+  cached.color = colorName;
+  window._sizeDataCache[_currentSizeDataProductId] = cached;
+
+  // تحديث الـ UI
+  document.querySelectorAll('#sizeModalColorsList [data-color-name]').forEach(el => {
+    const name = el.dataset.colorName;
+    const isActive = name === colorName;
+    const c = product.colors.find(x => x.name === name);
+    const isOut = c?.stock === 0;
+    el.style.boxShadow = `0 3px 10px rgba(0,0,0,0.12), 0 0 ${isActive ? '3px #5D3A7A' : '1.5px #e8dff0'}`;
+    el.innerHTML = isActive 
+      ? '<span style="color:#fff; font-weight:900; font-size:16px; text-shadow:0 0 4px #000;">✓</span>' 
+      : '';
+  });
+
+  customAlert(`🎨 تم اختيار اللون: ${colorName}`, 'success');
 };
 
 window.closeSizeDataModal = function() {
@@ -7712,8 +7810,9 @@ window.saveSizeData = function() {
   const length = parseFloat(lengthEl.value) || null;
   const size = (sizeEl?.value || '').trim() || null;
 
-  if (!weight || weight < 20 || weight > 250) {
-    customAlert("⚠️ يرجى إدخال وزن صحيح (20 - 250 كجم)", 'warning');
+  // ✅ التحقق: الوزن من 50 إلى 200 كجم
+  if (!weight || weight < 50 || weight > 200) {
+    customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
     weightEl.focus();
     weightEl.style.borderColor = '#e74c3c';
     setTimeout(() => weightEl.style.borderColor = '#D4A017', 2000);
@@ -10390,7 +10489,7 @@ if (typeof window.customAlert === 'undefined') {
         <span class="badge">مطلوب *</span>
       </label>
       <div class="input-wrap">
-        <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="20" max="250">
+       <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="50" max="200">
         <span class="unit-tag">كجم</span>
       </div>
     </div>
@@ -10405,6 +10504,17 @@ if (typeof window.customAlert === 'undefined') {
         <span class="unit-tag">سم</span>
       </div>
     </div>
+    <!-- ✅ قسم اختيار اللون (يظهر فقط لو المنتج له ألوان) -->
+<div class="size-modal-field" id="sizeModalColorField" style="display: none;">
+  <label>
+    🎨 اللون
+    <span class="badge" style="background:#5D3A7A;color:#fff;">اختياري</span>
+  </label>
+  <div id="sizeModalColorsList"
+       style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+              padding: 10px; background: #faf8fb; border-radius: 12px;
+              border: 1.5px solid #e8dff0;"></div>
+</div>
     <div class="size-modal-field optional">
   <label>
     📏 المقاس (إذا كنت تعرفه)
