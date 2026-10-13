@@ -2427,7 +2427,8 @@ button, input, select { font-family: inherit; outline: none; }
 .product-modal-horizontal .modal-close {
     position: absolute;
     top: 12px;
-    right: 12px;
+    left: 12px;      /* ✅ من right إلى left */
+    right: auto;     /* ✅ تأكيد الإلغاء */
     width: 36px;
     height: 36px;
     border-radius: 50%;
