@@ -6239,6 +6239,7 @@ window.addToCartFromCard = function(productId, name, price, image) {
   const customerSize = cached.size || null;
   const customerColor = cached.color || null;
 
+  // ✅ يكفي المقاس أو الوزن
   if (!customerSize && !customerWeight) {
     customAlert("⚠️ يرجى اختيار المقاس أو إدخال الوزن", 'warning');
     openSizeDataModal(productId, name, function(data) {
@@ -6246,6 +6247,18 @@ window.addToCartFromCard = function(productId, name, price, image) {
     });
     return false;
   }
+
+  // ✅ التحقق من نطاق الوزن لو موجود
+  if (customerWeight && (customerWeight < 50 || customerWeight > 200)) {
+    customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
+    openSizeDataModal(productId, name, function(data) {
+        window.addToCartFromCard(productId, name, price, image);
+    });
+    return false;
+  }
+
+  // ✅ سيب المقاس فاضي لو العميل مدخلوش (المختص هيحدده)
+  let size = customerSize || "";
 
   // ✅ اختيار اللون الافتراضي
   let selectedColorName = customerColor;
