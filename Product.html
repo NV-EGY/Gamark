@@ -3785,6 +3785,29 @@ updateCart();  // <--- تأكد من وجود هذا السطر
         const product = { id: productSnap.id, ...productSnap.data() };
         currentProduct = product;
         window.currentProduct = product;
+        
+        // ===== ✅ تحديث Open Graph tags حسب المنتج =====
+if (product) {
+    // الصورة: استخدم صورة المنتج الأساسية، أو صورة الـ preview الافتراضية
+    const ogImageUrl = product.image || 'https://gamark.sbs/images/preview.jpg';
+    
+    // تحديث الوسوم
+    document.getElementById('ogTitle').setAttribute('content', `${product.name} | GAMARK`);
+    document.getElementById('ogDescription').setAttribute('content', 
+        (product.description || 'مشدات كورسيه فاخرة من GAMARK').replace(/<[^>]*>/g, '').substring(0, 150)
+    );
+    document.getElementById('ogImage').setAttribute('content', ogImageUrl);
+    document.getElementById('ogUrl').setAttribute('content', window.location.href);
+    
+    // Twitter Card
+    document.getElementById('twitterTitle').setAttribute('content', `${product.name} | GAMARK`);
+    document.getElementById('twitterDescription').setAttribute('content', 
+        (product.description || 'مشدات كورسيه فاخرة من GAMARK').replace(/<[^>]*>/g, '').substring(0, 150)
+    );
+    document.getElementById('twitterImage').setAttribute('content', ogImageUrl);
+    
+    console.log('✅ تم تحديث Open Graph tags للمنتج:', product.name);
+}
 
                 // ===== إضافة حدث ViewContent للبيكسل (ضروري جداً) =====
         if (typeof fbq !== 'undefined') {
@@ -5957,6 +5980,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // ❌ لا تستدعي updateCart() هنا - سيتم استدعاؤها من loadProduct
 });
+
   function initCarousel(containerId, dotsId) {
     const container = document.getElementById(containerId);
     if (!container) return;
