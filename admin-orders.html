@@ -2009,10 +2009,7 @@ function parseOrderBlock(block) {
         order.weight  = wls[0]?.weight || null;
         order.weightMax = wls[0]?.weightMax || null;
         order.length  = wls[0]?.length || null;
-    } else {
-        order.weights = [];
-    }
-
+    } 
     if (!order.products || order.products.length === 0) {
         order.products = order.productName
             ? [{ name: order.productName, price: order.price, color: null, size: null }]
