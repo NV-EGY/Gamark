@@ -8609,12 +8609,13 @@ async function executeCheckout() {
         message += `🏙️ المدينة: ${city}\n`;
         message += `🏠 العنوان: ${address}\n\n`;
 
-    cart.forEach(item => {
+   cart.forEach(item => {
     message += `• ${item.name}\n`;
     if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
     if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
     if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
     if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
+    if (item.color) message += `🎨 اللون: ${item.color}\n`;   // ← ✨ السطر الجديد
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
