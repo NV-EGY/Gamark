@@ -6104,14 +6104,8 @@ window.addCurrentProductToCart = function(event) {
     return;
 }
 
-    // تحديد المقاس
-    let size = customerSize || "";
-    if (!size && product && product.stockBySize) {
-        const availableSizes = Object.entries(product.stockBySize)
-            .filter(([s, q]) => q === null || q === undefined || q > 0)
-            .map(([s]) => s);
-        if (availableSizes.length > 0) size = availableSizes[0];
-    }
+   // ✅ سيب المقاس فاضي لو العميل مدخلوش (المختص هيحدده)
+let size = customerSize || "";
     
 
     // فحص المخزون
@@ -6272,13 +6266,6 @@ window.addToCartFromCard = function(productId, name, price, image) {
     }
   }
 
-  let size = customerSize || "";
-  if (!size && product && product.stockBySize) {
-    const availableSizes = Object.entries(product.stockBySize)
-      .filter(([s, q]) => q === null || q === undefined || q > 0)
-      .map(([s]) => s);
-    if (availableSizes.length > 0) size = availableSizes[0];
-  }
   
   if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
     const stockForSize = product.stockBySize[size];
@@ -7040,6 +7027,7 @@ async function executeCheckout() {
     if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
     if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
     if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
+    if (item.color) message += `🎨 اللون: ${item.color}\n`;   // ← ✨ السطر الجديد
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
