@@ -6567,22 +6567,42 @@ onSnapshot(doc(db, "settings", "bestSellersConfig"), (docSnap) => {
 
 // ========== دليل المتسوق ==========
 const infoContent = {
-    shipping: `
-        <h4>📦 سياسة الشحن</h4>
-        <p>نشحن لجميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>3 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
-        <p><strong>تكلفة الشحن:</strong> تبدأ من 60 جنيه وتختلف حسب المحافظة، مع <strong>عروض وخصومات شحن</strong> للطلبات الكبيرة.</p>
+   shipping: `
+    <h4>📦 سياسة الشحن</h4>
+    <p>نشحن لجميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
+    <p><strong>تكلفة الشحن:</strong> تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة.</p>
 
-        <h4 style="margin-top:25px;">🤍 معاينة كاملة قبل الاستلام</h4>
-        <p>بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
+    <h4 style="margin-top:25px;">🤍 معاينة كاملة قبل الاستلام</h4>
+    <p>بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
 
-        <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
-        <p>نظراً لطبيعة منتجاتنا الصحية (مشدات كورسيه بتتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
-        <p>ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
+    <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
+    <p>نظراً لأن المنتج <strong>داخلي طبي</strong> بيتلامس مباشرة مع الجسم، <strong>لا يصح لبسه إلا للمعاينة فقط</strong>، ولذلك <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
+    <p>ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
 
-        <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; margin-top:15px; font-size:13px; line-height:1.8;">
-            💡 <strong>نصيحة مننا ليكي:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
-        </div>
-    `,
+    <h4 style="margin-top:25px;">📦 مصاريف الشحن في حالة الاستبدال أو الاسترجاع</h4>
+
+    <div style="background:#e8f5e9; padding:14px; border-radius:12px; border-right:4px solid #27ae60; margin-bottom:12px; font-size:13.5px; line-height:1.9; color:#1e8449;">
+        <strong style="font-size:14px;">✅ لو الخطأ من عندنا:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>مقاس غلط، منتج مختلف، أو عيب صناعي.</li>
+            <li><strong>إحنا بنتحمل مصاريف الشحن كاملة</strong> (رايح وجاي).</li>
+            <li>عند الطلب الجديد: <strong>يتم خصم مصاريف الشحن بالكامل</strong> من الطلب الجديد.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff3f3; padding:14px; border-radius:12px; border-right:4px solid #e74c3c; margin-bottom:15px; font-size:13.5px; line-height:1.9; color:#922b21;">
+        <strong style="font-size:14px;">⚠️ لو الخطأ من العميل:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>غيّر رأيه، طلب مقاس مختلف، أو قرر ما يكملش.</li>
+            <li><strong>العميل يدفع مصاريف الشحن</strong> للاستبدال أو الاسترجاع.</li>
+            <li>عند الطلب الجديد: <strong>يتم احتساب مصاريف الشحن على العميل</strong>.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; font-size:13px; line-height:1.8; color:#8B6914;">
+        💡 <strong>نصيحة:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
+    </div>
+`,
 
     size: `
         <h4>📏 دليل مقاسات المشدات</h4>
@@ -6670,13 +6690,13 @@ const infoContent = {
             </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ هل ينفع أرجّع المنتج بعد الاستلام؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">
-                بنحب نوضحلك بكل شفافية 🤍: نظراً لطبيعة المنتج الصحية (بيتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.<br><br>
-                ✅ <strong>خبر حلو:</strong> معاكي <strong>معاينة كاملة</strong> قدام المندوب — تطمني على المقاس واللون والخامة، ولو محتاجة تبديل أو تعديل بنعمله ليكي <strong>فورياً</strong> من غير أي رسوم.<br><br>
-                خدي وقتك في المعاينة، ده حقك الكامل. 💛
-            </div>
-        </div>
+            <div class="faq-item">
+    <div class="faq-question">❓ هل ينفع أرجّع المنتج بعد الاستلام؟ <i class="fas fa-chevron-down"></i></div>
+    <div class="faq-answer">
+        نظراً لطبيعة المنتج الصحية (بيتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.<br><br>
+        ✅ <strong>خبر حلو:</strong> معاكي <strong>معاينة كاملة</strong> قدام المندوب، ولو محتاجة تبديل بنعمله ليكي <strong>فورياً</strong> من غير أي رسوم. 💛
+    </div>
+</div>
         <div class="faq-item">
             <div class="faq-question">❓ إزاي أختار المقاس المناسب؟ <i class="fas fa-chevron-down"></i></div>
             <div class="faq-answer">
@@ -6685,13 +6705,14 @@ const infoContent = {
                 ولو عايزة تعرفي أكتر، تقدري تشوفي <strong>دليل المقاسات</strong> في تبويب المقاسات.
             </div>
         </div>
-        <div class="faq-item">
-            <div class="faq-question">❓ متى أحصل على الطلب؟ وتكلفة الشحن قد إيه؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">
-                التوصيل من <strong>3 إلى 7 أيام عمل</strong> حسب محافظتك، وبنشحن لكل محافظات مصر.<br>
-                تكلفة الشحن تبدأ من 60 جنيه وتختلف حسب المحافظة، مع <strong>عروض وخصومات شحن</strong> للطلبات الكبيرة. 🚚✨
-            </div>
-        </div>
+      <div class="faq-item">
+    <div class="faq-question">❓ متى أحصل على الطلب؟ وتكلفة الشحن قد إيه؟ <i class="fas fa-chevron-down"></i></div>
+    <div class="faq-answer">
+        التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب محافظتك، وبنشحن لكل محافظات مصر.<br>
+        تكلفة الشحن تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة. 🚚✨
+    </div>
+</div>
+
         <div class="faq-item">
             <div class="faq-question">❓ أعرف إمتى الطلب بيوصلني إزاي؟ <i class="fas fa-chevron-down"></i></div>
             <div class="faq-answer">
