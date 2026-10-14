@@ -6212,10 +6212,13 @@ function getCategoryFromSearch(searchTerm) {
     }
     return null;
 }
-let currentTab = 'shipping';
+// ✅ جميع المتغيرات العامة - معرّفة في بداية المودال (قبل أي استخدام)
 let displayedProductsCount = 8;
-let pinnedProductId = null;  // معرف المنتج الذي سيظهر أولاً
 let currentSearchFilter = "";
+let pinnedProductId = null;
+let currentSort = "random";
+const AUTO_SORT_INTERVAL = 60 * 60 * 1000; // ساعة واحدة
+let autoSortTimer = null;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, where, getDocs, updateDoc, doc, increment, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -8575,7 +8578,7 @@ async function executeCheckout() {
         const orderID = `${customerCode}-${dateStr}${customerOrderCount}${String(dailyOrderCount).padStart(3, '0')}`;
         
         // ========== 6. تجهيز تفاصيل الطلب ==========
-       const orderDetails = cart.map(item => {
+      const orderDetails = cart.map(item => {
     const product = allProducts.find(p => p.id === item.productId);
     return {
         productId: item.productId,
@@ -8587,7 +8590,9 @@ async function executeCheckout() {
         image: item.image || "",
         costPrice: product?.costPrice || 0,
         customerWeight: item.customerWeight || null,
-        customerLength: item.customerLength || null
+        customerLength: item.customerLength || null,
+        color: item.color || null,
+        colorImage: item.colorImage || null
     };
 });
 
@@ -8747,16 +8752,11 @@ fbq('track', 'Purchase', {
     }
 }
 
-window.toggleCollections = function(e) {
-    if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-    // افتح/اقفل القايمة في الموبايل
+// في أول <script> (قبل المودال)، أضف:
+window.toggleCollections = window.toggleCollections || function(e) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     const mobileSub = document.getElementById("collectionsSub");
     if (mobileSub) mobileSub.classList.toggle("active");
-
-    // افتح/اقفل القايمة في سطح المكتب (لما يكون عرض الشاشة صغير واللمس شغال)
     const desktopSub = document.getElementById("collectionsSubDesktop");
     if (desktopSub) desktopSub.classList.toggle("active");
 };
@@ -10028,15 +10028,6 @@ function resetProductsDisplay() {
 }
 window.setCategory = setCategory;
 
-// متغير الترتيب الحالي
-let currentSort = "random";
-pinnedProductId = null;
-
-// ========== نظام تحديث الترتيب التلقائي ==========
-let autoSortTimer = null;
-const AUTO_SORT_INTERVAL = 60 * 60 * 1000; // ساعة واحدة (60 دقيقة)
-// للاختبار: استخدم 10 * 1000 (10 ثوانٍ)
-// const AUTO_SORT_INTERVAL = 10 * 1000;
 // ========== تحديث الترتيب العشوائي ==========
 function refreshRandomSort() {
     // نتحقق إذا كان الترتيب الحالي هو "random"
@@ -10574,7 +10565,7 @@ const checkProductsInterval = setInterval(() => {
     }
 }, 500);
 // تم إزالة السطر الزائد عن onSnapshot لأنه غير مستخدم هنا
-let pinnedProductId = null;
+
 </script>
 <script>
 // ========== حل الرجوع بالهاش (مضمون 100%) ==========
