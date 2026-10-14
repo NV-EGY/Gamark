@@ -7547,75 +7547,180 @@ window.sendContactMessage = async function() {
   }
 };
 
-// ========== محتوى دليل المتسوق (نسخة كاملة من صفحة المنتج) ==========
 const infoContent = {
-    shipping: `
-        <h4>📦 سياسة الشحن</h4>
-        <p>نشحن إلى جميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من 3 إلى 7 أيام عمل حسب المحافظة.</p>
-        <p><strong>تكلفة الشحن:</strong> (مجاني للطلبات فوق 1000 جنيه).</p>
-        <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
-        <p>يحق لك استبدال أو إرجاع المنتج خلال 14 يومًا من تاريخ الاستلام بشرط أن يكون بحالته الأصلية والتغليف سليم.</p>
-        <p>لبدء عملية الإرجاع، يرجى التواصل مع خدمة العملاء عبر رقم الواتساب او "تواصل مع المسئول".</p>
-        <p><strong>ملاحظة:</strong> تكاليف الشحن للإرجاع يتحملها العميل إلا في حالة وجود عيب صناعي.</p>
-    `,
-    size: `
-    <h4>📏 دليل مقاسات المشدات</h4>
-    <p>قيسي محيط الوسط (الخصر) عند أنحف نقطة، ومحيط أكبر منطقة في الأرداف، وطول الجذع من الكتف للفخذ.</p>
-    <table class="size-guide-table">
-        <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>محيط الأرداف (سم)</th><th>الطول (سم)</th></tr></thead>
-        <tbody>
-            <tr><td>S</td><td>60-66</td><td>86-92</td><td>60</td></tr>
-            <tr><td>M</td><td>66-72</td><td>92-98</td><td>61</td></tr>
-            <tr><td>L</td><td>72-78</td><td>98-104</td><td>62</td></tr>
-            <tr><td>XL</td><td>78-84</td><td>104-110</td><td>63</td></tr>
-            <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>64</td></tr>
-            <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>65</td></tr>
-        </tbody>
-    </table>
-    <div style="margin-top: 15px; padding: 15px; background: #f9f9f9; border-radius: 16px; border-right: 4px solid #D4AF37;">
-        <h5 style="color: #D4AF37;">💡 نصائح:</h5>
-        <ul>
-            <li>✅ قيسي فوق ملابس خفيفة.</li>
-            <li>✅ لو بين مقاسين، اختاري الأصغر لفعالية أكبر، أو الأكبر لراحة أكثر.</li>
-            <li>✅ المشدات بتتمط شوية مع الاستخدام.</li>
+   shipping: `
+    <h4>📦 سياسة الشحن</h4>
+    <p>نشحن لجميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
+    <p><strong>تكلفة الشحن:</strong> تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة.</p>
+
+    <h4 style="margin-top:25px;">🤍 معاينة كاملة قبل الاستلام</h4>
+    <p>بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
+
+    <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
+    <p>نظراً لأن المنتج <strong>داخلي طبي</strong> بيتلامس مباشرة مع الجسم، <strong>لا يصح لبسه إلا للمعاينة فقط</strong>، ولذلك <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
+    <p>ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
+
+    <h4 style="margin-top:25px;">📦 مصاريف الشحن في حالة الاستبدال أو الاسترجاع</h4>
+
+    <div style="background:#e8f5e9; padding:14px; border-radius:12px; border-right:4px solid #27ae60; margin-bottom:12px; font-size:13.5px; line-height:1.9; color:#1e8449;">
+        <strong style="font-size:14px;">✅ لو الخطأ من عندنا:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>مقاس غلط، منتج مختلف، أو عيب صناعي.</li>
+            <li><strong>إحنا بنتحمل مصاريف الشحن كاملة</strong> (رايح وجاي).</li>
+            <li>عند الطلب الجديد: <strong>يتم خصم مصاريف الشحن بالكامل</strong> من الطلب الجديد.</li>
         </ul>
     </div>
+
+    <div style="background:#fff3f3; padding:14px; border-radius:12px; border-right:4px solid #e74c3c; margin-bottom:15px; font-size:13.5px; line-height:1.9; color:#922b21;">
+        <strong style="font-size:14px;">⚠️ لو الخطأ من العميل:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>غيّر رأيه، طلب مقاس مختلف، أو قرر ما يكملش.</li>
+            <li><strong>العميل يدفع مصاريف الشحن</strong> للاستبدال أو الاسترجاع.</li>
+            <li>عند الطلب الجديد: <strong>يتم احتساب مصاريف الشحن على العميل</strong>.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; font-size:13px; line-height:1.8; color:#8B6914;">
+        💡 <strong>نصيحة:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
+    </div>
 `,
+
+    size: `
+        <h4>📏 دليل مقاسات المشدات</h4>
+        <p>قيسي الأبعاد التالية بدقة عشان تحصلي على أفضل نتيجة:</p>
+
+        <table class="size-guide-table">
+            <thead>
+                <tr>
+                    <th>المقاس</th>
+                    <th>محيط الوسط (سم)</th>
+                    <th>محيط الأرداف (سم)</th>
+                    <th>الوزن التقريبي (كجم)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>S</strong></td><td>60 - 66</td><td>86 - 92</td><td>45 - 55</td></tr>
+                <tr><td><strong>M</strong></td><td>66 - 72</td><td>92 - 98</td><td>55 - 65</td></tr>
+                <tr><td><strong>L</strong></td><td>72 - 78</td><td>98 - 104</td><td>65 - 75</td></tr>
+                <tr><td><strong>XL</strong></td><td>78 - 84</td><td>104 - 110</td><td>75 - 85</td></tr>
+                <tr><td><strong>2XL</strong></td><td>84 - 90</td><td>110 - 116</td><td>85 - 95</td></tr>
+                <tr><td><strong>3XL</strong></td><td>90 - 96</td><td>116 - 122</td><td>95 - 105</td></tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 16px; border-right: 4px solid #D4AF37;">
+            <h5 style="color: #D4AF37; margin-bottom: 10px;">📏 طريقة القياس الصحيحة:</h5>
+            <ul style="margin: 0; padding-right: 20px;">
+                <li>✅ <strong>محيط الوسط:</strong> قيسي عند أنحف نقطة في البطن (عادة فوق السرة قليلاً).</li>
+                <li>✅ <strong>محيط الأرداف:</strong> قيسي عند أكبر منطقة في الأرداف.</li>
+                <li>✅ <strong>الطول:</strong> من أعلى الكتف إلى أسفل الفخذ (للمشدات الكاملة).</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 15px; padding: 15px; background: #faf8fb; border-radius: 16px; border-right: 4px solid #5D3A7A;">
+            <h5 style="color: #5D3A7A; margin-bottom: 10px;">🎯 نصيحة سريعة لاختيار المقاس:</h5>
+            <ul style="margin: 0; padding-right: 20px;">
+                <li>لو بينك وبين مقاسين، اختاري <strong>الأصغر</strong> لفعالية شفط أعلى، أو <strong>الأكبر</strong> لراحة أكثر.</li>
+                <li>في أول استخدام، ارتدي المشد لمدة <strong>ساعتين</strong> وزيدي المدة تدريجياً لحد 8-10 ساعات.</li>
+                <li>لو محتارة، سيبيها علينا 🤍 — فريقنا هيحدد المقاس المثالي من بيانات وزنك وطولك.</li>
+            </ul>
+        </div>
+    `,
+
     packaging: `
-    <h4>🎁 تغليف فاخر</h4>
-    <p>كل مشد من GAMARK بيوصلك في تغليف فاخر يحافظ على المنتج ويعطيك تجربة راقية:</p>
-    <ul>
-        <li>✨ <strong>علبة أنيقة بتصميم عصري</strong> تناسب هدية أو استخدام شخصي.</li>
-        <li>🛡️ <strong>تغليف محكم</strong> يحمي المشد من التلف أثناء الشحن.</li>
-        <li>📦 <strong>كيس حماية داخلي</strong> يحفظ المشد نظيف وآمن.</li>
-        <li>🎀 <strong>لمسة نهائية فاخرة</strong> تعكس هوية GAMARK.</li>
-    </ul>
-    <p style="color: #D4AF37; font-weight: bold; text-align: center; margin: 20px 0;">✨ لأن كل قطعة تستحق تغليف يليق بها.</p>
-`,
+        <h4>🎁 تغليف GAMARK</h4>
+        <p>كل مشد من GAMARK بيوصلك بمعاملة تستحقها من أول لحظة:</p>
+        <ul>
+            <li>🛍️ <strong>كيس GAMARK الحصري</strong> بتصميم أنيق يعكس فخامة البراند.</li>
+            <li>🛡️ <strong>تغليف حماية داخلي (Plastic Bag محكم)</strong> يحمي المشد من أي تلامس مع الخارج.</li>
+            <li>🧼 <strong>نظافة تامة</strong> — المنتج محفوظ بعناية من المصنع لحد باب بيتك.</li>
+            <li>🤍 <strong>تجربة تفتحينها بثقة</strong> — لأن منتجات GAMARK تستحق الاهتمام بأدق التفاصيل.</li>
+        </ul>
+        <p style="color: #5D3A7A; font-weight: bold; text-align: center; margin: 20px 0; background:#faf8fb; padding:14px; border-radius:12px;">
+            ✨ لأن كل قطعة بتعبر عن ثقتك فينا، بنغلفها بكل حب.
+        </p>
+    `,
+
     faq: `
         <div class="faq-item">
-            <div class="faq-question">❓ هل المنتجات أصلية؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">نعم، جميع منتجاتنا مصنوعة من معادن ثمينة (ستانلس ستيل بيور) ومضمونة 100% أصلية.</div>
+            <div class="faq-question">❓ المشد مصنوع من إيه؟ وهل آمن على الجسم؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                مشدات GAMARK مصممة بخامات طبية عالية الجودة وفق <strong>المواصفات القياسية الطبية</strong> — خالي من أي مواد ضارة، وآمن تماماً على البشرة والجسم. التصميم مدروس بشكل يسمح بالتهوية وضبط القوام بدون أي ضغط مؤذي. 🤍
+            </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ كيف أتابع طلبي بعد الشراء؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">سنرسل لك تأكيد الطلب عبر واتساب يمكنك تتبع حاله الطلب من خلاله مع احد ممثلي خدمة العملاء.</div>
+            <div class="faq-question">❓ أقدر ألبسه كام ساعة في اليوم؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                الاستخدام المثالي من <strong>8 إلى 10 ساعات يومياً</strong> لأفضل نتيجة.<br>
+                في أول استخدام ننصح إنك تبدأي بـ <strong>ساعتين</strong> وتزيديها تدريجياً لحد ما جسمك يتعود.<br>
+                ⚠️ <strong>وممنوع النوم بالمشد تماماً</strong> — صحة جسمك أولوية عندنا. 💜
+            </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ ما هي طرق الدفع المتاحة؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">الدفع عند الاستلام (كاش) لجميع المحافظات، أو تحويل محفظة الكترونيه او تحويل انستا باي حسب الاتفاق.</div>
+            <div class="faq-question">❓ إزاي أغسل المشد صح؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                سهلة جداً ومحافظة على عمر المشد:
+                <ul style="margin-top:8px;">
+                    <li>🧼 <strong>غسيل يدوي فقط</strong> — ممنوع الغسالة تماماً.</li>
+                    <li>✨ استخدمي <strong>مسحوق خفيف</strong> (رشة صغيرة كفاية للرائحة المنعشة).</li>
+                    <li>💧 <strong>مياه فاترة</strong> (مش سخنة ولا باردة جداً).</li>
+                    <li>🚫 ممنوع النقع الطويل أو الكلور أو المبيضات.</li>
+                    <li>☁️ جففيه في <strong>الهواء الطبيعي</strong> بعيد عن الشمس المباشرة.</li>
+                </ul>
+                بالطريقة دي هتحافظي عليه لسنين وهيديكي أفضل نتيجة. 🌸
+            </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ مدة التوصيل؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">تتراوح بين 3-7 أيام حسب محافظتك، نضمن التوصيل خلال أسبوع كحد أقصى.</div>
+            <div class="faq-question">❓ هل ينفع أرجّع المنتج بعد الاستلام؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                بنحب نوضحلك بكل شفافية 🤍: نظراً لطبيعة المنتج الصحية (بيتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.<br><br>
+                ✅ <strong>خبر حلو:</strong> معاكي <strong>معاينة كاملة</strong> قدام المندوب — تطمني على المقاس واللون والخامة، ولو محتاجة تبديل أو تعديل بنعمله ليكي <strong>فورياً</strong> من غير أي رسوم.<br><br>
+                خدي وقتك في المعاينة، ده حقك الكامل. 💛
+            </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ هل يمكن تغيير المقاس بعد الشراء؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">نعم، يمكنك استبدال المقاس خلال 14 يومًا من الاستلام بشرط أن يكون المنتج غير مستخدم، مع تحمل مصاريف الشحن.</div>
+            <div class="faq-question">❓ إزاي أختار المقاس المناسب؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                مش محتاجة تحسبيها بنفسك 🤍 — سيبيها علينا!<br>
+                كل اللي عليك إنك تكتبي <strong>وزنك وطولك</strong> عند الطلب، وفريق المختصين بتاعنا هيحدد المقاس المثالي ليكي بدقة.<br>
+                ولو عايزة تعرفي أكتر، تقدري تشوفي <strong>دليل المقاسات</strong> في تبويب المقاسات.
+            </div>
+        </div>
+      <div class="faq-item">
+    <div class="faq-question">❓ متى أحصل على الطلب؟ وتكلفة الشحن قد إيه؟ <i class="fas fa-chevron-down"></i></div>
+    <div class="faq-answer">
+        التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب محافظتك، وبنشحن لكل محافظات مصر.<br>
+        تكلفة الشحن تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة. 🚚✨
+    </div>
+</div>
+        <div class="faq-item">
+            <div class="faq-question">❓ أعرف إمتى الطلب بيوصلني إزاي؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                أول ما تعملي الطلب، بيجيلك تأكيد على الواتساب فيه كل تفاصيل طلبك.<br>
+                وبعدها بيتواصل معاك المندوب قبل التسليم بـ <strong>ساعة</strong>، وفي أي وقت تقدري تكلمي فريق خدمة العملاء بتاعنا من خلال زر <strong>"تواصل مع المسئول"</strong>. 📞💛
+            </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ كيف يمكنني التواصل مع الدعم؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">يمكنك التواصل عبر زر "تواصل مع المسئول" في القائمة، أو عبر واتساب على الرقم <strong dir="ltr">+20 110 601 8685</strong>.</div>
+            <div class="faq-question">❓ إيه أنواع المشدات المتوفرة عندكم؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                تشكيلة GAMARK فيها كل اللي محتاجاه:<br>
+                👩 <strong>للنساء:</strong> حزام البطن، كورسيه بطن وضهر، شورت وبطن، وكورسيه كامل.<br>
+                👨 <strong>للرجال:</strong> كورسيه فانيلة وشورت رجالي.<br>
+                وكل منتج مصمم لمكان معين في الجسم بحيث يديكي أفضل نتيجة بشكل مريح وآمن. ✨
+            </div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">❓ إيه مزايا المشدات الطبية؟ <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">
+                المشدات الطبية بتساعد على:
+                <ul style="margin-top:8px;">
+                    <li>💜 تحديد القوام وشد الجسم بشكل مثالي.</li>
+                    <li>🌸 تقليل الانتفاخ بعد الولادة القيصرية (بإشراف طبي).</li>
+                    <li>🩺 دعم عضلات البطن والظهر وتحسين الوقفة.</li>
+                    <li>✨ نتيجة فورية ملحوظة من أول استخدام.</li>
+                </ul>
+                وكله بمواصفات طبية آمنة تماماً. 🤍
+            </div>
         </div>
     `
 };
