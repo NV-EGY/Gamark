@@ -7988,8 +7988,17 @@ if (typeof updateCart === 'function') updateCart();
   const customerSize = cached.size || null;
   const customerColor = cached.color || null;   // ✅ اللون المحفوظ
 
-  // ✅ التحقق من الوزن (50 - 200 كجم)
-if (!customerWeight || customerWeight < 50 || customerWeight > 200) {
+  // ✅ يكفي المقاس أو الوزن (واحد على الأقل)
+if (!customerWeight && !customerSize) {
+    customAlert("⚠️ يرجى إدخال الوزن أو اختيار المقاس", 'warning');
+    openSizeDataModal(productId, name, function(data) {
+        window.addToCartFromCard(productId, name, price, image);
+    });
+    return false;
+}
+
+// ✅ لو العميل دخل وزن، لازم يكون في النطاق الصحيح
+if (customerWeight && (customerWeight < 50 || customerWeight > 200)) {
     customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
     openSizeDataModal(productId, name);
     return false;
@@ -8615,7 +8624,7 @@ async function executeCheckout() {
     if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
     if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
     if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
-    if (item.color) message += `🎨 اللون: ${item.color}\n`;   // ← ✨ السطر الجديد
+    if (item.color) message += `🎨 اللون: ${item.color}\n`;  
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
