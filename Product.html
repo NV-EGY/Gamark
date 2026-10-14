@@ -4691,9 +4691,21 @@ function addProductToCartWithData(productId, size, weight, length, color = null)
         }
     }
 
-    const colorName = color ? color.name : null;
-    const colorImage = color ? color.image : null;
-
+       // ✅ دعم الاتنين: object {name, image} أو string (اسم اللون)
+    let colorName = null;
+    let colorImage = null;
+    if (color) {
+        if (typeof color === 'string') {
+            colorName = color;
+            // دوّر على صورة اللون
+            const found = product.colors?.find(c => c.name === color);
+            colorImage = found?.image || null;
+        } else if (typeof color === 'object') {
+            colorName = color.name || null;
+            colorImage = color.image || null;
+        }
+    }
+    
     const existing = cart.find(item =>
         item.id === productId &&
         item.size === size &&
