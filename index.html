@@ -7862,15 +7862,7 @@ document.head.appendChild(style);
     customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
     return;
 }
-    // تحديد المقاس النهائي
-    let size = customerSize || "";
-    if (!size && product && product.stockBySize) {
-        const availableSizes = Object.entries(product.stockBySize)
-            .filter(([s, q]) => q === null || q === undefined || q > 0)
-            .map(([s]) => s);
-        if (availableSizes.length > 0) size = availableSizes[0];
-    }
-   
+     
     // فحص المخزون
     if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
         const stockForSize = product.stockBySize[size];
@@ -8025,14 +8017,8 @@ if (!customerWeight || customerWeight < 50 || customerWeight > 200) {
     }
   }
 
-  // ✅ تحديد المقاس
-  let size = customerSize || "";
-  if (!size && product && product.stockBySize) {
-    const availableSizes = Object.entries(product.stockBySize)
-      .filter(([s, q]) => q === null || q === undefined || q > 0)
-      .map(([s]) => s);
-    if (availableSizes.length > 0) size = availableSizes[0];
-  }
+  // ✅ سيب المقاس فاضي لو العميل مدخلوش (المختص هيحدده)
+let size = customerSize || "";
  
 
   // ✅ فحص المخزون
