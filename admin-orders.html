@@ -2050,8 +2050,28 @@ async function buildExistingOrdersMap() {
 
 // ===== عرض أليرت داخل المودال (فوق) =====
 window.showPasteAlert = function(message, type = 'info') {
-    const zone = document.getElementById('pasteAlertsZone');
-    if (!zone) return;
+    // ✅ ندوّر على المنطقة، ولو مش موجودة ننشئها تلقائياً
+    let zone = document.getElementById('pasteAlertsZone');
+    if (!zone) {
+        const modal = document.getElementById('pasteOrdersModal');
+        if (modal) {
+            const box = modal.querySelector('.custom-confirm-box');
+            const header = box?.querySelector('.confirm-header');
+            if (box && header) {
+                zone = document.createElement('div');
+                zone.id = 'pasteAlertsZone';
+                zone.style.cssText = 'display:none; padding: 12px 20px 0 20px; max-height: 200px; overflow-y: auto;';
+                header.parentNode.insertBefore(zone, header.nextSibling);
+            }
+        }
+    }
+
+    // ✅ لو ما زال مش موجود → fallback على console
+    if (!zone) {
+        console.warn(`[Paste ${type.toUpperCase()}] ${message}`);
+        return;
+    }
+
     zone.style.display = 'block';
 
     const colors = {
@@ -6135,6 +6155,9 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
       <i class="fas fa-paste" style="color: #fff;"></i>
       <h3 style="color: #fff;">📋 لصق طلبات</h3>
     </div>
+
+        <!-- ✅ جديد: منطقة عرض التنبيهات -->
+    <div id="pasteAlertsZone" style="display: none; padding: 12px 20px 0 20px; max-height: 200px; overflow-y: auto;"></div>
 
     <div style="padding: 20px; overflow-y: auto; flex: 1;">
       <p style="font-size: 13px; color: #666; margin-bottom: 12px; text-align: right;">
