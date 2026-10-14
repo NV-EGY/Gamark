@@ -3786,7 +3786,7 @@ function updateStockDisplay(product) {
     
     if (hasUnlimited) {
         stockEl.className = 'stock-info in-stock';
-        stockEl.innerHTML = '<i class="fas fa-infinity"></i> متوفر دائماً (غير محدود)';
+        stockEl.innerHTML = '<i class="fas fa-check-circle"></i> متوفر فقط';
     } else if (totalStock > 20) {
         stockEl.className = 'stock-info in-stock';
         stockEl.innerHTML = `<i class="fas fa-check-circle"></i> متوفر: ${totalStock} قطعة`;
