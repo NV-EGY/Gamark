@@ -5284,12 +5284,15 @@ async function executeCheckout() {
         message += `🏠 العنوان: ${address}\n\n`;
 
         cart.forEach(item => {
-            message += `• ${item.name}\n`;
-            if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
-            message += `المقاس: ${item.size}\n`;
-            message += `الكمية: ${item.qty}\n`;
-            message += `السعر: ${item.price * item.qty} جنيه\n\n`;
-        });
+    message += `• ${item.name}\n`;
+    if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
+    // ✅ ضيف الشروط دي
+    if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
+    if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
+    if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
+    message += `الكمية: ${item.qty}\n`;
+    message += `السعر: ${item.price * item.qty} جنيه\n\n`;
+});
 
         message += `🚚 الشحن: ${customerShippingFee} جنيه\n`;
         if (savedCoupon && savedDiscount > 0) {
