@@ -5241,15 +5241,19 @@ async function executeCheckout() {
         const orderID = `${customerCode}-${dateStr}${customerOrderCount}${String(dailyOrderCount).padStart(3, '0')}`;
 
         const orderDetails = cart.map(item => ({
-            productId: item.id,
-            sku: item.sku || null,
-            name: item.name,
-            size: item.size || "",
-            qty: item.qty,
-            price: item.price,
-            image: item.image || "",
-            costPrice: 0
-        }));
+    productId: item.id,
+    sku: item.sku || null,
+    name: item.name,
+    size: item.size || "",
+    qty: item.qty,
+    price: item.price,
+    image: item.image || "",
+    costPrice: 0,
+    customerWeight: item.customerWeight || null,
+    customerLength: item.customerLength || null,
+    color: item.color || null,
+    colorImage: item.colorImage || null
+}));
 
         const totalCost = 0;
 
