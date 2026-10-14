@@ -4705,7 +4705,7 @@ function addProductToCartWithData(productId, size, weight, length, color = null)
             colorImage = color.image || null;
         }
     }
-    
+
     const existing = cart.find(item =>
         item.id === productId &&
         item.size === size &&
@@ -4837,13 +4837,16 @@ window.updateCart = function() {
         }
         
         // ===== عرض المنتج في السلة =====
-        return `<div class="cart-item">
-            <div class="cart-item-details">
-                <strong>${item.name || 'منتج'}</strong>
-                <small>المقاس: ${item.size || 'غير محدد'} ${isUnlimited ? ' <span style="color:#800080;">(كمية غير محدودة)</span>' : ''}</small>
-                ${item.sku ? `<small style="display:block;color:#999;font-size:11px;">SKU: ${item.sku}</small>` : ''}
-                ${item.color ? `<small style="display:block;color:#5D3A7A;font-size:11px;font-weight:700;">🎨 اللون: ${item.color}</small>` : ''}
-            </div>
+          return `<div class="cart-item">
+      <div class="cart-item-details">
+        <strong>${item.name}</strong>
+        ${item.size ? `<small style="display:block;color:#5D3A7A;font-size:12px;font-weight:800;margin-top:2px;">📏 المقاس: ${item.size}</small>` : ''}
+        ${item.customerWeight ? `<small style="display:block;color:#555;font-size:11px;">⚖️ الوزن: ${item.customerWeight} كجم</small>` : ''}
+        ${item.customerLength ? `<small style="display:block;color:#999;font-size:11px;">📐 الطول: ${item.customerLength} سم</small>` : ''}
+        ${item.sku ? `<small style="display:block;color:#999;font-size:11px;">SKU: ${item.sku}</small>` : ''}
+        ${item.color ? `<small style="display:block;color:#5D3A7A;font-size:11px;font-weight:700;">🎨 اللون: ${item.color}</small>` : ''}
+        ${!item.size && !item.customerWeight ? `<small style="display:block;color:#999;font-size:11px;">⚖️ سيتم تحديد المقاس</small>` : ''}
+      </div>
             <div class="qty-controls">
                 <button class="qty-btn" onclick="changeQty(${index},-1)">−</button>
                 <span class="qty-value">${item.qty || 1}</span>
