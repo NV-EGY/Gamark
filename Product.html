@@ -2156,32 +2156,18 @@ button:active,
                 <span class="review-count" id="reviewCountText">(0 تقييم)</span>
             </div>
             
-            <!-- ===== النجوم للتقييم (في الصفحة) ===== -->
-            <div style="text-align:center; margin: 10px 0 5px;">
+           <!-- ===== النجوم للتقييم ===== -->
+<div style="text-align:center; margin: 10px 0 5px;">
 
-              <!-- المقاسات وزر الإضافة (في الأعلى) -->
-<div class="size-selector">
-    <div class="size-options" id="sizeOptions"></div>
+    <div class="stars-container" id="starsContainer">
+        <span data-rate="1" onclick="selectStar(1)">☆</span>
+        <span data-rate="2" onclick="selectStar(2)">☆</span>
+        <span data-rate="3" onclick="selectStar(3)">☆</span>
+        <span data-rate="4" onclick="selectStar(4)">☆</span>
+        <span data-rate="5" onclick="selectStar(5)">☆</span>
+    </div>
+    <div class="rating-hint" id="ratingHint">اضغط على النجوم لتقييم المنتج</div>
 </div>
-
-    <div class="action-buttons" style="display: flex; gap: 10px; align-items: center; flex-wrap: nowrap;">
-    <button class="btn-primary" onclick="addToCartFromPage()" id="addToCartBtn" style="flex: 1; min-width: 140px;">
-        <i class="fas fa-shopping-bag"></i> أضف للسلة
-    </button>
-    <button class="share-btn" onclick="shareProduct()" title="مشاركة المنتج" style="flex-shrink: 0;">
-        <i class="fas fa-share-alt"></i>
-    </button>
-</div>
-
-                <div class="stars-container" id="starsContainer">
-                    <span data-rate="1" onclick="selectStar(1)">☆</span>
-                    <span data-rate="2" onclick="selectStar(2)">☆</span>
-                    <span data-rate="3" onclick="selectStar(3)">☆</span>
-                    <span data-rate="4" onclick="selectStar(4)">☆</span>
-                    <span data-rate="5" onclick="selectStar(5)">☆</span>
-                </div>
-                <div class="rating-hint" id="ratingHint">اضغط على النجوم لتقييم المنتج</div>
-            </div>
             
             <!-- خانة كتابة الرأي -->
             <div class="review-input-area" id="reviewInputArea">
@@ -2261,26 +2247,42 @@ button:active,
     <div id="sizeGuideContent">
         <!-- يتم تعبئته تلقائياً بالـ JavaScript -->
     </div>
-    <div id="sizeList" style="margin-top: 20px;">
-        <h4 style="color:#D4AF37; font-size:16px; margin-bottom:12px;">📏 المقاسات المتوفرة</h4>
-        <div id="sizeListContainer" style="display:flex; flex-wrap:wrap; gap:10px;"></div>
     </div>
-</div>
 
-        <div class="tab-pane" id="tab-shipping">
+    <div class="tab-pane" id="tab-shipping">
     <h4 style="color:#D4AF37; font-size:18px; margin-bottom:12px;">📦 سياسة الشحن</h4>
-    <p style="color:#555; line-height:1.8;">نشحن إلى جميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من 3 إلى 7 أيام عمل حسب المحافظة.</p>
-    <p style="margin-top:12px; color:#555; line-height:1.8;"><strong>تكلفة الشحن:</strong> تبدأ من 60 جنيه وتختلف حسب المحافظة.</p>
-    
+    <p style="color:#555; line-height:1.8;">نشحن إلى جميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
+    <p style="margin-top:12px; color:#555; line-height:1.8;"><strong>تكلفة الشحن:</strong> تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة.</p>
+
     <h4 style="color:#D4AF37; font-size:18px; margin-top:25px; margin-bottom:12px;">🤍 معاينة كاملة قبل الاستلام</h4>
-    <p style="color:#555; line-height:1.8;">بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة.</p>
+    <p style="color:#555; line-height:1.8;">بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
 
     <h4 style="color:#D4AF37; font-size:18px; margin-top:25px; margin-bottom:12px;">🔄 سياسة الإرجاع والاستبدال</h4>
-    <p style="color:#555; line-height:1.8;">نظراً لطبيعة منتجاتنا الصحية، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
-    <p style="margin-top:8px; color:#555; line-height:1.8;">ولو حصل أي تعديل، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
-    
-    <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; margin-top:15px; font-size:13px; line-height:1.8; color:#8B6914;">
-        💡 <strong>نصيحة:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل. 🤍
+    <p style="color:#555; line-height:1.8;">نظراً لأن المنتج <strong>داخلي طبي</strong> بيتلامس مباشرة مع الجسم، <strong>لا يصح لبسه إلا للمعاينة فقط</strong>، ولذلك <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
+    <p style="margin-top:8px; color:#555; line-height:1.8;">ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
+
+    <h4 style="color:#D4AF37; font-size:18px; margin-top:25px; margin-bottom:12px;">📦 مصاريف الشحن في حالة الاستبدال أو الاسترجاع</h4>
+
+    <div style="background:#e8f5e9; padding:14px; border-radius:12px; border-right:4px solid #27ae60; margin-bottom:12px; font-size:13.5px; line-height:1.9; color:#1e8449;">
+        <strong style="font-size:14px;">✅ لو الخطأ من عندنا:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>مقاس غلط، منتج مختلف، أو عيب صناعي.</li>
+            <li><strong>إحنا بنتحمل مصاريف الشحن كاملة</strong> (رايح وجاي).</li>
+            <li>عند الطلب الجديد: <strong>يتم خصم مصاريف الشحن بالكامل</strong> من الطلب الجديد.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff3f3; padding:14px; border-radius:12px; border-right:4px solid #e74c3c; margin-bottom:15px; font-size:13.5px; line-height:1.9; color:#922b21;">
+        <strong style="font-size:14px;">⚠️ لو الخطأ من العميل:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>غيّر رأيه، طلب مقاس مختلف، أو قرر ما يكملش.</li>
+            <li><strong>العميل يدفع مصاريف الشحن</strong> للاستبدال أو الاسترجاع.</li>
+            <li>عند الطلب الجديد: <strong>يتم احتساب مصاريف الشحن على العميل</strong>.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; font-size:13px; line-height:1.8; color:#8B6914;">
+        💡 <strong>نصيحة:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
     </div>
 </div>
 
@@ -2309,35 +2311,31 @@ button:active,
 </a>
 </div>
 
-<!-- ============================================
-     RELATED PRODUCTS
-============================================ -->
+<!-- 👩 قسم حريمي -->
 <section class="related-section">
     <div style="position:relative; margin-bottom:5px;">
-        <h2 class="flame-title" style="margin-bottom:8px; font-size:24px;">🔥 منتجات قد تعجبك أيضاً</h2>
+        <h2 class="flame-title" style="margin-bottom:8px; font-size:24px;">👩 قسم حريمي</h2>
     </div>
     <div class="carousel-wrapper" style="margin-top:10px;">
-        <button class="carousel-btn prev" data-target="similarCarousel">‹</button>
-        <div class="carousel-container" id="similarCarousel">
-            <div class="carousel-track" id="similarTrack"></div>
+        <button class="carousel-btn prev" data-target="womenCarousel">‹</button>
+        <div class="carousel-container" id="womenCarousel">
+            <div class="carousel-track" id="womenTrack"></div>
         </div>
-        <button class="carousel-btn next" data-target="similarCarousel">›</button>
+        <button class="carousel-btn next" data-target="womenCarousel">›</button>
     </div>
 </section>
 
-<!-- ============================================
-     BEST SELLERS
-============================================ -->
+<!-- 👨 قسم رجالي -->
 <section class="related-section">
     <div style="position:relative; margin-bottom:5px;">
-        <h2 class="flame-title" style="margin-bottom:8px; font-size:24px;">✨ الأكثر مبيعاً</h2>
+        <h2 class="flame-title" style="margin-bottom:8px; font-size:24px;">👨 قسم رجالي</h2>
     </div>
     <div class="carousel-wrapper" style="margin-top:10px;">
-        <button class="carousel-btn prev" data-target="bestSellersCarousel">‹</button>
-        <div class="carousel-container" id="bestSellersCarousel">
-            <div class="carousel-track" id="bestSellersTrack"></div>
+        <button class="carousel-btn prev" data-target="menCarousel">‹</button>
+        <div class="carousel-container" id="menCarousel">
+            <div class="carousel-track" id="menTrack"></div>
         </div>
-        <button class="carousel-btn next" data-target="bestSellersCarousel">›</button>
+        <button class="carousel-btn next" data-target="menCarousel">›</button>
     </div>
 </section>
 
@@ -3095,48 +3093,15 @@ setTimeout(initReadMore, 150);
 // ===== المقاسات =====
 const sizes = product.sizes || ['7', '8', '9'];
 const stockBySize = product.stockBySize || {};
-const sizeContainer = document.getElementById('sizeOptions'); // ✅ تعريف المتغير
-sizeContainer.innerHTML = sizes.map(s => {
-    const qty = stockBySize[s] !== undefined ? stockBySize[s] : null;
-    const isDisabled = (qty === 0);
-    const isUnlimited = (qty === null || qty === undefined);
-    
-    let label = `المقاس: ${s}`;
-    if (isUnlimited) {
-        label += ' (غير محدود)';
-    } else if (qty !== null && qty > 0) {
-        label += ` (باقى ${qty} قطعه)`;
-    } else if (qty === 0) {
-        label += ' (نفذ)';
-    }
-    
-    return `<button class="${selectedSize === s ? 'active' : ''}" 
-                            data-size="${s}" 
-                            ${isDisabled ? 'disabled' : ''}
-                            onclick="selectSize('${s}')">
-                ${label}
-            </button>`;
-}).join('');
-
-// ===== عرض المقاسات في تبويب المقاسات =====
-const sizeListContainer = document.getElementById('sizeListContainer');
-if (sizeListContainer) {
-    sizeListContainer.innerHTML = sizes.map(s => {
-        const qty = stockBySize[s] !== undefined ? stockBySize[s] : null;
-        const isUnlimited = (qty === null || qty === undefined);
-        let label = `المقاس: ${s}`;
-        if (isUnlimited) {
-            label += ' (غير محدود)';
-        } else if (qty !== null && qty > 0) {
-            label += ` (باقى ${qty} قطعه)`;
-        } else if (qty === 0) {
-            label += ' (نفذ)';
-        }
-        const isOutOfStock = (qty === 0);
-        return `<span style="padding:8px 16px; border-radius:12px; border:1px solid ${isOutOfStock ? '#e74c3c' : '#D4AF37'}; background:${isOutOfStock ? '#fde8e8' : '#faf9f7'}; font-weight:600; font-size:14px; color:${isOutOfStock ? '#c0392b' : '#111'};">
-            ${label}
-        </span>`;
-    }).join('');
+// ✅ تعبئة اختيارات المقاس في الحقل الـ inline
+const inlineSizeEl = document.getElementById('inlineSize');
+if (inlineSizeEl) {
+    const availableSizes = sizes.filter(s => {
+        const qty = stockBySize[s];
+        return qty === null || qty === undefined || qty > 0;
+    });
+    inlineSizeEl.innerHTML = '<option value="">سيتم تحديده بواسطة المختص</option>' + 
+        availableSizes.map(s => `<option value="${s}">${s}</option>`).join('');
 }
 
         // ===== المخزون =====
@@ -3161,12 +3126,93 @@ const sizeGuides = {
                 <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
             </tbody>
         </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً — مش محتاجة تحسبي حاجة بنفسك.
+        </div>
     `,
-    'women_corset_belly_back': `... جدول مقاسات كورسيه البطن والضهر ...`,
-    'women_shorts_belly': `... جدول مقاسات شورت البطن ...`,
-    'women_full_corset': `... جدول مقاسات الكورسيه الكامل ...`,
-    'men_vest_corset': `... جدول مقاسات الفانيله الرجالي ...`,
-    'men_shorts': `... جدول مقاسات الشورت الرجالي ...`
+    'women_corset_belly_back': `
+        <h4>📏 دليل مقاسات كورسيه البطن والضهر</h4>
+        <table class="size-guide-table">
+            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>محيط الأرداف (سم)</th><th>الوزن (كجم)</th></tr></thead>
+            <tbody>
+                <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
+                <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
+                <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
+                <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
+                <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
+                <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
+            </tbody>
+        </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        </div>
+    `,
+    'women_shorts_belly': `
+        <h4>📏 دليل مقاسات شورت البطن</h4>
+        <table class="size-guide-table">
+            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
+            <tbody>
+                <tr><td>S</td><td>60-66</td><td>45-55</td></tr>
+                <tr><td>M</td><td>66-72</td><td>55-65</td></tr>
+                <tr><td>L</td><td>72-78</td><td>65-75</td></tr>
+                <tr><td>XL</td><td>78-84</td><td>75-85</td></tr>
+                <tr><td>2XL</td><td>84-90</td><td>85-95</td></tr>
+                <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
+            </tbody>
+        </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        </div>
+    `,
+    'women_full_corset': `
+        <h4>📏 دليل مقاسات الكورسيه الكامل</h4>
+        <table class="size-guide-table">
+            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>محيط الأرداف (سم)</th><th>الوزن (كجم)</th></tr></thead>
+            <tbody>
+                <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
+                <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
+                <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
+                <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
+                <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
+                <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
+            </tbody>
+        </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        </div>
+    `,
+    'men_vest_corset': `
+        <h4>📏 دليل مقاسات كورسيه الفانيلة الرجالي</h4>
+        <table class="size-guide-table">
+            <thead><tr><th>المقاس</th><th>محيط الصدر (سم)</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
+            <tbody>
+                <tr><td>M</td><td>90-96</td><td>76-82</td><td>65-75</td></tr>
+                <tr><td>L</td><td>96-102</td><td>82-88</td><td>75-85</td></tr>
+                <tr><td>XL</td><td>102-108</td><td>88-94</td><td>85-95</td></tr>
+                <tr><td>2XL</td><td>108-114</td><td>94-100</td><td>95-105</td></tr>
+                <tr><td>3XL</td><td>114-120</td><td>100-106</td><td>105-115</td></tr>
+            </tbody>
+        </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارف مقاسك؟</strong> ابعتلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليك تلقائياً.
+        </div>
+    `,
+    'men_shorts': `
+        <h4>📏 دليل مقاسات الشورت الرجالي</h4>
+        <table class="size-guide-table">
+            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
+            <tbody>
+                <tr><td>M</td><td>76-82</td><td>65-75</td></tr>
+                <tr><td>L</td><td>82-88</td><td>75-85</td></tr>
+                <tr><td>XL</td><td>88-94</td><td>85-95</td></tr>
+                <tr><td>2XL</td><td>94-100</td><td>95-105</td></tr>
+                <tr><td>3XL</td><td>100-106</td><td>105-115</td></tr>
+            </tbody>
+        </table>
+        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
+            🤍 <strong>مش عارف مقاسك؟</strong> ابعتلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليك تلقائياً.
+        </div>
+    `
 };
 
 // تحديد التبويب الافتراضي
@@ -3211,9 +3257,9 @@ const visibleBtns = tabsHeader?.querySelectorAll('button:not([style*="display: n
 visibleBtns?.forEach(btn => btn.style.flex = '1');
 
 
-        // ===== المنتجات المشابهة والأكثر مبيعاً =====
-        loadSimilarProducts(product.category, product.id, db);
-        loadBestSellers(product.id, db);
+        // ✅ تحميل قسم حريمي + رجالي
+loadWomenSection(db);
+loadMenSection(db);
 
         // ===== تفعيل التبويبات =====
         activateTabs(defaultTab);   // ← احذف هذا السطرactivateTabs();
@@ -3222,6 +3268,50 @@ visibleBtns?.forEach(btn => btn.style.flex = '1');
         console.error('خطأ في تحميل المنتج:', error);
         showToast('❌ حدث خطأ أثناء تحميل المنتج', 'error');
     }
+}
+
+// ✅ قسم حريمي
+async function loadWomenSection(database) {
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        const productsRef = collection(database, "products");
+        const snapshot = await getDocs(productsRef);
+        
+        let products = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(p => (p.category || '').toLowerCase().startsWith('women_'));
+        
+        const track = document.getElementById('womenTrack');
+        if (!track) return;
+        if (products.length === 0) {
+            track.innerHTML = '<div style="padding:20px;color:#888;">لا توجد منتجات في القسم الحريمي حالياً</div>';
+            return;
+        }
+        track.innerHTML = products.map(p => createProductCard(p)).join('');
+        initCarousel('womenCarousel');
+    } catch (e) { console.error('خطأ تحميل القسم الحريمي:', e); }
+}
+
+// ✅ قسم رجالي
+async function loadMenSection(database) {
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+        const productsRef = collection(database, "products");
+        const snapshot = await getDocs(productsRef);
+        
+        let products = snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(p => (p.category || '').toLowerCase().startsWith('men_'));
+        
+        const track = document.getElementById('menTrack');
+        if (!track) return;
+        if (products.length === 0) {
+            track.innerHTML = '<div style="padding:20px;color:#888;">لا توجد منتجات في القسم الرجالي حالياً</div>';
+            return;
+        }
+        track.innerHTML = products.map(p => createProductCard(p)).join('');
+        initCarousel('menCarousel');
+    } catch (e) { console.error('خطأ تحميل القسم الرجالي:', e); }
 }
 
 function renderColorsSelector() {
@@ -3402,222 +3492,6 @@ function createProductCard(product) {
     `;
 }
 
-// تحميل منتجات عشوائية (قد تعجبك أيضاً)
-async function loadSimilarProducts(category, excludeId, database) {
-    try {
-        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-        const productsRef = collection(database, "products");
-        const snapshot = await getDocs(productsRef);
-        
-        // ✅ فلترة: حريمي + رجالي فقط
-        let products = snapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(p => {
-                if (p.id === excludeId) return false;
-                const cat = (p.category || '').toLowerCase();
-                return cat.startsWith('women_') || cat.startsWith('men_');
-            });
-        
-        // ترتيب عشوائي
-        for (let i = products.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [products[i], products[j]] = [products[j], products[i]];
-        }
-        
-        products = products.slice(0, 10);
-        
-        const track = document.getElementById('similarTrack');
-        if (!track) return;
-        if (products.length === 0) {
-            track.innerHTML = '<div style="padding:20px;color:#888;">لا توجد منتجات</div>';
-            return;
-        }
-        track.innerHTML = products.map(p => createProductCard(p)).join('');
-        initCarousel('similarCarousel', 'similarDots');
-    } catch (e) { console.error(e); }
-}
-
-// ===== تحميل الأكثر مبيعاً مع دعم إعدادات لوحة التحكم =====
-async function loadBestSellers(excludeId, database) {
-    try {
-        // 1. جلب إعدادات الأكثر مبيعاً من Firestore
-        const { doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-        const configRef = doc(database, "settings", "bestSellersConfig");
-        const configSnap = await getDoc(configRef);
-        
-        let config = { mode: 'sales', limit: 10, fillMode: 'random', manualIds: [] };
-        if (configSnap.exists()) {
-            config = configSnap.data();
-        }
-
-        // 2. جلب جميع المنتجات
-        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-        const productsRef = collection(database, "products");
-        const snapshot = await getDocs(productsRef);
-       let allProducts = snapshot.docs
-    .map(doc => ({ id: doc.id, ...doc.data() }))
-    .filter(p => {
-        const cat = (p.category || '').toLowerCase();
-        return cat.startsWith('women_') || cat.startsWith('men_');
-    });
-
-        let selectedProducts = [];
-        const limitCount = Math.min(config.limit || 10, 20);
-
-        if (config.mode === "manual" && config.manualIds && config.manualIds.length) {
-            // المنتجات المختارة يدوياً (ثابتة)
-            const fixedPart = [];
-            for (let id of config.manualIds) {
-                const product = allProducts.find(p => p.id === id);
-                if (product) fixedPart.push(product);
-            }
-            // ملء الباقي حسب fillMode
-            const remaining = limitCount - fixedPart.length;
-            let dynamicPart = [];
-            if (remaining > 0) {
-                const excludedIds = fixedPart.map(p => p.id);
-                let candidates = allProducts.filter(p => !excludedIds.includes(p.id));
-                if (config.fillMode === "random") {
-                    // عشوائي
-                    for (let i = candidates.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-                    }
-                    dynamicPart = candidates.slice(0, remaining);
-                } else { // sales
-                    candidates.sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0));
-                    dynamicPart = candidates.slice(0, remaining);
-                }
-            }
-            selectedProducts = [...fixedPart, ...dynamicPart];
-        } else if (config.mode === "random") {
-            // عشوائي كامل
-            const shuffled = [...allProducts];
-            for (let i = shuffled.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            selectedProducts = shuffled.slice(0, limitCount);
-        } else { // mode === "sales"
-            // ترتيب حسب المبيعات
-            const sorted = [...allProducts].sort((a,b) => (b.salesCount || 0) - (a.salesCount || 0));
-            selectedProducts = sorted.slice(0, limitCount);
-        }
-
-        // استبعاد المنتج الحالي (إذا وجد)
-        if (excludeId) {
-            selectedProducts = selectedProducts.filter(p => p.id !== excludeId);
-        }
-
-        const track = document.getElementById('bestSellersTrack');
-        if (!track) return;
-        if (selectedProducts.length === 0) {
-            track.innerHTML = '<div style="padding:20px;color:#888;">لا توجد منتجات</div>';
-            return;
-        }
-        track.innerHTML = selectedProducts.map(p => createProductCard(p)).join('');
-        initCarousel('bestSellersCarousel', 'bestSellersDots');
-    } catch (e) {
-        console.error('خطأ في تحميل الأكثر مبيعاً:', e);
-        const track = document.getElementById('bestSellersTrack');
-        if (track) track.innerHTML = '<div style="padding:20px;color:#999;text-align:center;">⚠️ حدث خطأ في تحميل المنتجات</div>';
-    }
-}
-
-async function loadCategories() {
-    const categories = [
-    { id: 'women_waist', name: 'حزام بطن', image: 'images/cat-waist-belt.jpg' },
-    { id: 'women_corset_belly_back', name: 'كورسيه بطن وضهر', image: 'images/cat-corset-belly-back.jpg' },
-    { id: 'women_shorts_belly', name: 'شورت وبطن', image: 'images/cat-shorts-belly.jpg' },
-    { id: 'women_full_corset', name: 'كورسيه كامل', image: 'images/cat-full-corset.jpg' },
-    { id: 'men_vest_corset', name: 'كورسيه فانيله', image: 'images/cat-vest-corset.jpg' },
-    { id: 'men_shorts', name: 'شورت رجالي', image: 'images/cat-men-shorts.jpg' }
-];
-    const track = document.getElementById('categoriesTrack');
-    if (!track) return;
-
-    // ✅ نضيف style خاص بكروت الأقسام فقط
-    const style = document.createElement('style');
-    style.textContent = `
-        .category-card {
-            flex: 0 0 200px !important;
-            text-align: center !important;
-            padding: 8px 8px 12px !important;
-            border-radius: 18px !important;
-            background: linear-gradient(145deg, #1a1a1a, #0a0a0a) !important;
-            border: 1.5px solid #D4AF37 !important;
-            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.15) !important;
-            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
-            cursor: pointer !important;
-            position: relative !important;
-            overflow: hidden !important;
-        }
-        .category-card::before {
-            content: '';
-            position: absolute;
-            inset: -2px;
-            background: linear-gradient(135deg, rgba(212,175,55,0.3), transparent, rgba(212,175,55,0.2));
-            opacity: 0;
-            transition: opacity 0.4s ease;
-            border-radius: 18px;
-            pointer-events: none;
-        }
-        .category-card:hover::before {
-            opacity: 1;
-        }
-        .category-card:hover {
-            transform: translateY(-6px) scale(1.03) !important;
-            box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4) !important;
-            border-color: #FFD700 !important;
-        }
-        .category-card img {
-            width: 100% !important;
-            aspect-ratio: 3 / 2 !important;
-            object-fit: contain !important;
-            background: #111 !important;
-            border-radius: 12px !important;
-            margin-bottom: 8px !important;
-            transition: transform 0.4s ease !important;
-            border: 1px solid rgba(212, 175, 55, 0.15) !important;
-        }
-        .category-card:hover img {
-            transform: scale(1.04) !important;
-        }
-        .category-card .cat-name {
-            font-size: 13px !important;
-            margin: 4px 0 0 !important;
-            color: #D4AF37 !important;
-            font-weight: 700 !important;
-            letter-spacing: 0.8px !important;
-            text-shadow: 0 0 12px rgba(212, 175, 55, 0.2) !important;
-            transition: all 0.3s ease !important;
-            font-family: 'Cairo', sans-serif !important;
-        }
-        .category-card:hover .cat-name {
-            text-shadow: 0 0 25px rgba(212, 175, 55, 0.6) !important;
-        }
-        @media (max-width: 600px) {
-            .category-card {
-                flex: 0 0 140px !important;
-                padding: 6px 6px 10px !important;
-            }
-            .category-card .cat-name {
-                font-size: 11px !important;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-
-    track.innerHTML = categories.map(cat => `
-        <div class="category-card" onclick="window.location.href='index.html?category=${cat.id}'">
-            <img src="${cat.image}" alt="${cat.name}" loading="lazy">
-            <div class="cat-name">${cat.name}</div>
-        </div>
-    `).join('');
-
-    initCarousel('categoriesCarousel', 'categoriesDots');
-}
-
 // ========== إضافة للسلة من صفحة المنتج ==========
 window.addToCartFromPage = function() {
     const product = window.currentProduct;
@@ -3633,20 +3507,106 @@ window.addToCartFromPage = function() {
         return;
     }
 
-    const stockBySize = product.stockBySize || {};
-    const sizes = product.sizes || ['7', '8', '9'];
+    // ✅ قراءة البيانات من الحقول الـ inline
+    const weight = parseFloat(document.getElementById('inlineWeight').value) || null;
+    const length = parseFloat(document.getElementById('inlineLength').value) || null;
+    const size = (document.getElementById('inlineSize').value || '').trim();
 
-    const availableSizes = sizes.filter(s => {
-        const qty = stockBySize[s];
-        return qty === null || qty === undefined || qty > 0;
-    });
-
-    if (availableSizes.length === 0) {
-        showToast('❌ عذراً، المنتج نفد من المخزون', 'error');
+    // لازم وزن أو مقاس
+    if (!weight && !size) {
+        showToast('⚠️ يرجى إدخال الوزن أو اختيار المقاس', 'warning');
         return;
     }
 
-    openSizeDataModal(product.id, product.name, availableSizes);
+    if (weight && (weight < 50 || weight > 200)) {
+        showToast('⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)', 'warning');
+        return;
+    }
+
+    // تحديد المقاس النهائي
+    let finalSize = size;
+    if (!finalSize && product.stockBySize) {
+        const availableSizes = Object.entries(product.stockBySize)
+            .filter(([s, q]) => q === null || q === undefined || q > 0)
+            .map(([s]) => s);
+        if (availableSizes.length > 0) finalSize = availableSizes[0];
+    }
+    if (!finalSize) finalSize = 'غير محدد';
+
+    // فحص المخزون
+    const stockBySize = product.stockBySize || {};
+    if (stockBySize[finalSize] === 0) {
+        showToast(`❌ مقاس ${finalSize} غير متوفر حالياً`, 'error');
+        return;
+    }
+
+    // إضافة للسلة
+    const colorName = selectedColor ? selectedColor.name : null;
+    const colorImage = selectedColor ? selectedColor.image : null;
+
+    let cart = JSON.parse(localStorage.getItem('vante_cart') || '[]');
+
+    if (stockBySize[finalSize] !== null && stockBySize[finalSize] !== undefined && stockBySize[finalSize] > 0) {
+        const totalInCart = cart
+            .filter(it => it.id === product.id && it.size === finalSize)
+            .reduce((sum, it) => sum + it.qty, 0);
+        if (totalInCart + 1 > stockBySize[finalSize]) {
+            showToast(`❌ الكمية المتاحة لمقاس ${finalSize} هي ${stockBySize[finalSize]} قطعة فقط.`, 'error');
+            return;
+        }
+    }
+
+    const existing = cart.find(item =>
+        item.id === product.id &&
+        item.size === finalSize &&
+        (item.customerWeight || null) === weight &&
+        (item.customerLength || null) === length &&
+        (item.color || null) === colorName
+    );
+
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({
+            id: product.id,
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            size: finalSize,
+            image: colorImage || product.image || '',
+            qty: 1,
+            sku: product.sku || null,
+            comparePrice: product.comparePrice || null,
+            customerWeight: weight,
+            customerLength: length,
+            color: colorName,
+            colorImage: colorImage
+        });
+    }
+
+    localStorage.setItem('vante_cart', JSON.stringify(cart));
+    updateCart();
+    updateCartCount();
+
+    if (typeof fbq !== 'undefined') {
+        fbq('track', 'AddToCart', {
+            content_ids: [product.sku || product.id],
+            content_type: 'product',
+            value: product.price,
+            currency: 'EGP'
+        });
+    }
+
+    const colorMsg = colorName ? ` - لون ${colorName}` : '';
+    showToast(`✅ تم إضافة ${product.name}${colorMsg} إلى السلة`, 'success');
+
+    // إعادة تعيين الحقول
+    document.getElementById('inlineWeight').value = '';
+    document.getElementById('inlineLength').value = '';
+    document.getElementById('inlineSize').value = '';
+
+    // فتح السلة
+    setTimeout(() => window.openCart(), 100);
 };
 
 // ========== مشاركة المنتج ==========
@@ -4601,22 +4561,42 @@ function closeInfoModal() {
 window.closeInfoModal = closeInfoModal;
 
 const infoContent = {
-    shipping: `
-        <h4>📦 سياسة الشحن</h4>
-        <p>نشحن لجميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>3 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
-        <p><strong>تكلفة الشحن:</strong> تبدأ من 60 جنيه وتختلف حسب المحافظة، مع <strong>عروض وخصومات شحن</strong> للطلبات الكبيرة.</p>
+   shipping: `
+    <h4>📦 سياسة الشحن</h4>
+    <p>نشحن لجميع محافظات مصر عبر شركات شحن موثوقة. مدة التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب المحافظة.</p>
+    <p><strong>تكلفة الشحن:</strong> تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة.</p>
 
-        <h4 style="margin-top:25px;">🤍 معاينة كاملة قبل الاستلام</h4>
-        <p>بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
+    <h4 style="margin-top:25px;">🤍 معاينة كاملة قبل الاستلام</h4>
+    <p>بنمنحك <strong>معاينة كاملة للمنتج قبل الاستلام</strong> مع المندوب، عشان تطمني على المقاس واللون والخامة، وتتأكدي إنه هو اللي طلبته بالظبط.</p>
 
-        <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
-        <p>نظراً لطبيعة منتجاتنا الصحية (مشدات كورسيه بتتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
-        <p>ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
+    <h4 style="margin-top:25px;">🔄 سياسة الإرجاع والاستبدال</h4>
+    <p>نظراً لأن المنتج <strong>داخلي طبي</strong> بيتلامس مباشرة مع الجسم، <strong>لا يصح لبسه إلا للمعاينة فقط</strong>، ولذلك <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.</p>
+    <p>ولو حصل أي تعديل أو استبدال، بيتم <strong>فورياً أثناء المعاينة</strong> من غير أي رسوم إضافية.</p>
 
-        <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; margin-top:15px; font-size:13px; line-height:1.8;">
-            💡 <strong>نصيحة مننا ليكي:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
-        </div>
-    `,
+    <h4 style="margin-top:25px;">📦 مصاريف الشحن في حالة الاستبدال أو الاسترجاع</h4>
+
+    <div style="background:#e8f5e9; padding:14px; border-radius:12px; border-right:4px solid #27ae60; margin-bottom:12px; font-size:13.5px; line-height:1.9; color:#1e8449;">
+        <strong style="font-size:14px;">✅ لو الخطأ من عندنا:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>مقاس غلط، منتج مختلف، أو عيب صناعي.</li>
+            <li><strong>إحنا بنتحمل مصاريف الشحن كاملة</strong> (رايح وجاي).</li>
+            <li>عند الطلب الجديد: <strong>يتم خصم مصاريف الشحن بالكامل</strong> من الطلب الجديد.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff3f3; padding:14px; border-radius:12px; border-right:4px solid #e74c3c; margin-bottom:15px; font-size:13.5px; line-height:1.9; color:#922b21;">
+        <strong style="font-size:14px;">⚠️ لو الخطأ من العميل:</strong>
+        <ul style="margin:8px 0 0; padding-right:20px;">
+            <li>غيّر رأيه، طلب مقاس مختلف، أو قرر ما يكملش.</li>
+            <li><strong>العميل يدفع مصاريف الشحن</strong> للاستبدال أو الاسترجاع.</li>
+            <li>عند الطلب الجديد: <strong>يتم احتساب مصاريف الشحن على العميل</strong>.</li>
+        </ul>
+    </div>
+
+    <div style="background:#fff8e1; padding:14px; border-radius:12px; border-right:3px solid #D4AF37; font-size:13px; line-height:1.8; color:#8B6914;">
+        💡 <strong>نصيحة:</strong> خدي وقتك في المعاينة، وتأكدي من كل حاجة قبل ما تستلمي — ده حقك الكامل، وبنحب راحتك. 🤍
+    </div>
+`,
 
     size: `
         <h4>📏 دليل مقاسات المشدات</h4>
@@ -4704,13 +4684,16 @@ const infoContent = {
             </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ هل ينفع أرجّع المنتج بعد الاستلام؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">
-                بنحب نوضحلك بكل شفافية 🤍: نظراً لطبيعة المنتج الصحية (بيتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.<br><br>
-                ✅ <strong>خبر حلو:</strong> معاكي <strong>معاينة كاملة</strong> قدام المندوب — تطمني على المقاس واللون والخامة، ولو محتاجة تبديل أو تعديل بنعمله ليكي <strong>فورياً</strong> من غير أي رسوم.<br><br>
-                خدي وقتك في المعاينة، ده حقك الكامل. 💛
-            </div>
-        </div>
+    <div class="faq-question">❓ هل ينفع أرجّع المنتج بعد الاستلام؟ ومين يتحمل مصاريف الشحن؟ <i class="fas fa-chevron-down"></i></div>
+    <div class="faq-answer">
+        بنحب نوضحلك بكل شفافية 🤍: نظراً لطبيعة المنتج الصحية (بيتلامس مباشرة مع الجسم)، <strong>لا يوجد استرجاع أو استبدال إلا أثناء المعاينة</strong> مع المندوب قبل الاستلام.<br><br>
+        ✅ <strong>خبر حلو:</strong> معاكي <strong>معاينة كاملة</strong> قدام المندوب — تطمني على كل حاجة، ولو محتاجة تبديل بنعمله ليكي <strong>فورياً</strong>.<br><br>
+        📦 <strong>مصاريف الشحن:</strong><br>
+        • لو الخطأ مننا (مقاس غلط / منتج مختلف / عيب صناعي) → <strong>إحنا بنتحمل الشحن كامل</strong>، وعند الطلب الجديد <strong>يتم خصمه</strong>.<br>
+        • لو الخطأ من العميل (غيّر رأيه / طلب مقاس مختلف) → <strong>العميل يدفع الشحن</strong>، وعند الطلب الجديد <strong>يتم احتسابه عليه</strong>.<br><br>
+        خدي وقتك في المعاينة، ده حقك الكامل. 💛
+    </div>
+</div>
         <div class="faq-item">
             <div class="faq-question">❓ إزاي أختار المقاس المناسب؟ <i class="fas fa-chevron-down"></i></div>
             <div class="faq-answer">
@@ -4720,12 +4703,12 @@ const infoContent = {
             </div>
         </div>
         <div class="faq-item">
-            <div class="faq-question">❓ متى أحصل على الطلب؟ وتكلفة الشحن قد إيه؟ <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">
-                التوصيل من <strong>3 إلى 7 أيام عمل</strong> حسب محافظتك، وبنشحن لكل محافظات مصر.<br>
-                تكلفة الشحن تبدأ من 60 جنيه وتختلف حسب المحافظة، مع <strong>عروض وخصومات شحن</strong> للطلبات الكبيرة. 🚚✨
-            </div>
-        </div>
+    <div class="faq-question">❓ متى أحصل على الطلب؟ وتكلفة الشحن قد إيه؟ <i class="fas fa-chevron-down"></i></div>
+    <div class="faq-answer">
+        التوصيل من <strong>2 إلى 7 أيام عمل</strong> حسب محافظتك، وبنشحن لكل محافظات مصر.<br>
+        تكلفة الشحن تبدأ من <strong>50 جنيه</strong> وتختلف حسب المحافظة، مع عروض وخصومات شحن للطلبات الكبيرة. 🚚✨
+    </div>
+</div>
         <div class="faq-item">
             <div class="faq-question">❓ أعرف إمتى الطلب بيوصلني إزاي؟ <i class="fas fa-chevron-down"></i></div>
             <div class="faq-answer">
@@ -5076,60 +5059,85 @@ window.discountAmount = discountAmount;
         </div>
     </div>
 </div>
-<!-- مودال بيانات المقاس المنبثق -->
-<div id="sizeDataModal" class="size-modal-overlay" onclick="if(event.target===this) closeSizeDataModal()">
-  <div class="size-modal-box">
-    <div class="size-modal-header">
-      <h3>📏 بيانات المقاس</h3>
-      <button class="size-modal-close" onclick="closeSizeDataModal()">✕</button>
+<!-- ⚖️ بيانات المقاس (inline) -->
+<div style="background: linear-gradient(135deg, #faf8fb 0%, #f5edf8 100%); border-radius: 20px; padding: 18px; margin: 15px 0; border: 1.5px solid #e8dff0;">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px dashed #d4c7dd;">
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; box-shadow: 0 3px 12px rgba(93,58,122,0.3); flex-shrink: 0;">
+            <i class="fas fa-ruler-combined"></i>
+        </div>
+        <div style="flex: 1;">
+            <div style="font-weight: 800; font-size: 15px; color: #5D3A7A; line-height: 1.2;">بيانات المقاس</div>
+            <div style="font-size: 11px; color: #888; margin-top: 2px;">ساعدينا لتحديد المقاس المثالي لك</div>
+        </div>
     </div>
-    <div class="size-modal-product-name" id="sizeModalProductName">📦 المنتج</div>
-    
-    <div class="size-modal-field optional">
-      <label>
-        ⚖️ الوزن (اختياري)
-        <span class="badge">إن أردت</span>
-      </label>
-      <div class="input-wrap">
-        <input type="number" id="sizeModalWeight" placeholder="مثال: 65" step="0.1" inputmode="decimal" min="50" max="200">
-        <span class="unit-tag">كجم</span>
-      </div>
+
+    <!-- ⚖️ الوزن -->
+    <div style="margin-bottom: 14px;">
+        <label for="inlineWeight" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #333; margin-bottom: 8px; cursor: pointer;">
+            <i class="fas fa-weight-hanging" style="color: #D4A017; font-size: 14px;"></i>
+            <span>الوزن</span>
+            <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800;">اختياري</span>
+        </label>
+        <div style="position: relative;">
+            <input type="number" id="inlineWeight" placeholder="أدخل وزنك بالكيلو جرام" step="0.1" inputmode="decimal"
+                   style="width: 100%; padding: 12px 65px 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; transition: all 0.3s ease; outline: none;"
+                   onfocus="this.style.borderColor='#7B4B8A'; this.style.boxShadow='0 0 0 4px rgba(123,75,138,0.1)';"
+                   onblur="this.style.borderColor='#e8dff0'; this.style.boxShadow='none';">
+            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7B4B8A; font-size: 12px; font-weight: 800; pointer-events: none; background: #f0e6f5; padding: 4px 10px; border-radius: 8px;">كجم</span>
+        </div>
     </div>
-    
-    <div class="size-modal-field optional">
-      <label>
-        📐 الطول (اختياري)
-        <span class="badge">إن أردت</span>
-      </label>
-      <div class="input-wrap">
-        <input type="number" id="sizeModalLength" placeholder="مثال: 165" step="0.1" inputmode="decimal">
-        <span class="unit-tag">سم</span>
-      </div>
+
+    <!-- 📐 الطول -->
+    <div style="margin-bottom: 14px;">
+        <label for="inlineLength" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #555; margin-bottom: 8px; cursor: pointer;">
+            <i class="fas fa-ruler-vertical" style="color: #7B4B8A; font-size: 14px;"></i>
+            <span>الطول</span>
+            <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800;">اختياري</span>
+        </label>
+        <div style="position: relative;">
+            <input type="number" id="inlineLength" placeholder="أدخل طولك بالسنتيمتر" step="0.1" inputmode="decimal"
+                   style="width: 100%; padding: 12px 65px 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; transition: all 0.3s ease; outline: none;"
+                   onfocus="this.style.borderColor='#7B4B8A'; this.style.boxShadow='0 0 0 4px rgba(123,75,138,0.1)';"
+                   onblur="this.style.borderColor='#e8dff0'; this.style.boxShadow='none';">
+            <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7B4B8A; font-size: 12px; font-weight: 800; pointer-events: none; background: #f0e6f5; padding: 4px 10px; border-radius: 8px;">سم</span>
+        </div>
     </div>
-    <div class="size-modal-field">
-      <label>
-        📏 المقاس (مطلوب)
-        <span class="badge" style="background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;">مطلوب *</span>
-      </label>
-      <div class="input-wrap">
-        <select id="sizeModalSize" style="width: 100%; padding: 13px 16px; border: 2px solid #D4A017; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Cairo', sans-serif; background: #fffdf5; color: #2D2D2D; outline: none; box-sizing: border-box; cursor: pointer;">
-          <option value="">اختر المقاس</option>
-          <option value="S">S</option>
-          <option value="M">M</option>
-          <option value="L">L</option>
-          <option value="XL">XL</option>
-          <option value="2XL">2XL</option>
-          <option value="3XL">3XL</option>
-          <option value="4XL">4XL</option>
+
+    <!-- 📏 المقاس -->
+    <div style="margin-bottom: 14px;">
+        <label for="inlineSize" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: #555; margin-bottom: 8px; cursor: pointer;">
+            <i class="fas fa-tag" style="color: #5D3A7A; font-size: 14px;"></i>
+            <span>المقاس (إذا كنت تعرفه)</span>
+            <span style="background: #f0e6f5; color: #7B4B8A; font-size: 9px; padding: 2px 9px; border-radius: 20px; font-weight: 800;">اختياري</span>
+        </label>
+        <select id="inlineSize" style="width: 100%; padding: 12px 16px; border: 1.5px solid #e8dff0; border-radius: 14px; font-size: 14px; font-family: 'Cairo', sans-serif; background: #fff; color: #2D2D2D; cursor: pointer; outline: none;">
+            <option value="">سيتم تحديده بواسطة المختص</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="2XL">2XL</option>
+            <option value="3XL">3XL</option>
+            <option value="4XL">4XL</option>
         </select>
-      </div>
     </div>
-    
-    <div class="size-modal-actions">
-      <button class="save-btn" onclick="saveSizeData()">💾 حفظ البيانات</button>
-      <button class="cancel-btn" onclick="closeSizeDataModal()">إلغاء</button>
+
+    <div style="display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: linear-gradient(135deg, #fff8e6, #fff4d9); border-radius: 12px; border-right: 3px solid #D4A017;">
+        <i class="fas fa-lightbulb" style="color: #D4A017; font-size: 15px; flex-shrink: 0;"></i>
+        <div style="font-size: 11.5px; color: #8B6914; line-height: 1.55; font-weight: 600;">
+            اكتبي <strong style="color:#B8860B;">الوزن والطول</strong> وفريقنا المختص هيحدد المقاس المثالي — أو اختاري المقاس لو تعرفه
+        </div>
     </div>
-  </div>
+</div>
+
+<!-- أزرار الإضافة والمشاركة -->
+<div class="action-buttons" style="display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; margin-top: 15px;">
+    <button class="btn-primary" onclick="addToCartFromPage()" id="addToCartBtn" style="flex: 1; min-width: 140px;">
+        <i class="fas fa-shopping-bag"></i> أضف للسلة
+    </button>
+    <button class="share-btn" onclick="shareProduct()" title="مشاركة المنتج" style="flex-shrink: 0;">
+        <i class="fas fa-share-alt"></i>
+    </button>
 </div>
 </body>
 </html>
