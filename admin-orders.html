@@ -2262,12 +2262,7 @@ window.processPastedOrders = async function() {
                 o._errors.push('اسم العميل غير صحيح');
             }
 
-            // 2️⃣ الهاتف
-            if (o.phones.length === 0) {
-                o._errors.push(`الهاتف غير مصري: ${o.rawPhone || '—'}`);
-            }
-
-            // 3️⃣ المحافظة (مطلوب)
+                 // 3️⃣ المحافظة (مطلوب)
             if (!o.govOriginal && !o.gov) {
                 o._errors.push('المحافظة غير محددة');
             }
@@ -5344,20 +5339,19 @@ function stripLeadingZero(phone) {
     return txt.trim();
 }
 
+        // ✅ الهيدرز (43 عمود — مطابق لملف "مصطفى.xls")
     const HEADERS = [
-        'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','البيان',
-        'اليوم','7','','','معاد التسليم',
+        'رقم','اسم العميل','المحمول','التليفون','المحافظة','المنطقة','','','العنوان','',
+        'اليوم','التاريخ','','','معاد التسليم',
         'منتج 1','كمية 1','سعر1','الشحن',
         'منتج 2','كمية 2','سعر 2',
         'منتج 3','كمية 3','سعر 3',
         'منتج 4','كمية 4','سعر 4',
         'منتج 5','كمية 5','سعر 5',
         'منتج 6','كمية 6','سعر 6',
-        'سنتر','المندوب','الحساب','الشركة','التليفون','الصفر','اسم المول','','',
-        'الشركة','التليفون','الصفر','اسم المول',
-        '','','','','','','','',
-        '','','','','','','',''
+        'سنتر','المندوب','','المدة','من','الى','ترويج 1','ترويج 2','ترويج 3'
     ];
+    // 43 عمود فقط (A → AQ)
     while (HEADERS.length < 63) HEADERS.push('');
     HEADERS.length = 63;
 
@@ -5370,46 +5364,44 @@ function stripLeadingZero(phone) {
         const items = Array.isArray(o.orderDetails) ? o.orderDetails : [];
         const addressText = ((o.notes ? o.notes + ' ' : '') + (o.address || '')).trim();
 
-        const row = [];
-        row.push(serial++);
-        row.push(o.customerName || '');
-        row.push(stripLeadingZero(o.phone));
-row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
-        row.push(o.gov || '');
-        row.push(o.city || '');
-        row.push(o.gov || '');
-        row.push(o.city || '');
-        row.push(addressText);
-        row.push('الاتصال قبل الوصول بساعة');
-        row.push(dayName);
-        row.push(day);
-        row.push(month);
-        row.push(year);
-        row.push('خلال يومين');
+                const row = [];
 
-         for (let i = 0; i < 6; i++) {
-    const it = items[i];
-    row.push(it ? fmtProductCell(it) : null);                       // اسم المنتج (نص عادي)
-    row.push(it ? Number(1) : null);                                // ✅ كمية رقمية أو خلية فاضية
-    row.push(it ? (Number(it.price) || 0) : null);                  // ✅ سعر رقمي أو خلية فاضية
-    if (i === 0) row.push(Number(o.shipping) || 0);                 // ✅ شحن رقمي
-}
+        // ===== الحقول الأساسية =====
+        row.push(serial++);                                  // A: رقم
+        row.push(o.customerName || '');                      // B: اسم العميل
+        row.push(stripLeadingZero(o.phone));                 // C: المحمول
+        row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH); // D: التليفون
+        row.push(o.gov || '');                               // E: المحافظة
+        row.push(o.city || '');                              // F: المنطقة
+        row.push(o.gov || '');                               // G: (مخفي — نسخة)
+        row.push(0);                                         // H: (مخفي)
+        row.push(addressText);                               // I: العنوان
+        row.push('الاتصال قبل الوصول بساعة');                 // J: (مخفي — البيان)
+        row.push(dayName);                                   // K: اليوم
+        row.push(day);                                       // L: التاريخ (اليوم)
+        row.push(month);                                     // M: (الشهر)
+        row.push(year);                                      // N: (مخفي — السنة)
+        row.push('خلال يومين');                               // O: (مخفي — معاد التسليم)
 
-              // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
-        row.push('');       // AI: سنتر
-        row.push('');       // AJ: المندوب
-        row.push(0);        // AK: الحساب
-        row.push('الشركة'); // AL: الشركة
-        row.push('');       // AM: التليفون
-        row.push(0);        // AN: الصفر
-        row.push('جمارك');  // AO: اسم المول
-        row.push('');       // AP: فارغ
-        row.push('');       // AQ: فارغ
-        row.push('الشركة'); // AR: الشركة
-        row.push('');       // AS: التليفون
-        row.push(0);        // AT: الصفر
-        row.push('جمارك');  // AU: اسم المول
-        for (let k = 0; k < 16; k++) row.push('');
+        // ===== المنتجات الـ 6 (منتج + كمية + سعر) + الشحن =====
+        for (let i = 0; i < 6; i++) {
+            const it = items[i];
+            row.push(it ? fmtProductCell(it) : null);
+            row.push(it ? Number(1) : null);
+            row.push(it ? (Number(it.price) || 0) : null);
+            if (i === 0) row.push(Number(o.shipping) || 0);
+        }
+
+        // ===== الأعمدة الأخيرة =====
+        row.push('');        // AI: سنتر
+        row.push('');        // AJ: المندوب
+        row.push('');        // AK: (فاضي)
+        row.push('');        // AL: المدة
+        row.push('');        // AM: من
+        row.push('');        // AN: الى
+        row.push('');        // AO: ترويج 1
+        row.push('');        // AP: ترويج 2
+        row.push('');        // AQ: ترويج 3
 
         aoa.push(row);
         exportedIds.push(o.id);
@@ -5418,45 +5410,56 @@ row.push(o.secondaryPhone ? stripLeadingZero(o.secondaryPhone) : DASH);
     try {
         const ws = XLSX.utils.aoa_to_sheet(aoa);
 
-        // ✅ سهم الفلتر على كل الأعمدة من A لـ BK
-        ws['!autofilter'] = { ref: `A1:BK${aoa.length}` };
+              // ✅ سهم الفلتر على كل الأعمدة من A لـ AQ (43 عمود)
+        ws['!autofilter'] = { ref: `A1:AQ${aoa.length}` };
 
         // عرض الأعمدة
+               // ✅ عرض الأعمدة (43 عمود بالظبط)
         ws['!cols'] = [
-            {wch:6},{wch:22},{wch:14},{wch:14},{wch:12},{wch:14},{wch:12},{wch:14},
-            {wch:40},{wch:24},{wch:10},{wch:5},{wch:5},{wch:7},{wch:12},
-            {wch:28},{wch:8},{wch:8},{wch:8},
-            {wch:28},{wch:8},{wch:8},
-            {wch:28},{wch:8},{wch:8},
-            {wch:28},{wch:8},{wch:8},
-            {wch:28},{wch:8},{wch:8},
-            {wch:28},{wch:8},{wch:8},
-            {wch:8},{wch:12},{wch:10},{wch:10},{wch:12},{wch:8},{wch:12},
-            {wch:8},{wch:8},
-            {wch:10},{wch:12},{wch:8},{wch:12},
-            {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},
-            {wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}
+            {wch:6},   // A  رقم
+            {wch:22},  // B  اسم العميل
+            {wch:14},  // C  المحمول
+            {wch:14},  // D  التليفون
+            {wch:12},  // E  المحافظة
+            {wch:14},  // F  المنطقة
+            {wch:12},  // G  (مخفي)
+            {wch:12},  // H  (مخفي)
+            {wch:40},  // I  العنوان
+            {wch:24},  // J  (مخفي — البيان)
+            {wch:10},  // K  اليوم
+            {wch:8},   // L  التاريخ
+            {wch:8},   // M  (الشهر)
+            {wch:8},   // N  (مخفي — السنة)
+            {wch:12},  // O  (مخفي — معاد التسليم)
+            {wch:28},{wch:8},{wch:8},{wch:8},   // منتج 1
+            {wch:28},{wch:8},{wch:8},            // منتج 2
+            {wch:28},{wch:8},{wch:8},            // منتج 3
+            {wch:28},{wch:8},{wch:8},            // منتج 4
+            {wch:28},{wch:8},{wch:8},            // منتج 5
+            {wch:28},{wch:8},{wch:8},            // منتج 6
+            {wch:8},   // AI سنتر
+            {wch:12},  // AJ المندوب
+            {wch:10},  // AK (فاضي)
+            {wch:10},  // AL المدة
+            {wch:12},  // AM من
+            {wch:8},   // AN الى
+            {wch:12},  // AO ترويج 1
+            {wch:12},  // AP ترويج 2
+            {wch:12}   // AQ ترويج 3
         ];
 
-       // ============ 📦 ضم الأعمدة G, H, J, N, O ============
-// الفهارس صفرية: G=6, H=7, J=9, N=13, O=14
-const groupedColumns = [6, 7, 9, 13, 14];
-groupedColumns.forEach(idx => {
-    if (!ws['!cols'][idx]) ws['!cols'][idx] = { wch: 10 };
-    ws['!cols'][idx].hidden = true;
-    ws['!cols'][idx].level = 1;
-    ws['!cols'][idx].MDW = 0;         // ✅ ضمان الإخفاء على كل التطبيقات
-    ws['!cols'][idx].collapsed = true; // ✅ ضمان الطي
-});
+        // ✅ إخفاء الأعمدة G, H, J, N, O (نفس اللي في الملف الأصلي)
+        const groupedColumns = [6, 7, 9, 13, 14];
+        groupedColumns.forEach(idx => {
+            ws['!cols'][idx].hidden = true;
+            ws['!cols'][idx].level = 1;
+            ws['!cols'][idx].MDW = 0;
+            ws['!cols'][idx].collapsed = true;
+        });
 
-// ✅ إعدادات الـ outline لضمان ظهور أزرار الطي على Excel PC
-ws['!outline'] = { above: false, left: true };
-
-// ✅ ضبط بيانات الورقة لضمان اتجاه RTL على كل التطبيقات
-if (!ws['!sheetViews']) ws['!sheetViews'] = [];
-ws['!sheetViews'] = [{
-    RTL: true
-}];
+        // ✅ outline + RTL
+        ws['!outline'] = { above: false, left: true };
+        ws['!sheetViews'] = [{ RTL: true }];
 
         // ============ تطبيق التنسيقات ============
         const headerStyle = {
