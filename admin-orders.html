@@ -1844,6 +1844,8 @@ function parseOrdersFromPaste(text) {
     return orders;
 }
 
+
+
 // ═══════════════════════════════════════════════════════
 // 🧩 توزيع المقاسات والأوزان على المنتجات (Index-Based)
 // ═══════════════════════════════════════════════════════
@@ -2247,6 +2249,7 @@ window.processPastedOrders = async function() {
         showPasteAlert('❌ لم يتم التعرف على أي طلب', 'error');
         return;
     }
+    console.log('📋 [Paste] عدد الطلبات المُحللة:', parsedOrders.length, parsedOrders);
 
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحقق...';
@@ -2361,6 +2364,13 @@ if (o._phoneToSave) {
     }
 }
 }
+ console.log('📋 [Paste] نتائج التحقق:', parsedOrders.map((o, i) => ({
+            رقم: i + 1,
+            الاسم: o.customerName,
+            الهاتف: o.phones[0] || o.rawPhone,
+            الأخطاء: o._errors,
+            التحذيرات: o._warnings
+        })));
 
 
         // ===== مرحلة 2: ملخص التحقق =====
@@ -2402,8 +2412,38 @@ if (o._phoneToSave) {
         msgHtml += `<div style="text-align: center; margin: 14px 0 8px; font-weight: 800; color: #0F7B65; font-size: 15px;">✅ ${validCount} طلب جاهز للإضافة</div>`;
         msgHtml += `</div>`;
 
-        if (validCount === 0) {
-            showPasteAlert('❌ لا توجد طلبات صالحة للإضافة', 'error');
+               if (validCount === 0) {
+            // ✅ رسالة رئيسية
+            showPasteAlert(`❌ لا توجد طلبات صالحة للإضافة — ${parsedOrders.length} طلب فيه مشاكل`, 'error');
+
+            // ✅ اعرض تفاصيل كل خطأ لكل طلب
+            parsedOrders.forEach((o, idx) => {
+                if (o._errors.length > 0) {
+                    const phoneInfo = o._phoneToSave || o.phones[0] || o.rawPhone || '';
+                    const name = o.customerName || 'بدون اسم';
+                    const errsHtml = o._errors.map(e => `• ${e}`).join('<br>');
+                    showPasteAlert(
+                        `<b>${idx + 1}. ${name}</b>${phoneInfo ? ` (${phoneInfo})` : ''}:<br>${errsHtml}`,
+                        'error'
+                    );
+                }
+            });
+
+            // ✅ لو فيه تحذيرات (بس مفيش أخطاء) اعرضها
+            parsedOrders.forEach((o, idx) => {
+                if (o._errors.length === 0 && o._warnings && o._warnings.length > 0) {
+                    const name = o.customerName || 'بدون اسم';
+                    showPasteAlert(
+                        `<b>${idx + 1}. ${name}:</b> ${o._warnings.join(' • ')}`,
+                        'warning'
+                    );
+                }
+            });
+
+            // ✅ اطبع البيانات الخام في الـ Console للتشخيص
+            console.warn('🔍 [Paste Debug] الطلبات المُحللة:', parsedOrders);
+            console.warn('🔍 [Paste Debug] الأخطاء:', withErrors.map(o => ({ name: o.customerName, errors: o._errors })));
+
             btn.disabled = false;
             btn.innerHTML = '✅ إضافة الطلبات';
             return;
