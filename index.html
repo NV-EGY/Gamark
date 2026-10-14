@@ -7870,8 +7870,7 @@ document.head.appendChild(style);
             .map(([s]) => s);
         if (availableSizes.length > 0) size = availableSizes[0];
     }
-    if (!size) size = "غير محدد";
-
+   
     // فحص المخزون
     if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
         const stockForSize = product.stockBySize[size];
@@ -8034,7 +8033,7 @@ if (!customerWeight || customerWeight < 50 || customerWeight > 200) {
       .map(([s]) => s);
     if (availableSizes.length > 0) size = availableSizes[0];
   }
-  if (!size) size = "غير محدد";
+ 
 
   // ✅ فحص المخزون
   if (product && product.stockBySize && product.stockBySize[size] !== undefined) {
@@ -8584,13 +8583,14 @@ async function executeCheckout() {
         const orderID = `${customerCode}-${dateStr}${customerOrderCount}${String(dailyOrderCount).padStart(3, '0')}`;
         
         // ========== 6. تجهيز تفاصيل الطلب ==========
-      const orderDetails = cart.map(item => {
+    const orderDetails = cart.map(item => {
     const product = allProducts.find(p => p.id === item.productId);
-    return {
+    
+    // ✅ نبني الكائن الأساسي
+    const detail = {
         productId: item.productId,
         sku: item.sku || product?.sku || null,
         name: item.name,
-        size: item.size || "",
         qty: item.qty,
         price: item.price,
         image: item.image || "",
@@ -8600,6 +8600,13 @@ async function executeCheckout() {
         color: item.color || null,
         colorImage: item.colorImage || null
     };
+    
+    // ✅ نضيف المقاس فقط لو موجود فعلاً
+    if (item.size && item.size !== "غير محدد" && item.size !== "") {
+        detail.size = item.size;
+    }
+    
+    return detail;
 });
 
         const totalCost = cart.reduce((sum, item) => {
