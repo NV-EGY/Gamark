@@ -3323,6 +3323,7 @@ async function loadProduct() {
 const productsCollection = collection(db, "products");
 const productsSnapshot = await getDocs(productsCollection);
 window.allProducts = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+if (typeof window.updateCart === 'function') window.updateCart();
 updateCart();  // <--- تأكد من وجود هذا السطر
         const productRef = doc(db, "products", productId);
         const productSnap = await getDoc(productRef);
@@ -3830,7 +3831,14 @@ window.addToCartFromPage = function() {
         showToast('❌ المنتج غير موجود', 'error');
         return;
     }
-
+    
+    // ✅ فحص أن دالة المودال موجودة
+    if (typeof window.openSizeDataModal !== 'function') {
+        console.error('❌ openSizeDataModal غير معرفة!');
+        showToast('❌ حدث خطأ، يرجى تحديث الصفحة', 'error');
+        return;
+    }
+    
     // ✅ فحص المخزون
     const stockBySize = product.stockBySize || {};
     const hasStock = Object.values(stockBySize).some(q => q === null || q === undefined || q > 0);
@@ -4074,8 +4082,8 @@ function addProductToCartWithData(productId, size, weight, length, color = null)
     }
 
     localStorage.setItem('vante_cart', JSON.stringify(cart));
-    updateCart();
-    updateCartCount();
+if (typeof window.updateCart === 'function') window.updateCart();
+if (typeof window.updateCartCount === 'function') window.updateCartCount();
 
     if (typeof fbq !== 'undefined') {
         fbq('track', 'AddToCart', {
@@ -4099,8 +4107,8 @@ document.addEventListener('DOMContentLoaded', loadProduct);
 // ========== تحديث السلة عند العودة للصفحة ==========
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
-        updateCartCount();
-        updateCart(); // ✅ تحديث محتوى السلة أيضاً
+        if (typeof window.updateCartCount === 'function') window.updateCartCount();
+        if (typeof window.updateCart === 'function') window.updateCart();
     }
 });
 
@@ -5165,22 +5173,16 @@ function renderInfoTab(tabId) {
             });
         });
     }
-}
     
-    // ✅ إضافة ربط أحداث التبويبات الفرعية للمقاسات
+    // ✅ ربط أحداث التبويبات الفرعية للمقاسات (داخل الدالة)
     if (tabId === 'size') {
         setTimeout(() => {
             const sizeSubTabs = document.querySelectorAll('.size-subtab');
             sizeSubTabs.forEach(tab => {
                 tab.addEventListener('click', function() {
-                    // إزالة active من كل التبويبات
                     document.querySelectorAll('.size-subtab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
-                    
-                    // إخفاء كل المحتويات
                     document.querySelectorAll('.size-subcontent').forEach(c => c.classList.remove('active'));
-                    
-                    // إظهار المحتوى المطابق
                     const targetId = this.dataset.subtab + 'Tab';
                     const targetContent = document.getElementById(targetId);
                     if (targetContent) targetContent.classList.add('active');
