@@ -4475,16 +4475,16 @@ window.addToCartFromPage = function() {
     _currentSizeDataProductId = product.id;
     _availableSizesForModal = product.sizes || ['S', 'M', 'L', 'XL', '2XL', '3XL'];
 
-    window._sizeModalCallback = function(data) {
-        // ✅ إضافة المنتج بالسلة بعد تجميع البيانات
-        addProductToCartWithData(
-            product.id,
-            data.size || 'غير محدد',
-            data.weight,
-            data.length,
-            data.color
-        );
-    };
+   // ✅ الكود الجديد
+window._sizeModalCallback = function(data) {
+    addProductToCartWithData(
+        product.id,
+        data.size || '',   // ← سيبها فاضية بدل 'غير محدد'
+        data.weight,
+        data.length,
+        data.color
+    );
+};
 
     openSizeDataModal(product.id, product.name, _availableSizesForModal);
 };
@@ -5283,13 +5283,13 @@ async function executeCheckout() {
         message += `🏙️ المدينة: ${city}\n`;
         message += `🏠 العنوان: ${address}\n\n`;
 
-        cart.forEach(item => {
+     cart.forEach(item => {
     message += `• ${item.name}\n`;
     if (item.sku) message += `🔖 SKU: ${item.sku}\n`;
-    // ✅ ضيف الشروط دي
     if (item.customerWeight) message += `⚖️ الوزن: ${item.customerWeight} كجم\n`;
     if (item.customerLength) message += `📐 الطول: ${item.customerLength} سم\n`;
     if (item.size && item.size !== "غير محدد") message += `📏 المقاس: ${item.size}\n`;
+    if (item.color) message += `🎨 اللون: ${item.color}\n`;   // ← ✨ السطر الجديد
     message += `الكمية: ${item.qty}\n`;
     message += `السعر: ${item.price * item.qty} جنيه\n\n`;
 });
