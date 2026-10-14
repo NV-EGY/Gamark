@@ -2201,39 +2201,90 @@ body.modal-open{
 .lightbox-nav.prev { left: 20px; }
 .lightbox-nav.next { right: 20px; }
 
-/* ====================================
-   BEST SELLERS GALLERY
-==================================== */
-.best-seller-card .price-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 8px;
-}
-.best-seller-card .price-wrapper .old-price {
-    font-size: 13px;
-    color: #999;
-    text-decoration: line-through;
-    font-weight: 400;
-}
-.best-seller-card .price-wrapper .current-price {
-    font-size: 16px;
-    font-weight: 900;
-    color: #D4AF37;
+/* ===== معرض الأكثر مبيعاً - نسخة موحدة مع الديسكتوب ===== */
+.best-sellers {
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAF8FB 100%) !important;
+    border-radius: 24px !important;
+    padding: 25px 15px !important;
+    margin: 20px auto 25px !important;
+    box-shadow: 0 4px 20px rgba(93, 58, 122, 0.04) !important;
 }
 
-.best-sellers {
-    max-width: 100%;     /* استغلال كامل العرض */
-    padding: 0 5px;      /* مسافة صغيرة جدًا من الجوانب */
-    max-width: 1200px;
-    margin: 30px auto 10px;
-    padding: 0 20px;
+.best-seller-card {
+    position: relative !important;
+    flex: 0 0 auto !important;
+    width: 180px !important;
+    background: linear-gradient(180deg, #FFFFFF 0%, #FAF8FB 100%) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 25px rgba(93, 58, 122, 0.06) !important;
+    border: 1.5px solid #E8E0ED !important;
+    overflow: hidden !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1.2) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 15px 10px !important;
+    cursor: pointer !important;
 }
-.best-sellers h2 {
-    font-size: 28px;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #111;
+
+.best-seller-card:hover {
+    transform: translateY(-8px) !important;
+    box-shadow: 0 20px 45px rgba(93, 58, 122, 0.15) !important;
+    border-color: #D4A017 !important;
+}
+
+.best-seller-card img {
+    width: 120px !important;
+    height: 120px !important;
+    object-fit: cover !important;
+    border-radius: 16px !important;
+    margin-bottom: 10px !important;
+    background: #F0E6F5 !important;
+    border: 1px solid rgba(232, 224, 237, 0.5) !important;
+}
+
+.best-seller-card .name {
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    margin-bottom: 4px !important;
+    color: #2D2D2D !important;
+    text-align: center !important;
+    line-height: 1.4 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: 38px !important;
+}
+
+.best-seller-card .price-wrapper .current-price {
+    font-size: 16px !important;
+    font-weight: 900 !important;
+    color: #5D3A7A !important;
+}
+
+.best-seller-card .price-wrapper .old-price {
+    font-size: 12px !important;
+    color: #999 !important;
+    text-decoration: line-through !important;
+}
+
+/* الشارة - بنفسجي وذهبي (زي الديسكتوب) */
+.best-seller-badge {
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: linear-gradient(135deg, #5D3A7A 0%, #7B4B8A 100%) !important;
+    color: #FFFFFF !important;
+    padding: 4px 12px !important;
+    border-radius: 30px !important;
+    font-size: 10px !important;
+    font-weight: 800 !important;
+    z-index: 10 !important;
+    box-shadow: 0 4px 12px rgba(93, 58, 122, 0.35) !important;
+    letter-spacing: 0.3px !important;
+    white-space: nowrap !important;
+    border: 1px solid rgba(212, 160, 23, 0.4) !important;
 }
 /* ========== تمكين الالتقاط (Snap) ========== */
 .best-sellers-gallery {
@@ -2489,9 +2540,6 @@ body.modal-open{
     }
 }
 
-/* قواعد موحدة للهواتف (أقل من 600px) */
-/* قواعد موحدة للهواتف (أقل من 600px) */
-@media (max-width: 599px) {
     .best-sellers {
         padding: 0 5px;
         margin-top: 20px;
@@ -3286,83 +3334,6 @@ body.modal-open{
     }
     .rating-bars {
         width: 100%;
-    }
-}
-
-/* =========================================
-   الكمبيوتر فقط - عرض ثابت للأكثر مبيعاً
-========================================= */
-@media (min-width: 769px) {
-    .best-sellers {
-        max-width: 1200px;
-        margin: 30px auto 40px;
-        padding: 0 20px;
-    }
-    
-    .best-sellers h2 {
-        font-size: 32px;
-        margin-bottom: 30px;
-    }
-    
-    /* إخفاء عناصر التمرير التلقائي على الكمبيوتر */
-    .best-sellers-viewport,
-    .best-sellers-track,
-    .pair,
-    .gallery-wrapper,
-    .gallery-dots,
-    .gallery-btn {
-        display: none !important;
-    }
-    
-    /* شبكة ثابتة 4 أعمدة */
-    .best-sellers-gallery {
-        display: grid !important;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 24px;
-        padding: 0;
-        overflow-x: visible !important;
-    }
-    
-    /* تنسيق البطاقات */
-    .best-seller-card {
-        width: 100%;
-        padding: 18px 12px;
-        border-radius: 20px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .best-seller-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-    }
-    
-    .best-seller-card img {
-        width: 100%;
-        height: 200px;
-        object-fit: cover;
-        border-radius: 16px;
-    }
-    
-    .best-seller-card .name {
-        font-size: 16px;
-        font-weight: 700;
-        margin: 12px 0 6px;
-    }
-    
-    .best-seller-card .price-wrapper .current-price {
-        font-size: 18px;
-    }
-    
-    .best-seller-card .price-wrapper .old-price {
-        font-size: 14px;
-    }
-    
-    /* شارة أفضل مبيعاً */
-    .best-seller-badge {
-        top: 12px;
-        right: 12px;
-        padding: 4px 10px;
-        font-size: 11px;
     }
 }
 
@@ -4581,6 +4552,7 @@ body {
 }
 /* ===== القائمة الجانبية (Mobile Menu) ===== */
 .mobile-menu {
+    direction: rtl !important;   /* ← أضف هذا السطر */
     background: #FFFFFF !important;
     padding: 0 !important;
     box-shadow: -10px 0 40px rgba(93, 58, 122, 0.15) !important;
@@ -4666,6 +4638,7 @@ body {
 
 /* ===== روابط القائمة ===== */
 .mobile-menu-link {
+    direction: rtl !important;
     display: flex !important;
     align-items: center;
     justify-content: space-between;
@@ -5423,13 +5396,15 @@ body {
     font-size: 13px;
     color: #fff;
 }
-/* ===== القائمة الجانبية (Mobile Menu) - محسّنة ===== */
+/* ===== القائمة الجانبية - الأقسام (تخطيط احترافي نهائي) ===== */
 .mobile-menu-link.collection-toggle {
+    direction: rtl !important;                    /* 🔥 المفتاح الأساسي */
     display: flex !important;
     align-items: center !important;
     justify-content: flex-start !important;
-    gap: 12px !important;
+    gap: 8px !important;
     padding: 16px 22px !important;
+    margin: 0 !important;
     border-bottom: 1px solid #F0E6F5 !important;
     color: #2D2D2D !important;
     font-size: 15.5px !important;
@@ -5437,39 +5412,135 @@ body {
     transition: all 0.3s ease !important;
     background: #FFFFFF !important;
     position: relative;
+    text-decoration: none;
 }
-.mobile-menu-link.collection-toggle > i:first-child {
+
+/* 📝 النص "الأقسام" - أقصى اليمين */
+.mobile-menu-link.collection-toggle > span {
+    color: #2D2D2D;
+    font-weight: 700;
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+/* 🔽 السهم - جنب النص مباشرة */
+.mobile-menu-link.collection-toggle .arrow-icon {
+    color: #D4A017 !important;
+    font-size: 12px !important;
+    width: auto !important;
+    transition: transform 0.35s ease !important;
+    flex-shrink: 0;
+}
+
+.mobile-menu-link.collection-toggle.active .arrow-icon {
+    transform: rotate(180deg) !important;
+}
+
+/* 🎯 الأيقونة - أقصى الشمال (auto margin يدفعها) */
+.mobile-menu-link.collection-toggle > i:last-child {
+    margin-right: auto !important;   /* 🔥 هذا يدفعها للشمال بعد ضبط direction */
+    margin-left: 0 !important;
     color: #5D3A7A !important;
-    font-size: 16px !important;
-    width: 22px !important;
+    font-size: 18px !important;
+    width: 24px !important;
     text-align: center !important;
     transition: all 0.3s ease !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
 }
-.mobile-menu-link.collection-toggle > span {
-    flex: 1;
-    text-align: right;
-}
-.mobile-menu-link.collection-toggle .arrow-icon {
-    color: #5D3A7A !important;
-    font-size: 13px !important;
-    width: auto !important;
-    margin-left: 0 !important;
-    transition: transform 0.35s ease !important;
-}
-.mobile-menu-link.collection-toggle.active .arrow-icon {
-    transform: rotate(180deg);
-    color: #D4A017 !important;
-}
+
+/* عند الـ hover */
 .mobile-menu-link.collection-toggle:hover {
     background: linear-gradient(90deg, #FAF8FB 0%, #F0E6F5 100%) !important;
     color: #5D3A7A !important;
-    padding-right: 28px !important;
 }
-.mobile-menu-link.collection-toggle:hover > i:first-child {
+.mobile-menu-link.collection-toggle:hover > span {
+    color: #5D3A7A !important;
+}
+.mobile-menu-link.collection-toggle:hover > i:last-child {
     color: #D4A017 !important;
-    transform: scale(1.15);
+    transform: scale(1.15) !important;
+}
+.mobile-menu-link.collection-toggle:hover .arrow-icon {
+    color: #5D3A7A !important;
+}
+/* ═══════════════════════════════════════════════
+   🎨 Color Selector in Size Modal - محسّن واحترافي
+   ═══════════════════════════════════════════════ */
+.size-modal-field#sizeModalColorField {
+    background: linear-gradient(135deg, #FAF8FB 0%, #F5EDF8 100%);
+    border: 1.5px solid #E8DFF0;
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+}
+
+.size-modal-field#sizeModalColorField label {
+    justify-content: space-between;
+    margin-bottom: 10px;
+    color: #5D3A7A;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+/* عرض اللون المختار حالياً جنب العنوان */
+.size-modal-field#sizeModalColorField .selected-color-name {
+    background: linear-gradient(135deg, #FFF8E6, #FFF4D9);
+    color: #D4A017;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 3px 12px;
+    border-radius: 20px;
+    margin-right: auto;
+}
+
+/* شبكة الألوان */
+#sizeModalColorsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    padding: 8px 0;
+}
+
+/* دائرة اللون */
+#sizeModalColorsList > div {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 50% !important;
+    cursor: pointer;
+    transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12),
+                0 0 0 1.5px #E8DFF0;
+    border: 3px solid #FFF !important;
+}
+
+#sizeModalColorsList > div:hover:not([style*="not-allowed"]) {
+    transform: scale(1.12);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.2),
+                0 0 0 2px #D4A017;
+}
+
+#sizeModalColorsList > div.active {
+    transform: scale(1.08);
+    box-shadow: 0 6px 22px rgba(93,58,122,0.4),
+                0 0 0 3px #5D3A7A;
+}
+
+#sizeModalColorsList > div.active::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFF;
+    font-weight: 900;
+    font-size: 20px;
+    text-shadow: 0 0 6px rgba(0,0,0,0.8);
+    pointer-events: none;
 }
 
     </style>
@@ -5539,11 +5610,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <i class="fas fa-home"></i> الصفحة الرئيسية
     </a>
 
-    <div class="menu-item">
+   <div class="menu-item">
     <a href="#" class="mobile-menu-link collection-toggle" onclick="event.preventDefault(); toggleCollections(event)">
-        <i class="fas fa-th-large"></i>
         <span>الأقسام</span>
         <i class="fas fa-chevron-down arrow-icon"></i>
+        <i class="fas fa-th-large"></i>
     </a>
     <div id="collectionsSub" class="collections-sub">
         <a href="?category=all" onclick="event.preventDefault(); window.setCategory('all'); closeMobileMenu();">🏠 كل الأقسام</a>
@@ -7742,137 +7813,196 @@ if (!customerWeight || customerWeight < 50 || customerWeight > 200) {
 window._sizeDataCache = window._sizeDataCache || {};
 let _currentSizeDataProductId = null;
 
-window.openSizeDataModal = function(productId, productName) {
-  _currentSizeDataProductId = productId;
+window.openSizeDataModal = function(productId, productName, callback) {
+    _currentSizeDataProductId = productId;
+    window._sizeModalCallback = callback || null;
 
-  const modal = document.getElementById('sizeDataModal');
-  const nameEl = document.getElementById('sizeModalProductName');
-  const weightEl = document.getElementById('sizeModalWeight');
-  const lengthEl = document.getElementById('sizeModalLength');
-  const sizeEl = document.getElementById('sizeModalSize');
+    const modal = document.getElementById('sizeDataModal');
+    if (!modal) { console.error('❌ sizeDataModal غير موجود'); return; }
 
-  nameEl.textContent = '📦 ' + (productName || 'المنتج');
+    const nameEl   = document.getElementById('sizeModalProductName');
+    const weightEl = document.getElementById('sizeModalWeight');
+    const lengthEl = document.getElementById('sizeModalLength');
+    const sizeEl   = document.getElementById('sizeModalSize');
 
-  const cached = window._sizeDataCache[productId] || {};
-  weightEl.value = cached.weight || '';
-  lengthEl.value = cached.length || '';
-  if (sizeEl) sizeEl.value = cached.size || '';
-  weightEl.style.borderColor = '#D4A017';
+    if (nameEl) nameEl.textContent = '📦 ' + (productName || 'المنتج');
 
-  // ✅ إظهار الألوان إذا كان المنتج له ألوان
-  const product = window.allProducts?.find(p => p.id === productId);
-  const colors = product?.colors || [];
-  const colorField = document.getElementById('sizeModalColorField');
-  const colorsList = document.getElementById('sizeModalColorsList');
+    // استرجاع البيانات من الكاش
+    const cached = window._sizeDataCache[productId] || {};
+    if (weightEl) weightEl.value = cached.weight || '';
+    if (lengthEl) lengthEl.value = cached.length || '';
+    if (sizeEl)   sizeEl.value   = cached.size   || '';
 
-  if (colors.length > 0 && colorField && colorsList) {
-    colorField.style.display = 'block';
+    // ✅ إظهار الألوان إذا كان المنتج له ألوان
+    const product = window.allProducts?.find(p => p.id === productId);
+    const colors = product?.colors || [];
+    const colorField = document.getElementById('sizeModalColorField');
+    const colorsList = document.getElementById('sizeModalColorsList');
+    const selectedColorNameEl = document.getElementById('sizeModalSelectedColorName');
 
-    // ✅ اللون الأول المتوفر هو الافتراضي
-    const defaultColor = colors.find(c => 
-      c.stock === null || c.stock === undefined || c.stock > 0
-    ) || colors[0];
-    
-    const currentColorName = cached.color || defaultColor.name;
-    window._sizeDataCache[productId] = { ...cached, color: currentColorName };
+    if (colors.length > 0 && colorField && colorsList) {
+        colorField.style.display = 'block';
 
-    colorsList.innerHTML = colors.map(c => {
-      const isActive = c.name === currentColorName;
-      const isOut = c.stock === 0;
-      return `
-        <div onclick="${isOut ? '' : `selectSizeModalColor('${c.name.replace(/'/g, "\\'")}')`}"
-             data-color-name="${c.name}"
-             style="width:44px; height:44px; border-radius:50%;
-                    background:${c.hex || '#ccc'};
-                    border:3px solid #fff;
-                    box-shadow:0 3px 10px rgba(0,0,0,0.12),
-                               0 0 0 ${isActive ? '3px #5D3A7A' : '1.5px #e8dff0'};
-                    cursor:${isOut ? 'not-allowed' : 'pointer'};
-                    opacity:${isOut ? '0.35' : '1'};
-                    display:flex; align-items:center; justify-content:center;
-                    transition:all 0.25s;
-                    position:relative;"
-             title="${c.name}${isOut ? ' (نفذ)' : ''}">
-          ${isActive ? '<span style="color:#fff; font-weight:900; font-size:18px; text-shadow:0 0 4px #000;">✓</span>' : ''}
-        </div>`;
-    }).join('');
-  } else if (colorField) {
-    colorField.style.display = 'none';
-  }
+        const defaultColor = colors.find(c =>
+            c.stock === null || c.stock === undefined || c.stock > 0
+        ) || colors[0];
 
-  modal.classList.add('active');
-  document.body.style.overflow = 'hidden';
-  setTimeout(() => weightEl.focus(), 250);
+        const currentColorName = cached.color || defaultColor.name;
+        window._sizeDataCache[productId] = { ...cached, color: currentColorName };
+
+        // تحديث اسم اللون المعروض
+        if (selectedColorNameEl) {
+            selectedColorNameEl.textContent = currentColorName;
+        }
+
+        colorsList.innerHTML = colors.map(c => {
+            const isActive = c.name === currentColorName;
+            const isOut = c.stock === 0;
+            return `
+                <div onclick="${isOut ? '' : `selectSizeModalColor('${c.name.replace(/'/g, "\\'")}')`}"
+                     data-color-name="${c.name}"
+                     class="${isActive ? 'active' : ''}"
+                     style="background:${c.hex || '#ccc'};
+                            cursor:${isOut ? 'not-allowed' : 'pointer'};
+                            opacity:${isOut ? '0.35' : '1'};"
+                     title="${c.name}${isOut ? ' (نفذ)' : ''}">
+                </div>`;
+        }).join('');
+    } else if (colorField) {
+        colorField.style.display = 'none';
+    }
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => { if (weightEl) weightEl.focus(); }, 250);
 };
 
-// ✅ دالة اختيار اللون داخل مودال المقاس
+// ✅ دالة اختيار اللون داخل المودال (محسّنة)
 window.selectSizeModalColor = function(colorName) {
-  if (!_currentSizeDataProductId) return;
+    if (!_currentSizeDataProductId) return;
 
-  const product = window.allProducts?.find(p => p.id === _currentSizeDataProductId);
-  const color = product?.colors?.find(c => c.name === colorName);
-  if (!color || color.stock === 0) return;
+    const product = window.allProducts?.find(p => p.id === _currentSizeDataProductId);
+    const color = product?.colors?.find(c => c.name === colorName);
+    if (!color || color.stock === 0) return;
 
-  const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
-  cached.color = colorName;
-  window._sizeDataCache[_currentSizeDataProductId] = cached;
+    // تحديث الكاش
+    const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
+    cached.color = colorName;
+    window._sizeDataCache[_currentSizeDataProductId] = cached;
 
-  document.querySelectorAll('#sizeModalColorsList [data-color-name]').forEach(el => {
-    const name = el.dataset.colorName;
-    const isActive = name === colorName;
-    const c = product.colors.find(x => x.name === name);
-    const isOut = c?.stock === 0;
-    el.style.boxShadow = `0 3px 10px rgba(0,0,0,0.12), 0 0 ${isActive ? '3px #5D3A7A' : '1.5px #e8dff0'}`;
-    el.innerHTML = isActive 
-      ? '<span style="color:#fff; font-weight:900; font-size:18px; text-shadow:0 0 4px #000;">✓</span>' 
-      : '';
-  });
+    // تحديث الـ UI - إزالة active من الكل، ثم إضافة على المختار
+    document.querySelectorAll('#sizeModalColorsList > div').forEach(el => {
+        const name = el.dataset.colorName;
+        const isActive = name === colorName;
+        el.classList.toggle('active', isActive);
+    });
 
-  customAlert(`🎨 تم اختيار اللون: ${colorName}`, 'success');
+    // تحديث اسم اللون المعروض
+    const nameEl = document.getElementById('sizeModalSelectedColorName');
+    if (nameEl) nameEl.textContent = colorName;
+
+    customAlert(`🎨 تم اختيار اللون: ${colorName}`, 'success');
 };
 
 window.closeSizeDataModal = function() {
-  const modal = document.getElementById('sizeDataModal');
-  if (!modal) return;
-  modal.classList.remove('active');
-  document.body.style.overflow = '';
-  _currentSizeDataProductId = null;
+    const modal = document.getElementById('sizeDataModal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = '';
+    _currentSizeDataProductId = null;
+    window._sizeModalCallback = null;
 };
 
 window.saveSizeData = function() {
-  if (!_currentSizeDataProductId) return;
+    const modal = document.getElementById('sizeDataModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    if (!_currentSizeDataProductId) return;
 
-  const weightEl = document.getElementById('sizeModalWeight');
-  const lengthEl = document.getElementById('sizeModalLength');
-  const sizeEl = document.getElementById('sizeModalSize');
-  const weight = parseFloat(weightEl.value);
-  const length = parseFloat(lengthEl.value) || null;
-  const size = (sizeEl?.value || '').trim() || null;
+    const weightEl = document.getElementById('sizeModalWeight');
+    const lengthEl = document.getElementById('sizeModalLength');
+    const sizeEl   = document.getElementById('sizeModalSize');
 
-  if (!weight || weight < 50 || weight > 200) {
-    customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
-    weightEl.focus();
-    weightEl.style.borderColor = '#e74c3c';
-    setTimeout(() => weightEl.style.borderColor = '#D4A017', 2000);
-    return;
-  }
+    const weight = weightEl ? (parseFloat(weightEl.value) || null) : null;
+    const length = lengthEl ? (parseFloat(lengthEl.value) || null) : null;
+    const size   = sizeEl ? (sizeEl.value || '').trim() : '';
 
-  // ✅ حفظ اللون مع باقي البيانات
-  const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
-  const color = cached.color || null;
+    // ✅ يجب إدخال الوزن (50-200 كجم) أو اختيار المقاس
+    if (!weight && !size) {
+        customAlert("⚠️ يرجى إدخال الوزن أو اختيار المقاس", 'warning');
+        if (weightEl) weightEl.focus();
+        return;
+    }
 
-  window._sizeDataCache[_currentSizeDataProductId] = { weight, length, size, color };
+    if (weight && (weight < 50 || weight > 200)) {
+        customAlert("⚠️ يرجى إدخال وزن صحيح (50 - 200 كجم)", 'warning');
+        if (weightEl) weightEl.focus();
+        return;
+    }
 
-  const btn = document.querySelector(`.size-data-btn[data-product-id="${_currentSizeDataProductId}"]`);
-  if (btn) {
-    btn.classList.add('filled');
-    const sizeText = size ? ` · مقاس ${size}` : '';
-    const colorText = color ? ` · ${color}` : '';
-    btn.innerHTML = `📏 <span>${weight} كجم${sizeText}${colorText}</span>`;
-  }
+    // ✅ اللون المختار (أو الافتراضي)
+    const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
+    const product = window.allProducts?.find(p => p.id === _currentSizeDataProductId);
+    const colors = product?.colors || [];
+    let colorName = cached.color;
 
-  customAlert('✅ تم حفظ بيانات المقاس', 'success');
-  closeSizeDataModal();
+    if (!colorName && colors.length > 0) {
+        const defaultColor = colors.find(c =>
+            c.stock === null || c.stock === undefined || c.stock > 0
+        ) || colors[0];
+        colorName = defaultColor?.name || null;
+    }
+
+    const data = { weight, length, size, color: colorName };
+    window._sizeDataCache[_currentSizeDataProductId] = data;
+
+    // تحديث زر "بيانات المقاس" على الكارت
+    const btn = document.querySelector(`.size-data-btn[data-product-id="${_currentSizeDataProductId}"]`);
+    if (btn) {
+        btn.classList.add('filled');
+        let displayText = '';
+        if (weight) displayText += weight + ' كجم';
+        if (size)   displayText += (displayText ? ' · ' : '') + 'مقاس ' + size;
+        if (colorName) displayText += (displayText ? ' · ' : '') + '🎨 ' + colorName;
+        if (!displayText && length) displayText = length + ' سم';
+        btn.innerHTML = `📏 <span>${displayText}</span>`;
+    }
+
+    // ✅ إذا كان هناك callback (من زر + في السلة) → نفّذه
+    if (window._sizeModalCallback) {
+        const cb = window._sizeModalCallback;
+        window._sizeModalCallback = null;
+        closeSizeDataModal();
+        cb(data);
+        return;
+    }
+
+    customAlert('✅ تم حفظ بيانات المقاس', 'success');
+    closeSizeDataModal();
+};
+
+// ✅ دالة اختيار اللون داخل المودال
+window.selectSizeModalColor = function(colorName) {
+    if (!_currentSizeDataProductId) return;
+
+    const product = window.allProducts?.find(p => p.id === _currentSizeDataProductId);
+    const color = product?.colors?.find(c => c.name === colorName);
+    if (!color || color.stock === 0) return;
+
+    const cached = window._sizeDataCache[_currentSizeDataProductId] || {};
+    cached.color = colorName;
+    window._sizeDataCache[_currentSizeDataProductId] = cached;
+
+    document.querySelectorAll('#sizeModalColorsList [data-color-name]').forEach(el => {
+        const name = el.dataset.colorName;
+        const isActive = name === colorName;
+        const c = product.colors.find(x => x.name === name);
+        const isOut = c?.stock === 0;
+        el.style.boxShadow = `0 3px 10px rgba(0,0,0,0.12), 0 0 ${isActive ? '3px #5D3A7A' : '1.5px #e8dff0'}`;
+        el.innerHTML = isActive
+            ? '<span style="color:#fff; font-weight:900; font-size:18px; text-shadow:0 0 4px #000;">✓</span>'
+            : '';
+    });
+
+    customAlert(`🎨 تم اختيار اللون: ${colorName}`, 'success');
 };
 
     window.updateCart = function() {
@@ -7926,24 +8056,63 @@ ${item.color ? `<small style="display:block;color:#5D3A7A;font-size:11px;font-we
     localStorage.setItem('vante_cart', JSON.stringify(cart));
 };
 
-    window.changeQty = function(index, change) {
+   window.changeQty = function(index, change) {
     const item = cart[index];
     if (!item) return;
-    
+
+    // ===== ➕ زيادة الكمية =====
     if (change > 0) {
-        const product = allProducts.find(p => p.name === item.name);
+        const product = allProducts.find(p => p.id === item.productId || p.name === item.name);
+
+        // فحص المخزون
         if (product && product.stockBySize && product.stockBySize[item.size] !== undefined) {
             const stockValue = product.stockBySize[item.size];
-            // ✅ null أو undefined يعني غير محدود (لا نمنع)
             if (stockValue !== null && stockValue !== undefined) {
-                if (item.qty + change > stockValue) {
+                const totalInCart = cart
+                    .filter(it => it.name === item.name && it.size === item.size)
+                    .reduce((sum, it) => sum + it.qty, 0);
+                if (totalInCart + 1 > stockValue) {
                     customAlert(`❌ الكمية المتاحة لمقاس ${item.size} هي ${stockValue} قطعة فقط.`, 'error');
                     return;
                 }
             }
         }
+
+        // ✅ فتح مودال المقاسات للقطعة الجديدة (مع callback)
+        const productId = item.productId || product?.id;
+        openSizeDataModal(productId, item.name, function(data) {
+            const finalSize = data.size || item.size;
+
+            const existing = cart.find(it =>
+                it.name === item.name &&
+                it.size === finalSize &&
+                (it.customerWeight || null) === (data.weight || null) &&
+                (it.customerLength || null) === (data.length || null) &&
+                (it.color || null) === (data.color || null)   // ✅ ضيف اللون
+            );
+
+            if (existing) {
+                existing.qty += 1;
+            } else {
+                // جلب صورة اللون
+                const colorObj = product?.colors?.find(c => c.name === data.color);
+                cart.push({
+                    ...item,
+                    size: finalSize,
+                    customerWeight: data.weight || null,
+                    customerLength: data.length || null,
+                    color: data.color || null,               // ✅ اللون
+                    colorImage: colorObj?.image || null      // ✅ صورة اللون
+                });
+            }
+            updateCart();
+            localStorage.setItem('vante_cart', JSON.stringify(cart));
+            customAlert(`✅ تم إضافة قطعة جديدة${data.color ? ' - 🎨 ' + data.color : ''}`, 'success');
+        });
+        return;
     }
-    
+
+    // ===== ➖ تقليل الكمية =====
     item.qty += change;
     if (item.qty <= 0) {
         cart.splice(index, 1);
@@ -10550,13 +10719,11 @@ if (typeof window.customAlert === 'undefined') {
     <!-- ✅ قسم اختيار اللون (يظهر فقط لو المنتج له ألوان) -->
 <div class="size-modal-field" id="sizeModalColorField" style="display: none;">
   <label>
-    🎨 اللون
+    <span>🎨 اللون</span>
     <span class="badge" style="background:#5D3A7A;color:#fff;">اختياري</span>
+    <span class="selected-color-name" id="sizeModalSelectedColorName">—</span>
   </label>
-  <div id="sizeModalColorsList"
-       style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-              padding: 10px; background: #faf8fb; border-radius: 12px;
-              border: 1.5px solid #e8dff0;"></div>
+  <div id="sizeModalColorsList"></div>
 </div>
     <div class="size-modal-field optional">
   <label>
