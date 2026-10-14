@@ -2322,6 +2322,416 @@ button:active,
     font-size: 18px !important;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   📐 دليل المقاسات المبتكر + سياسة الاستعمال
+   ═══════════════════════════════════════════════════════════ */
+
+/* Hero */
+.size-hero {
+    text-align: center;
+    padding: 28px 20px 22px;
+    background: linear-gradient(135deg, #FAF8FB 0%, #F5EDF8 100%);
+    border-radius: 24px;
+    border: 2px solid #E8DFF0;
+    margin-bottom: 22px;
+    position: relative;
+    overflow: hidden;
+}
+.size-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(212,160,23,0.15), transparent 70%);
+    border-radius: 50%;
+}
+.size-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 140px; height: 140px;
+    background: radial-gradient(circle, rgba(93,58,122,0.1), transparent 70%);
+    border-radius: 50%;
+}
+.size-hero-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(93,58,122,0.35);
+    position: relative;
+    z-index: 1;
+    animation: pulseIcon 3s ease-in-out infinite;
+}
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); box-shadow: 0 12px 30px rgba(93,58,122,0.35); }
+    50% { transform: scale(1.05); box-shadow: 0 16px 40px rgba(93,58,122,0.5); }
+}
+.size-hero h3 {
+    font-size: 22px;
+    font-weight: 900;
+    color: #5D3A7A;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+}
+.size-hero p {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.8;
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Two Option Cards */
+.size-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+@media (max-width: 600px) {
+    .size-options-grid { grid-template-columns: 1fr; }
+}
+.size-option-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px 18px;
+    border: 2px solid #E8DFF0;
+    transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1.2);
+    position: relative;
+    overflow: hidden;
+}
+.size-option-card:hover {
+    transform: translateY(-4px);
+    border-color: #5D3A7A;
+    box-shadow: 0 15px 35px rgba(93,58,122,0.15);
+}
+.size-option-card.primary {
+    background: linear-gradient(135deg, #fff 0%, #FAF8FB 100%);
+    border-color: #D4A017;
+    box-shadow: 0 10px 30px rgba(212,160,23,0.12);
+}
+.size-option-card.primary::before {
+    content: '⭐ الأنسب';
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, #D4A017, #E8B923);
+    color: #1A1A1A;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.3px;
+}
+.option-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, #F0E6F5, #E8DFF0);
+}
+.size-option-card.primary .option-icon {
+    background: linear-gradient(135deg, #FFF4D9, #FFE9A8);
+}
+.size-option-card h4 {
+    font-size: 16px;
+    font-weight: 900;
+    color: #5D3A7A;
+    margin-bottom: 8px;
+}
+.size-option-card p {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+.size-option-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.size-option-card ul li {
+    font-size: 12px;
+    color: #27ae60;
+    font-weight: 700;
+    padding: 3px 0;
+}
+
+/* Corset Size Table */
+.corset-sizes-section {
+    background: #fff;
+    border-radius: 20px;
+    padding: 20px 18px;
+    border: 2px solid #E8DFF0;
+    margin-bottom: 22px;
+}
+.corset-sizes-section h4 {
+    font-size: 17px;
+    font-weight: 900;
+    color: #5D3A7A;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 10px;
+    border-bottom: 2px dashed #E8DFF0;
+}
+.corset-size-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(93,58,122,0.06);
+    font-size: 13px;
+}
+.corset-size-table thead th {
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+    color: #fff;
+    padding: 12px 10px;
+    font-weight: 800;
+    font-size: 13px;
+    text-align: center;
+}
+.corset-size-table tbody td {
+    padding: 11px 10px;
+    text-align: center;
+    color: #444;
+    font-weight: 600;
+    border-bottom: 1px solid #f0f0f0;
+    background: #fff;
+}
+.corset-size-table tbody tr:nth-child(even) td {
+    background: #FAF8FB;
+}
+.corset-size-table tbody tr:hover td {
+    background: #F0E6F5;
+    color: #5D3A7A;
+}
+.corset-size-table tbody td:first-child {
+    font-weight: 900;
+    color: #D4A017;
+    font-size: 15px;
+}
+
+/* Warning Box - Corset vs Clothing */
+.warning-box {
+    background: linear-gradient(135deg, #FFF8E6 0%, #FFF4D9 100%);
+    border: 2px solid #D4A017;
+    border-radius: 20px;
+    padding: 20px 18px;
+    margin-bottom: 22px;
+    position: relative;
+}
+.warning-box-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed #D4A017;
+}
+.warning-box-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #D4A017, #E8B923);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+.warning-box h4 {
+    font-size: 15px;
+    font-weight: 900;
+    color: #8B6914;
+    margin: 0;
+    line-height: 1.4;
+}
+.warning-box p {
+    color: #8B6914;
+    font-size: 13.5px;
+    line-height: 1.9;
+    margin-bottom: 12px;
+}
+.size-compare-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin: 14px 0;
+}
+@media (max-width: 500px) {
+    .size-compare-grid { grid-template-columns: 1fr; }
+}
+.compare-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    border: 2px dashed #D4A017;
+}
+.compare-card.clothes {
+    border-color: #3498db;
+    background: #EBF5FB;
+}
+.compare-card.corset {
+    border-color: #D4A017;
+    background: #FFF9E6;
+}
+.compare-card .compare-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+.compare-card.clothes .compare-label { color: #2E86C1; }
+.compare-card.corset .compare-label { color: #B8860B; }
+.compare-card .compare-size {
+    font-size: 26px;
+    font-weight: 900;
+}
+.compare-card.clothes .compare-size { color: #2E86C1; }
+.compare-card.corset .compare-size { color: #B8860B; }
+.compare-vs {
+    font-size: 18px;
+    font-weight: 900;
+    color: #D4A017;
+    text-align: center;
+}
+
+/* Usage Policy */
+.usage-policy-section {
+    background: linear-gradient(135deg, #FAF8FB 0%, #F5EDF8 100%);
+    border-radius: 24px;
+    padding: 22px 20px;
+    border: 2px solid #E8DFF0;
+    margin-bottom: 8px;
+}
+.usage-policy-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px dashed #D4C7DD;
+}
+.usage-policy-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 22px;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(93,58,122,0.3);
+}
+.usage-policy-header h4 {
+    font-size: 17px;
+    font-weight: 900;
+    color: #5D3A7A;
+    margin: 0;
+    line-height: 1.3;
+}
+.usage-policy-header small {
+    display: block;
+    font-size: 11.5px;
+    color: #888;
+    margin-top: 2px;
+    font-weight: 500;
+}
+.policy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+@media (max-width: 600px) {
+    .policy-grid { grid-template-columns: 1fr; }
+}
+.policy-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px 14px;
+    border: 1.5px solid #E8DFF0;
+    transition: all 0.3s ease;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.policy-card:hover {
+    transform: translateY(-2px);
+    border-color: #5D3A7A;
+    box-shadow: 0 8px 20px rgba(93,58,122,0.08);
+}
+.policy-card-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #F0E6F5, #E8DFF0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+.policy-card-content h5 {
+    font-size: 13.5px;
+    font-weight: 900;
+    color: #5D3A7A;
+    margin: 0 0 5px;
+}
+.policy-card-content p {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+    margin: 0;
+}
+.policy-card.danger .policy-card-icon {
+    background: linear-gradient(135deg, #FFE5E5, #FFD0D0);
+}
+.policy-card.danger h5 { color: #c0392b; }
+.policy-card.success .policy-card-icon {
+    background: linear-gradient(135deg, #E8F5E9, #D5F0D8);
+}
+.policy-card.success h5 { color: #1e8449; }
+.policy-card.info .policy-card-icon {
+    background: linear-gradient(135deg, #E8F0F5, #D5E5F0);
+}
+.policy-card.info h5 { color: #2E86C1; }
+
+/* Note box inside policy */
+.policy-note {
+    background: linear-gradient(135deg, #FFF8E6, #FFF4D9);
+    border-right: 4px solid #D4A017;
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: #8B6914;
+    line-height: 1.8;
+    margin-top: 14px;
+    font-weight: 600;
+}
+.policy-note strong { color: #B8860B; }
+
     </style>
 </head>
 <body>
@@ -3443,147 +3853,291 @@ if (inlineSizeEl) {
 const category = product.category || 'women_corset_belly_back';
 const sizeGuideContent = document.getElementById('sizeGuideContent');
 
-// تعريف أدلة المقاسات حسب الفئة
-const sizeGuides = {
+// ═══════════════════════════════════════════════════════════════
+// 📐 دليل المقاسات المبتكر + سياسة الاستعمال (موحدة لكل المنتجات)
+// ═══════════════════════════════════════════════════════════════
+
+// 🩺 سياسة الاستعمال (نفسها لكل المنتجات)
+const commonUsagePolicy = `
+    <div class="usage-policy-section">
+        <div class="usage-policy-header">
+            <div class="usage-policy-icon">🩺</div>
+            <div>
+                <h4>سياسة استعمال المشد الطبي</h4>
+                <small>اقرئيها بعناية للحصول على أفضل نتيجة</small>
+            </div>
+        </div>
+
+        <div class="policy-grid">
+            <div class="policy-card success">
+                <div class="policy-card-icon">⏰</div>
+                <div class="policy-card-content">
+                    <h5>عدد ساعات الاستخدام</h5>
+                    <p>8 - 10 ساعات يومياً للحصول على أفضل نتيجة. في أول أسبوع ابدئي بساعتين وزيديها تدريجياً.</p>
+                </div>
+            </div>
+
+            <div class="policy-card danger">
+                <div class="policy-card-icon">🌙</div>
+                <div class="policy-card-content">
+                    <h5>ممنوع النوم بالمشد</h5>
+                    <p>لا يُنصح بالنوم بالمشد نهائياً — صحة جسمك أولوية عندنا.</p>
+                </div>
+            </div>
+
+            <div class="policy-card info">
+                <div class="policy-card-icon">🧼</div>
+                <div class="policy-card-content">
+                    <h5>طريقة الغسيل</h5>
+                    <p>غسيل يدوي فقط بماء فاتر ومسحوق خفيف. ممنوع الغسالة والنقع الطويل والكلور.</p>
+                </div>
+            </div>
+
+            <div class="policy-card info">
+                <div class="policy-card-icon">☁️</div>
+                <div class="policy-card-content">
+                    <h5>طريقة التجفيف</h5>
+                    <p>جففيه في الهواء الطبيعي بعيداً عن الشمس المباشرة للحفاظ على الخامة.</p>
+                </div>
+            </div>
+
+            <div class="policy-card success">
+                <div class="policy-card-icon">✨</div>
+                <div class="policy-card-content">
+                    <h5>النتيجة المتوقعة</h5>
+                    <p>نتيجة فورية من أول استخدام، ونتيجة مثالية بعد 3-4 أسابيع من الاستخدام المنتظم.</p>
+                </div>
+            </div>
+
+            <div class="policy-card info">
+                <div class="policy-card-icon">🤍</div>
+                <div class="policy-card-content">
+                    <h5>نصيحة إضافية</h5>
+                    <p>البسيه على جسم نظيف وجاف. اخلعيه لو حسيتي بضيق شديد أو تنميل.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="policy-note">
+            💡 <strong>مهم:</strong> المشد الطبي مش بديل عن الرياضة أو النظام الغذائي الصحي — هو أداة مساعدة لتحديد القوام بشكل أسرع وأفضل.
+        </div>
+    </div>
+`;
+
+// ⚠️ تنبيه مهم: الفرق بين مقاس الكورسيه ومقاس الملابس
+const corsetVsClothesNote = `
+    <div class="warning-box">
+        <div class="warning-box-header">
+            <div class="warning-box-icon">⚠️</div>
+            <h4>مهم جداً: مقاس الكورسيه ≠ مقاس الملابس العادية</h4>
+        </div>
+        <p>
+            مقاسات الكورسيه <strong>مختلفة تماماً</strong> عن مقاسات الملابس العادية.
+            لأن الكورسيه بيشتغل بنظام <strong>الضغط والشد</strong>، فالمقاس لازم يكون
+            <strong>أصغر من مقاس ملابسك</strong> عشان يدي النتيجة المطلوبة.
+        </p>
+        <div class="size-compare-grid">
+            <div class="compare-card clothes">
+                <div class="compare-label">👗 ملابس عادية</div>
+                <div class="compare-size">L</div>
+            </div>
+            <div class="compare-vs">≠</div>
+            <div class="compare-card corset">
+                <div class="compare-label">🎀 كورسيه</div>
+                <div class="compare-size">XL</div>
+            </div>
+        </div>
+        <p style="margin-bottom:0;">
+            <strong>مثال:</strong> لو بتلبسي مقاس L في الملابس، فمقاس الكورسيه المناسب ليكي هو XL غالباً.
+            علشان كده <strong>الأفضل تسيبيها للمختص</strong> يحدد مقاسك بالظبط من الوزن والطول. ✨
+        </p>
+    </div>
+`;
+
+// 📐 Hero + الاختيار بين طريقتين
+const smartSizingHero = `
+    <div class="size-hero">
+        <div class="size-hero-icon">📐</div>
+        <h3>نظام تحديد المقاس الذكي</h3>
+        <p>مش محتاجة تحسبي حاجة! اختاري الطريقة الأنسب ليكي وفريقنا هيساعدك توصلي لمقاسك المثالي.</p>
+    </div>
+
+    <div class="size-options-grid">
+        <div class="size-option-card primary">
+            <div class="option-icon">⚖️</div>
+            <h4>مش عارفة مقاسك؟</h4>
+            <p>ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.</p>
+            <ul>
+                <li>✓ دقة عالية 100%</li>
+                <li>✓ مجاناً تماماً</li>
+                <li>✓ استشارة من مختص</li>
+            </ul>
+        </div>
+
+        <div class="size-option-card">
+            <div class="option-icon">📏</div>
+            <h4>عارف مقاس الكورسيه؟</h4>
+            <p>لو متأكدة من مقاسك، اكتبيه مباشرة عند الطلب وهنشحنه ليكي على طول.</p>
+            <ul>
+                <li>✓ سريع ومباشر</li>
+                <li>✓ مش محتاج بيانات إضافية</li>
+            </ul>
+        </div>
+    </div>
+`;
+
+// جدول المقاسات الخاص بكل فئة
+const corsetTables = {
     'women_waist': `
-        <h4>📏 دليل مقاسات حزام البطن</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن التقريبي (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>S</td><td>60-66</td><td>45-55</td></tr>
-                <tr><td>M</td><td>66-72</td><td>55-65</td></tr>
-                <tr><td>L</td><td>72-78</td><td>65-75</td></tr>
-                <tr><td>XL</td><td>78-84</td><td>75-85</td></tr>
-                <tr><td>2XL</td><td>84-90</td><td>85-95</td></tr>
-                <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً — مش محتاجة تحسبي حاجة بنفسك.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات حزام البطن</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
+                <tbody>
+                    <tr><td>S</td><td>60-66</td><td>45-55</td></tr>
+                    <tr><td>M</td><td>66-72</td><td>55-65</td></tr>
+                    <tr><td>L</td><td>72-78</td><td>65-75</td></tr>
+                    <tr><td>XL</td><td>78-84</td><td>75-85</td></tr>
+                    <tr><td>2XL</td><td>84-90</td><td>85-95</td></tr>
+                    <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
+                </tbody>
+            </table>
         </div>
     `,
     'women_corset_belly_back': `
-        <h4>📏 دليل مقاسات كورسيه البطن والضهر</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>محيط الأرداف (سم)</th><th>الوزن (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
-                <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
-                <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
-                <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
-                <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
-                <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات كورسيه البطن والضهر</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الوسط</th><th>محيط الأرداف</th><th>الوزن</th></tr></thead>
+                <tbody>
+                    <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
+                    <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
+                    <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
+                    <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
+                    <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
+                    <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
+                </tbody>
+            </table>
         </div>
     `,
     'women_shorts_belly': `
-        <h4>📏 دليل مقاسات شورت البطن</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>S</td><td>60-66</td><td>45-55</td></tr>
-                <tr><td>M</td><td>66-72</td><td>55-65</td></tr>
-                <tr><td>L</td><td>72-78</td><td>65-75</td></tr>
-                <tr><td>XL</td><td>78-84</td><td>75-85</td></tr>
-                <tr><td>2XL</td><td>84-90</td><td>85-95</td></tr>
-                <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات شورت البطن</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الوسط</th><th>الوزن</th></tr></thead>
+                <tbody>
+                    <tr><td>S</td><td>60-66</td><td>45-55</td></tr>
+                    <tr><td>M</td><td>66-72</td><td>55-65</td></tr>
+                    <tr><td>L</td><td>72-78</td><td>65-75</td></tr>
+                    <tr><td>XL</td><td>78-84</td><td>75-85</td></tr>
+                    <tr><td>2XL</td><td>84-90</td><td>85-95</td></tr>
+                    <tr><td>3XL</td><td>90-96</td><td>95-105</td></tr>
+                </tbody>
+            </table>
         </div>
     `,
     'women_full_corset': `
-        <h4>📏 دليل مقاسات الكورسيه الكامل</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>محيط الأرداف (سم)</th><th>الوزن (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
-                <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
-                <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
-                <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
-                <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
-                <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارفة مقاسك؟</strong> ابعتيلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليكي تلقائياً.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات الكورسيه الكامل</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الوسط</th><th>محيط الأرداف</th><th>الوزن</th></tr></thead>
+                <tbody>
+                    <tr><td>S</td><td>60-66</td><td>86-92</td><td>45-55</td></tr>
+                    <tr><td>M</td><td>66-72</td><td>92-98</td><td>55-65</td></tr>
+                    <tr><td>L</td><td>72-78</td><td>98-104</td><td>65-75</td></tr>
+                    <tr><td>XL</td><td>78-84</td><td>104-110</td><td>75-85</td></tr>
+                    <tr><td>2XL</td><td>84-90</td><td>110-116</td><td>85-95</td></tr>
+                    <tr><td>3XL</td><td>90-96</td><td>116-122</td><td>95-105</td></tr>
+                </tbody>
+            </table>
         </div>
     `,
     'men_vest_corset': `
-        <h4>📏 دليل مقاسات كورسيه الفانيلة الرجالي</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الصدر (سم)</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>M</td><td>90-96</td><td>76-82</td><td>65-75</td></tr>
-                <tr><td>L</td><td>96-102</td><td>82-88</td><td>75-85</td></tr>
-                <tr><td>XL</td><td>102-108</td><td>88-94</td><td>85-95</td></tr>
-                <tr><td>2XL</td><td>108-114</td><td>94-100</td><td>95-105</td></tr>
-                <tr><td>3XL</td><td>114-120</td><td>100-106</td><td>105-115</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارف مقاسك؟</strong> ابعتلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليك تلقائياً.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات كورسيه الفانيلة الرجالي</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الصدر</th><th>محيط الوسط</th><th>الوزن</th></tr></thead>
+                <tbody>
+                    <tr><td>M</td><td>90-96</td><td>76-82</td><td>65-75</td></tr>
+                    <tr><td>L</td><td>96-102</td><td>82-88</td><td>75-85</td></tr>
+                    <tr><td>XL</td><td>102-108</td><td>88-94</td><td>85-95</td></tr>
+                    <tr><td>2XL</td><td>108-114</td><td>94-100</td><td>95-105</td></tr>
+                    <tr><td>3XL</td><td>114-120</td><td>100-106</td><td>105-115</td></tr>
+                </tbody>
+            </table>
         </div>
     `,
     'men_shorts': `
-        <h4>📏 دليل مقاسات الشورت الرجالي</h4>
-        <table class="size-guide-table">
-            <thead><tr><th>المقاس</th><th>محيط الوسط (سم)</th><th>الوزن (كجم)</th></tr></thead>
-            <tbody>
-                <tr><td>M</td><td>76-82</td><td>65-75</td></tr>
-                <tr><td>L</td><td>82-88</td><td>75-85</td></tr>
-                <tr><td>XL</td><td>88-94</td><td>85-95</td></tr>
-                <tr><td>2XL</td><td>94-100</td><td>95-105</td></tr>
-                <tr><td>3XL</td><td>100-106</td><td>105-115</td></tr>
-            </tbody>
-        </table>
-        <div style="background:#faf8fb; border-right:4px solid #5D3A7A; padding:14px 16px; border-radius:12px; margin-top:15px; font-size:13px; color:#5D3A7A; line-height:1.8;">
-            🤍 <strong>مش عارف مقاسك؟</strong> ابعتلنا <strong>وزنك وطولك</strong> وفريقنا المختص هيحدد المقاس المثالي ليك تلقائياً.
+        <div class="corset-sizes-section">
+            <h4>📊 جدول مقاسات الشورت الرجالي</h4>
+            <table class="corset-size-table">
+                <thead><tr><th>المقاس</th><th>محيط الوسط</th><th>الوزن</th></tr></thead>
+                <tbody>
+                    <tr><td>M</td><td>76-82</td><td>65-75</td></tr>
+                    <tr><td>L</td><td>82-88</td><td>75-85</td></tr>
+                    <tr><td>XL</td><td>88-94</td><td>85-95</td></tr>
+                    <tr><td>2XL</td><td>94-100</td><td>95-105</td></tr>
+                    <tr><td>3XL</td><td>100-106</td><td>105-115</td></tr>
+                </tbody>
+            </table>
         </div>
     `
 };
+
+// دمج المحتوى
+const sizeGuides = {};
+Object.keys(corsetTables).forEach(cat => {
+    sizeGuides[cat] = `
+        ${smartSizingHero}
+        ${corsetTables[cat]}
+        ${corsetVsClothesNote}
+        ${commonUsagePolicy}
+    `;
+});
+
+// ⚠️ منتجات أخرى (مش كورسيه) — سياسة الاستعمال فقط
+const genericProductsNote = `
+    <div class="size-hero">
+        <div class="size-hero-icon">✨</div>
+        <h3>دليل المنتج</h3>
+        <p>منتج فاخر من GAMARK بجودة عالية وخامات آمنة. اقرئي سياسة الاستعمال بعناية.</p>
+    </div>
+`;
 
 // تحديد التبويب الافتراضي
 let defaultTab = 'sizes';
 
 if (sizeGuideContent && sizeGuides[category]) {
-    // ✅ يوجد دليل مقاسات لهذه الفئة
+    // ✅ كورسيه — دليل مقاسات كامل + سياسة الاستعمال
     sizeGuideContent.innerHTML = sizeGuides[category];
     
-    // إظهار تبويب المقاسات
     const sizesTabBtn = document.querySelector('[data-tab="sizes"]');
     const sizesTabPane = document.getElementById('tab-sizes');
     if (sizesTabBtn) {
         sizesTabBtn.style.display = '';
         sizesTabBtn.style.flex = '1';
+        sizesTabBtn.innerHTML = '📏 المقاسات والاستعمال';
     }
-    if (sizesTabPane) {
-        sizesTabPane.style.display = '';
-    }
+    if (sizesTabPane) sizesTabPane.style.display = '';
     defaultTab = 'sizes';
 } else {
-    // ❌ لا يوجد دليل مقاسات (مثل السلاسل، الحلقان، الخلخال)
+    // ✅ منتجات أخرى (سلاسل، حلقان، إلخ) — سياسة استعمال عامة فقط
     if (sizeGuideContent) {
-        sizeGuideContent.innerHTML = '';
+        sizeGuideContent.innerHTML = genericProductsNote + commonUsagePolicy;
     }
     
-    // إخفاء تبويب المقاسات
     const sizesTabBtn = document.querySelector('[data-tab="sizes"]');
     const sizesTabPane = document.getElementById('tab-sizes');
     if (sizesTabBtn) {
-        sizesTabBtn.style.display = 'none';
+        sizesTabBtn.style.display = '';
+        sizesTabBtn.style.flex = '1';
+        sizesTabBtn.innerHTML = '🩺 سياسة الاستعمال';
     }
-    if (sizesTabPane) {
-        sizesTabPane.style.display = 'none';
-    }
-    defaultTab = 'shipping';
+    if (sizesTabPane) sizesTabPane.style.display = '';
+    defaultTab = 'sizes';  // ← اجعلها افتراضية لكي يراها العميل فوراً
 }
 
-// إعادة توزيع العرض على الأزرار المتبقية (بعد الإخفاء)
+// إعادة توزيع العرض على الأزرار
 const tabsHeader = document.querySelector('.tabs-header');
 const visibleBtns = tabsHeader?.querySelectorAll('button:not([style*="display: none"])');
 visibleBtns?.forEach(btn => btn.style.flex = '1');
