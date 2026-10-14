@@ -1665,31 +1665,151 @@ return {
 };
 }
 
-// ===== تحليل سطر المنتجات (متعدد + أسعار داخلية) - نسخة محسّنة =====
+// ═══════════════════════════════════════════════════════
+// 🎨 قائمة الألوان المعروفة + استخراج اللون من الاسم
+// ═══════════════════════════════════════════════════════
+
+const KNOWN_COLORS = [
+    // ===== عربي =====
+    'أسود', 'اسود', 'أبيض', 'ابيض', 'أحمر', 'احمر', 'أزرق', 'ازرق', 'أخضر', 'اخضر',
+    'أصفر', 'اصفر', 'برتقالي', 'برتقالى', 'بنفسجي', 'بنفسجى', 'وردي', 'وردى', 'روز',
+    'بيج', 'بني', 'بنى', 'رمادي', 'رمادى', 'رصاصي', 'رصاصى', 'كحلي', 'كحلى',
+    'ذهبي', 'ذهبى', 'فضي', 'فضى', 'نبيتي', 'نبيتى', 'تركواز', 'تركوازي', 'تركوازى',
+    'موف', 'ليموني', 'ليمونى', 'سكري', 'سكرى', 'بشت', 'كافيه',
+    'أوف وايت', 'اوف وايت', 'أوفوايت', 'اوفوايت',
+    'كريمي', 'كريمى', 'كريمة', 'سيلفر', 'جولد', 'نحاسي', 'نحاسى',
+    'فيروزي', 'فيروزى', 'خمري', 'خمرى', 'جملي', 'جملية',
+    'لبني', 'لبنى', 'سماوي', 'سماوى', 'زيتي', 'زيتى',
+    'مطفي', 'مطفى', 'لامع', 'شفاف', 'بينك', 'بلاك', 'وايت',
+    // ===== إنجليزي =====
+    'black', 'white', 'red', 'blue', 'green', 'yellow', 'orange', 'purple',
+    'pink', 'beige', 'brown', 'gray', 'grey', 'navy', 'gold', 'silver',
+    'rose', 'cream', 'off white', 'turquoise', 'teal', 'maroon', 'burgundy',
+    'blue', 'sky blue', 'olive', 'dark', 'light'
+];
+
+// تطبيع اسم اللون (بدون همزات/تشكيل)
+function normalizeColor(str) {
+    if (!str) return '';
+    return String(str).trim().toLowerCase()
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه')
+        .replace(/[ًٌٍَُِّْـ]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+const NORMALIZED_COLORS = KNOWN_COLORS.map(c => normalizeColor(c));
+
+// هل النص ده لون معروف؟
+function isKnownColor(text) {
+    if (!text) return false;
+    const norm = normalizeColor(text);
+    if (!norm) return false;
+    return NORMALIZED_COLORS.includes(norm);
+}
+
+// محاولة استخراج اللون من نهاية اسم المنتج (بدون أقواس)
+// "مشد كامل أسود" → { cleanName: "مشد كامل", color: "أسود" }
+// "مشد كامل أوف وايت" → { cleanName: "مشد كامل", color: "أوف وايت" }
+function extractColorFromName(name) {
+    if (!name) return { cleanName: name, color: null };
+
+    const words = name.trim().split(/\s+/);
+    if (words.length < 2) return { cleanName: name, color: null };
+
+    // 1️⃣ جرّب آخر كلمتين (زي "أوف وايت"، "sky blue")
+    if (words.length >= 3) {
+        const lastTwo = words.slice(-2).join(' ');
+        if (isKnownColor(lastTwo)) {
+            const cleanName = words.slice(0, -2).join(' ').trim();
+            if (cleanName.length >= 2) {
+                return { cleanName, color: lastTwo };
+            }
+        }
+    }
+
+    // 2️⃣ جرّب آخر كلمة واحدة
+    const lastWord = words[words.length - 1];
+    if (isKnownColor(lastWord)) {
+        const cleanName = words.slice(0, -1).join(' ').trim();
+        // ✅ لازم يفضل اسم المنتج على الأقل حرفين
+        if (cleanName.length >= 2) {
+            return { cleanName, color: lastWord };
+        }
+    }
+
+    return { cleanName: name, color: null };
+}
+
+// ===== تحليل سطر المنتجات (متعدد + أسعار + ألوان + مقاسات داخلية) =====
 function parseProductLine(value) {
     if (!value) return [];
     const products = [];
-
-    if (/السعر/.test(value)) {
-        const parts = splitProductValues(value);
-        for (const part of parts) {
-            const priceMatch = part.match(/\(?\s*السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)?/);
-            const price = priceMatch ? parseFloat(priceMatch[1]) : null;
-            let name = part
-                .replace(/\(?\s*السعر\s*[:：]?\s*\d+(?:\.\d+)?\s*\)?/g, '')
-                .trim();
-            name = name.replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
-            if (name) products.push({ name, price });
-        }
-        return products.length ? products : [{ name: value.trim(), price: null }];
-    }
-
     const parts = splitProductValues(value);
-    if (parts.length > 1) {
-        return parts.map(p => ({ name: p, price: null }));
+
+    for (const rawPart of parts) {
+        let part = rawPart.trim();
+        if (!part) continue;
+
+        let price = null;
+        let color = null;
+        let size = null;
+
+        // 1️⃣ استخراج "السعر 300" أو "(السعر 300)"
+        const labelMatch = part.match(/\(?\s*السعر\s*[:：]?\s*(\d+(?:\.\d+)?)\s*\)?/);
+        if (labelMatch) {
+            price = parseFloat(labelMatch[1]);
+            part = part.replace(labelMatch[0], ' ').trim();
+        }
+
+        // 2️⃣ استخراج كل الأقواس واحدة واحدة
+        let safety = 0;
+        while (safety++ < 20) {
+            const m = part.match(/\(([^()]*)\)/);
+            if (!m) break;
+
+            const c = m[1].trim();
+
+            if (/^\d+(\.\d+)?$/.test(c) && price === null) {
+                // رقم صافي → سعر
+                price = parseFloat(c);
+            } else if (/^(S|M|L|XL|2XL|3XL|XXL|XXXL)$/i.test(c) && size === null) {
+                // مقاس معروف → مقاس المنتج
+                size = c.toUpperCase();
+            } else if (color === null && c) {
+                // أي نص تاني → لون (حتى لو مش من القائمة، لأن المستخدم كتبه جوه قوس صريح)
+                color = c;
+            }
+
+            part = part.replace(m[0], ' ').trim();
+        }
+
+        let name = part.replace(/\s+/g, ' ').replace(/^[\s\-–—]+|[\s\-–—]+$/g, '').trim();
+
+        // 3️⃣ ✅ لو مفيش لون في الأقواس → نجرّب نستخرجه من نهاية الاسم
+        if (!color && name) {
+            const extracted = extractColorFromName(name);
+            if (extracted.color) {
+                name = extracted.cleanName;
+                color = extracted.color;
+            }
+        }
+
+        if (name || price !== null || color || size) {
+            products.push({
+                name: name || 'منتج',
+                price,
+                color,
+                size
+            });
+        }
     }
 
-    return [{ name: value.trim(), price: null }];
+    return products.length
+        ? products
+        : [{ name: value.trim(), price: null, color: null, size: null }];
 }
 
 // ===== تحليل سطر الأوزان/الأطوال (متعدد) - نسخة محسّنة =====
@@ -1724,7 +1844,56 @@ function parseOrdersFromPaste(text) {
     return orders;
 }
 
-// ===== تحليل بلوك طلب واحد =====
+// ═══════════════════════════════════════════════════════
+// 🧩 توزيع المقاسات والأوزان على المنتجات (Index-Based)
+// ═══════════════════════════════════════════════════════
+function resolveOrderAttributes(order) {
+    const products = order.products || [];
+    const N = products.length;
+
+    if (N === 0) {
+        return { error: 'لا توجد منتجات محددة' };
+    }
+
+    const sizes   = order.sizes   || [];
+    const weights = order.weights || [];
+
+    // ✅ التحقق: عدد المقاسات لازم يطابق عدد المنتجات (أو صفر)
+    if (sizes.length > 0 && sizes.length !== N) {
+        return {
+            error: `عدد المقاسات (${sizes.length}) مش مطابق لعدد المنتجات (${N}). لازم تكتب ${N} مقاس أو تسيبها فاضية.`
+        };
+    }
+
+    // ✅ التحقق: عدد الأوزان/الأطوال لازم يطابق عدد المنتجات (أو صفر)
+    if (weights.length > 0 && weights.length !== N) {
+        return {
+            error: `عدد الأوزان/الأطوال (${weights.length}) مش مطابق لعدد المنتجات (${N}). لازم تكتب ${N} وزن/طول أو تسيبها فاضية.`
+        };
+    }
+
+    // ✅ التوزيع بالفهرس
+    const items = [];
+    for (let i = 0; i < N; i++) {
+        const p = products[i];
+        const s = sizes[i] || p.size || null;   // الأولوية: "المقاس" الخارجي > المقاس الداخلي في ()
+        const w = weights[i] || { weight: null, weightMax: null, length: null };
+
+        items.push({
+            name: p.name,
+            price: (p.price != null) ? p.price : (order.price != null ? order.price : null),
+            color: p.color || null,
+            size: s ? String(s).trim() : null,
+            weight: w.weight,
+            weightMax: w.weightMax,
+            length: w.length,
+            qty: p.qty || 1
+        });
+    }
+
+    return { items };
+}
+
 function parseOrderBlock(block) {
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
@@ -1741,10 +1910,10 @@ function parseOrderBlock(block) {
         sizes: [],
         weight: null, weightMax: null, length: null,
         weights: [],
-        price: null,          // ✅ null بدل 0
+        price: null,
         shipping: 0,
-        _hasPrice: false,     // ✅ جديد
-        _hasShipping: false,  // ✅ موجود مسبقاً
+        _hasPrice: false,
+        _hasShipping: false,
         notes: '',
         _errors: [], _warnings: [],
         _product: null,
@@ -1764,13 +1933,12 @@ function parseOrderBlock(block) {
             const key = normalizeArabic(km[1]);
             const value = km[2].trim();
 
-            // لو كنا في وضع WL، نحلل الـ buffer الأول
             if (wlBuffer !== null) {
                 const wls = parseWeightsLengths(wlBuffer);
                 order.weights = wls;
-                order.weight = wls[0]?.weight || null;
+                order.weight  = wls[0]?.weight || null;
                 order.weightMax = wls[0]?.weightMax || null;
-                order.length = wls[0]?.length || null;
+                order.length  = wls[0]?.length || null;
                 wlBuffer = null;
             }
 
@@ -1800,9 +1968,9 @@ function parseOrderBlock(block) {
                 order.productName = order.products[0]?.name || value;
                 lastKey = 'product';
             } else if (key === 'مقاس' || key.includes('المقاس') || key === 'قياس') {
-            order.sizeRaw = value;
-             order.sizes = parseSizes(value);
-             lastKey = 'size';
+                order.sizeRaw = value;
+                order.sizes = parseSizes(value);
+                lastKey = 'size';
             } else if (key.includes('وزن') || key.includes('طول')) {
                 if (lastKey === 'wl' && wlBuffer !== null) {
                     wlBuffer += ' ' + line;
@@ -1812,8 +1980,8 @@ function parseOrderBlock(block) {
                 }
             } else if (key.includes('سعر')) {
                 const p = parseFloat(toEnglishDigits(value));
-                order.price = isNaN(p) ? null : p;   // ✅ يقبل الصفر
-                order._hasPrice = true;              // ✅ جديد
+                order.price = isNaN(p) ? null : p;
+                order._hasPrice = true;
                 lastKey = 'price';
             } else if (key.includes('شحن')) {
                 const s = parseFloat(toEnglishDigits(value));
@@ -1832,21 +2000,20 @@ function parseOrderBlock(block) {
         }
     }
 
-    // معالجة الـ buffer الأخير
+    // معالجة آخر wlBuffer
     if (wlBuffer !== null) {
         const wls = parseWeightsLengths(wlBuffer);
         order.weights = wls;
-        order.weight = wls[0]?.weight || null;
+        order.weight  = wls[0]?.weight || null;
         order.weightMax = wls[0]?.weightMax || null;
-        order.length = wls[0]?.length || null;
+        order.length  = wls[0]?.length || null;
     } else {
         order.weights = [];
     }
 
-    // لو مفيش منتجات، استخدم الاسم القديم
     if (!order.products || order.products.length === 0) {
         order.products = order.productName
-            ? [{ name: order.productName, price: order.price }]
+            ? [{ name: order.productName, price: order.price, color: null, size: null }]
             : [];
     }
 
@@ -1950,7 +2117,6 @@ window.closePasteOrdersModal = function() {
     document.getElementById('pasteOrdersModal').classList.remove('active');
 };
 
-// ===== معاينة فورية عند الكتابة =====
 document.getElementById('pasteOrdersTextarea')?.addEventListener('input', function(e) {
     const text = e.target.value;
     const preview = document.getElementById('pasteOrdersPreview');
@@ -1968,23 +2134,23 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
     </div>`;
 
     orders.forEach((o, i) => {
+        // ✅ توزيع القيم على المنتجات
+        const dist = resolveOrderAttributes(o);
+        const hasError = !!dist.error;
+        const items = dist.items || [];
+
+        // ✅ فحص الهاتف
         const phone = o.phones[0] || null;
         const phoneOk = !!phone;
         const secondPhone = o.phones[1] ? ` (+${o.phones[1]})` : '';
 
-        // مطابقة المنتج
-        const product = o.productName ? findProductByName(o.productName, allProducts) : null;
-        const productBadge = !o.productName
-            ? `<span style="background:#e74c3c; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">❌ مش محدد</span>`
-            : product
-                ? `<span style="background:#27ae60; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">✓ ${product.name}</span>`
-                : `<span style="background:#f39c12; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير معروف بالموقع</span>`;
+        const borderColor = hasError ? '#e74c3c' : (phoneOk ? '#27ae60' : '#f39c12');
 
         const phoneBadge = phoneOk
             ? `<span style="background:#27ae60; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">✓ ${phone}${secondPhone}</span>`
-            : `<span style="background:#e74c3c; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير مصري: ${o.rawPhone || '—'}</span>`;
+            : `<span style="background:#f39c12; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px;">⚠️ غير مصري: ${o.rawPhone || '—'} (هيتضاف لو وافقت)</span>`;
 
-                const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
+        const govBadge = o.govOriginal && o.gov && o.gov !== o.govOriginal
             ? `<span title="الأصل: ${o.govOriginal}" style="color:#8B6914;">📍 ${o.gov} (مصحّح)</span>`
             : `📍 ${o.gov || o.govOriginal || '—'}`;
 
@@ -1992,31 +2158,51 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
             ? `<span style="background:#f39c12; color:#fff; padding:1px 8px; border-radius:8px; font-size:9px; margin-right:4px;">⚠️ غير معروفة</span>`
             : '';
 
+        // ✅ بناء قائمة المنتجات مع قيمها
+        let itemsHtml = '';
+        if (hasError) {
+            itemsHtml = `<div style="background:#fee; color:#c0392b; padding:10px; border-radius:8px; font-size:12px; font-weight:700; border-right:3px solid #e74c3c; margin-top:6px;">
+                🚨 ${dist.error}
+            </div>`;
+        } else {
+            itemsHtml = items.map((it, idx) => {
+                const priceText = it.price != null ? `${it.price}ج` : '—';
+                const sizeText = it.size ? `مقاس: ${it.size}` : 'بدون مقاس';
+                const weightText = it.weight
+                    ? (it.weightMax && it.weightMax !== it.weight
+                        ? `⚖️ من ${it.weight} إلى ${it.weightMax} كجم`
+                        : `⚖️ ${it.weight} كجم`)
+                    : 'بدون وزن';
+                const lengthText = it.length ? `📐 ${it.length} سم` : '';
+                const colorText = it.color ? `🎨 ${it.color}` : '';
+
+                return `
+                    <div style="background:#fff; border:1px solid #eee; border-radius:8px; padding:6px 10px; margin-top:4px; font-size:11px; display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+                        <b style="color:#0F7B65;">م${idx+1}:</b>
+                        <span>${it.name}</span>
+                        <span style="background:#0F7B65; color:#fff; padding:1px 6px; border-radius:8px;">${sizeText}</span>
+                        ${it.weight ? `<span style="background:#f39c12; color:#000; padding:1px 6px; border-radius:8px;">${weightText} ${lengthText}</span>` : ''}
+                        ${colorText ? `<span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${colorText}</span>` : ''}
+                        <span style="background:#D4AF37; color:#000; padding:1px 6px; border-radius:8px; font-weight:700;">💰 ${priceText}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
         html += `
-        <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:8px; border-right:3px solid ${phoneOk ? '#27ae60' : '#e74c3c'}; text-align:right; font-size:12px;">
+        <div style="background:#fff; border:1px solid #eee; border-radius:12px; padding:10px 12px; margin-bottom:8px; border-right:3px solid ${borderColor}; text-align:right; font-size:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; gap:8px; flex-wrap:wrap;">
-                <span style="font-weight:800; color:#0F7B65;">${i + 1}. ${o.customerName}</span>
+                <span style="font-weight:800; color:#0F7B65;">${i + 1}. ${o.customerName || '—'}</span>
                 ${phoneBadge}
             </div>
-                        <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'} ${cityBadge}</div>
-            <div style="color:#555; margin-bottom:4px;">🛍️ ${productBadge}</div>
-<div style="color:#555; margin-bottom:4px;">📦 المنتجات: ${
-    (o.products || []).map((p, idx) => `<b>م${idx+1}:</b> ${p.name}${p.price ? ` (${p.price}ج)` : ''}`).join(' • ') || '—'
-}</div>
-${(o.sizes && o.sizes.length > 0) ? 
-  `<div style="color:#555; margin-bottom:4px;">📏 المقاسات: ${o.sizes.join(' • ')}</div>` 
-  : ''}
-<div style="color:#555; margin-bottom:4px;">⚖️ الأوزان/الأطوال: ${
-    (o.weights || []).map((w, idx) => {
-        const range = w.weightMax && w.weightMax !== w.weight 
-            ? `من ${w.weight} إلى ${w.weightMax}` 
-            : (w.weight || '—');
-        return `م${idx+1}: ${range}${w.length ? ` / ${w.length}` : ''}`;
-    }).join(' • ') || '—'
-}</div>
-            <div style="color:#0F7B65; font-weight:700;">
-💰 ${o._hasPrice ? (o.price ?? 0) : '—'} + 🚚 ${o.shipping || 0} = ${(o.price || 0) + (o.shipping || 0)} جنيه
-</div>
+            <div style="color:#555; margin-bottom:4px;">${govBadge} - ${o.city || o.cityOriginal || '—'} ${cityBadge}</div>
+            <div style="margin-top:6px;">
+                <div style="font-weight:700; color:#555; margin-bottom:2px;">📦 المنتجات (${items.length}):</div>
+                ${itemsHtml}
+            </div>
+            <div style="color:#0F7B65; font-weight:700; margin-top:8px; padding-top:6px; border-top:1px dashed #ddd;">
+                💰 الإجمالي: ${o.price || 0} + 🚚 شحن ${o.shipping || 0} = <b style="color:#e67e22;">${(o.price || 0) + (o.shipping || 0)} جنيه</b>
+            </div>
         </div>`;
     });
 
@@ -2081,68 +2267,80 @@ window.processPastedOrders = async function() {
                 o._errors.push('العنوان غير محدد');
             }
 
-            // 6️⃣ المنتج (مطلوب)
-            if (o.productName) {
-                const p = findProductByName(o.productName, allProducts);
-                if (p) {
-                    o._product = p;
-                    o.productName = p.name;
-                } else {
-                    o._warnings.push(`المنتج "${o.productName}" غير موجود بالموقع — سيتم إضافته بدون خصم مخزون`);
-                }
-            } else {
-                o._errors.push('المنتج غير محدد');
-            }
-
-            // 7️⃣ الوزن/الطول أو المقاس (واحد منهم على الأقل إلزامي)
-            // 7️⃣ المقاس أو الوزن/الطول (واحد منهم على الأقل إلزامي)
-const hasSize = o.sizes && o.sizes.length > 0 && o.sizes.some(s => s && String(s).trim());
-const hasWeightOrLength = 
-    (o.weight !== null && o.weight !== undefined && !isNaN(o.weight) && o.weight > 0) ||
-    (o.length !== null && o.length !== undefined && !isNaN(o.length) && o.length > 0) ||
-    (o.weightMax !== null && o.weightMax !== undefined && !isNaN(o.weightMax) && o.weightMax > 0);
-
-if (!hasSize && !hasWeightOrLength) {
-    o._errors.push('يجب تحديد المقاس أو الوزن/الطول');
-} else {
-    // تحذير الوزن غير المعتاد (فقط لو الوزن موجود)
-    if (hasWeightOrLength && o.weight !== null && o.weight !== undefined) {
-       if (o.weight < 50 || o.weight > 200) {
-    o._warnings.push(`الوزن غير معتاد: ${o.weight} كجم (المعتاد: 50 - 200)`);
-}
+           // 6️⃣ المنتج (مطلوب)
+if (o.productName) {
+    const p = findProductByName(o.productName, allProducts);
+    if (p) {
+        o._product = p;
+        o.productName = p.name;
+    } else {
+        o._warnings.push(`المنتج "${o.productName}" غير موجود بالموقع — سيتم إضافته بدون خصم مخزون`);
     }
-    // تحذير المقاس غير المعتاد
-    if (hasSize) {
-        const validSizes = ['S','M','L','XL','2XL','3XL','XXL','XXXL'];
-        const invalidSizes = o.sizes.filter(s => s && String(s).trim() && !validSizes.includes(String(s).trim().toUpperCase()));
-        if (invalidSizes.length > 0) {
-            o._warnings.push(`مقاسات غير معتادة: ${invalidSizes.join(', ')}`);
+} else {
+    o._errors.push('المنتج غير محدد');
+}
+
+// ✅ 7️⃣ التحقق من تطابق عدد المقاسات/الأوزان مع عدد المنتجات
+const dist = resolveOrderAttributes(o);
+if (dist.error) {
+    o._errors.push(dist.error);
+} else {
+    // ✅ فحص الوزن غير المعتاد لكل منتج
+    for (const it of dist.items) {
+        if (it.weight != null && (it.weight < 50 || it.weight > 200)) {
+            o._warnings.push(`⚠️ وزن غير معتاد: ${it.weight} كجم في المنتج "${it.name}" (المعتاد: 50 - 200)`);
         }
     }
+    // ✅ فحص المقاسات غير المعتادة
+    const validSizes = ['S','M','L','XL','2XL','3XL','XXL','XXXL'];
+    for (const it of dist.items) {
+        if (it.size && !validSizes.includes(String(it.size).toUpperCase())) {
+            o._warnings.push(`⚠️ مقاس غير معتاد: "${it.size}" في المنتج "${it.name}"`);
+        }
+    }
+    // ✅ لازم يكون فيه مقاس أو وزن لكل منتج
+    for (const it of dist.items) {
+        const hasSize = it.size && String(it.size).trim();
+        const hasWeight = (it.weight != null && it.weight > 0) || (it.length != null && it.length > 0);
+        if (!hasSize && !hasWeight) {
+            o._errors.push(`المنتج "${it.name}": يجب تحديد المقاس أو الوزن/الطول`);
+        }
+    }
+    // ✅ حفظ النتيجة الموزعة
+    o._resolvedItems = dist.items;
 }
 
-            // 8️⃣ السعر (مطلوب — ويُقبل الصفر)
+// 8️⃣ السعر
 if (!o._hasPrice) {
     o._errors.push('السعر غير محدد');
 } else if (o.price === null || o.price === undefined || isNaN(o.price) || o.price < 0) {
     o._errors.push('السعر غير صحيح');
 }
 
-            // 9️⃣ الشحن (مطلوب — حتى لو 0 لازم يكون مكتوب صراحة)
-            if (!o._hasShipping) {
-                o._errors.push('الشحن غير محدد');
-            }
+// 9️⃣ الشحن
+if (!o._hasShipping) {
+    o._errors.push('الشحن غير محدد');
+}
 
-            // 🔟 التكرار
-            if (o.phones.length > 0) {
-                const dupOrder = existingPhones[o.phones[0]];
-                if (dupOrder) {
-                    o._duplicate = true;
-                    o._duplicateOf = dupOrder;
-                    o._warnings.push(`رقم مكرر — موجود مسبقاً في الطلب: ${dupOrder}`);
-                }
-            }
-        }
+// 🔟 الهاتف غير المصري → تحذير فقط (يسمح بالإضافة)
+if (o.phones.length === 0 && o.rawPhone) {
+    o._warnings.push(`⚠️ رقم الهاتف "${o.rawPhone}" غير مطابق للصيغة المصرية — سيتم إضافته كما هو لو وافقت`);
+    o._nonEgyptianPhone = true;
+    o._phoneToSave = String(o.rawPhone).trim().replace(/\s+/g, '');
+} else if (o.phones.length > 0) {
+    o._phoneToSave = o.phones[0];
+}
+
+// 1️⃣1️⃣ التكرار
+if (o._phoneToSave) {
+    const dupOrder = existingPhones[o._phoneToSave];
+    if (dupOrder) {
+        o._duplicate = true;
+        o._duplicateOf = dupOrder;
+        o._warnings.push(`رقم مكرر — موجود مسبقاً في الطلب: ${dupOrder}`);
+    }
+}
+
 
         // ===== مرحلة 2: ملخص التحقق =====
         const withErrors = parsedOrders.filter(o => o._errors.length > 0);
@@ -2270,13 +2468,15 @@ if (!o._hasPrice) {
 // إضافة طلب واحد إلى Firestore + خصم مخزون
 // ============================================================
 async function addPastedOrderToFirestore(order) {
-    const product = order._product;
+    // ✅ حماية
+    const safePrice = (order.price == null || isNaN(order.price)) ? 0 : Number(order.price);
+    const safeShipping = (order.shipping == null || isNaN(order.shipping)) ? 0 : Number(order.shipping);
 
-    // ✅ حماية من null
-    const safePrice = (order.price === null || order.price === undefined || isNaN(order.price))
-        ? 0 : Number(order.price);
-    const safeShipping = (order.shipping === null || order.shipping === undefined || isNaN(order.shipping))
-        ? 0 : Number(order.shipping);
+    // ✅ استخدم المنتجات الموزّعة
+    const resolvedItems = order._resolvedItems || (() => {
+        const d = resolveOrderAttributes(order);
+        return d.items || [];
+    })();
 
     // === 1. رقم الطلب ===
     const today = new Date();
@@ -2289,8 +2489,11 @@ async function addPastedOrderToFirestore(order) {
     const todaySnap = await getDocs(qToday);
     const dailyCount = todaySnap.size + 1;
 
-    // === 2. كود العميل ===
-    const phone = order.phones[0];
+    // === 2. رقم الهاتف (يقبل غير المصري لو المستخدم وافق) ===
+    const phone = order._phoneToSave || order.phones[0] || (order.rawPhone || '').trim();
+    const secondaryPhone = order.phones[1] || null;
+
+    // === 3. كود العميل ===
     const customersRef = collection(db, "customers");
     const qCust = query(customersRef, where("phone", "==", phone));
     const custSnap = await getDocs(qCust);
@@ -2315,92 +2518,82 @@ async function addPastedOrderToFirestore(order) {
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
 
-   // === 3. اختيار المقاس ===
-const providedSizes = (order.sizes && order.sizes.length > 0)
-    ? order.sizes.map(s => String(s).trim()).filter(Boolean)
-    : [];
-const firstProvidedSize = providedSizes[0] || null;
-let usedSize = null;
-let newStockBySize = null;
-
-// ✅ لو المقاس مكتوب صراحة، نستخدمه
-if (firstProvidedSize) {
-    usedSize = firstProvidedSize.toUpperCase();
-}
-
-// ✅ لو مفيش مقاس مكتوب بس فيه منتج → نختار أول مقاس متوفر
-if (!usedSize && product && product.stockBySize) {
-    const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
-    const sb = product.stockBySize;
-    for (const s of sizeOrder) {
-        const qty = sb[s];
-        if (qty !== undefined && qty !== null && qty >= 1) {
-            usedSize = s;
-            break;
-        }
-    }
-    if (!usedSize) {
-        for (const s of sizeOrder) {
-            if (sb[s] === null || sb[s] === undefined) {
-                usedSize = s;
-                break;
-            }
-        }
-    }
-}
-
-// ✅ خصم المخزون
-if (product && product.stockBySize && usedSize) {
-    const sb = { ...product.stockBySize };
-    const qty = sb[usedSize];
-    if (qty !== undefined && qty !== null && qty >= 1) {
-        sb[usedSize] = qty - 1;
-        newStockBySize = sb;
-    }
-}
-
-    // === 4. تفاصيل الطلب (متعدد المنتجات) ===
-    const products = (order.products && order.products.length > 0)
-        ? order.products
-        : [{ name: order.productName, price: safePrice }];
-
-    const weights = (order.weights && order.weights.length > 0)
-        ? order.weights
-        : [{ weight: order.weight, weightMax: order.weightMax, length: order.length }];
-
+    // === 4. تفاصيل الطلب ===
     const allProducts = window.allProducts || [];
     const orderDetails = [];
     let totalCost = 0;
 
-    for (let i = 0; i < products.length; i++) {
-    const p = products[i];
-    const wl = weights[i] || weights[0] || { weight: null, weightMax: null, length: null };
-    const matched = findProductByName(p.name, allProducts);
+    // ✅ متغيرات لخصم المخزون (لأول منتج له stockBySize)
+    let firstDeductedProductId = null;
+    let firstDeductedSize = null;
+    let firstDeductedStockBySize = null;
 
-    orderDetails.push({
-        productId: matched?.id || null,
-        sku: matched?.sku || null,
-        name: p.name || order.productName,
-        size: (order.sizes && order.sizes[i]) || usedSize || "غير محدد",
-        color: null,
-        colorImage: null,
-        qty: p.qty || 1,                                    // ⚠️ هنا
-        price: (p.price === null || p.price === undefined) ? safePrice : Number(p.price),
-        image: matched?.image || "",
-        costPrice: matched?.costPrice || 0,
-        customerWeight: wl.weight || null,
-        customerWeightMax: wl.weightMax || null,
-        customerLength: wl.length || null
-    });
-    totalCost += (matched?.costPrice || 0);
-}
+    for (const item of resolvedItems) {
+        const matched = findProductByName(item.name, allProducts);
+        const itemPrice = (item.price == null) ? safePrice : Number(item.price);
+
+        // ✅ اختيار المقاس النهائي: من الـ resolvedItems أو أول مقاس متوفر
+        let finalSize = item.size ? String(item.size).trim().toUpperCase() : null;
+
+        // ✅ لو مفيش مقاس، نشوف أول مقاس متوفر للمنتج المطابق
+        if (!finalSize && matched && matched.stockBySize) {
+            const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
+            for (const s of sizeOrder) {
+                const qty = matched.stockBySize[s];
+                if (qty !== undefined && qty !== null && qty >= 1) {
+                    finalSize = s;
+                    break;
+                }
+            }
+            if (!finalSize) {
+                for (const s of sizeOrder) {
+                    if (matched.stockBySize[s] === null || matched.stockBySize[s] === undefined) {
+                        finalSize = s;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // ✅ خصم المخزون لأول منتج قابل للخصم
+        if (matched && matched.stockBySize && finalSize && !firstDeductedProductId) {
+            const sb = { ...matched.stockBySize };
+            const qty = sb[finalSize];
+            if (qty !== undefined && qty !== null && qty >= 1) {
+                sb[finalSize] = qty - 1;
+                firstDeductedProductId = matched.id;
+                firstDeductedSize = finalSize;
+                firstDeductedStockBySize = sb;
+            }
+        }
+
+        orderDetails.push({
+            productId: matched?.id || null,
+            sku: matched?.sku || null,
+            name: item.name || 'منتج',
+            size: finalSize || 'غير محدد',
+            color: item.color || null,
+            colorImage: null,
+            qty: item.qty || 1,
+            price: itemPrice,
+            image: matched?.image || '',
+            costPrice: matched?.costPrice || 0,
+            customerWeight: item.weight || null,
+            customerWeightMax: item.weightMax || null,
+            customerLength: item.length || null
+        });
+
+        totalCost += (matched?.costPrice || 0);
+    }
+
     const totalQuantity = orderDetails.reduce((sum, d) => sum + (d.qty || 1), 0);
     const finalTotal = safePrice + safeShipping;
+
     const orderData = {
         orderID,
         customerName: order.customerName,
-        phone: order.phones[0],
-        secondaryPhone: order.phones[1] || null,
+        phone,
+        secondaryPhone,
         gov: order.gov || order.govOriginal,
         city: order.city || order.cityOriginal,
         address: order.address,
@@ -2409,15 +2602,15 @@ if (product && product.stockBySize && usedSize) {
         price: safePrice,
         shipping: safeShipping,
         shippingCostPaid: safeShipping,
-        finalTotal: finalTotal,
+        finalTotal,
         status: "new",
         date: dateStr,
         notes: order.notes || '',
-        stockDeducted: !!newStockBySize,
+        stockDeducted: !!firstDeductedProductId,
         stockRestored: false,
         createdAt: serverTimestamp(),
         originalCreatedAt: serverTimestamp(),
-        totalCost: totalCost,
+        totalCost,
         profit: finalTotal - totalCost - safeShipping,
         source: 'paste',
         addedBy: window.currentUserEmail || 'unknown'
@@ -2426,13 +2619,28 @@ if (product && product.stockBySize && usedSize) {
     await addDoc(collection(db, "orders"), orderData);
 
     // === 5. تحديث المخزون والمبيعات ===
+    if (firstDeductedProductId && firstDeductedStockBySize) {
+        try {
+            await updateDoc(doc(db, "products", firstDeductedProductId), {
+                salesCount: increment(1),
+                stockBySize: firstDeductedStockBySize
+            });
+        } catch (e) {
+            console.warn('stock update failed', e);
+        }
+    }
+
+    // باقي المنتجات: تحديث salesCount فقط
     for (const item of orderDetails) {
         if (!item.productId) continue;
+        if (item.productId === firstDeductedProductId) continue;
         try {
-            const updates = { salesCount: increment(1) };
-            if (newStockBySize) updates.stockBySize = newStockBySize;
-            await updateDoc(doc(db, "products", item.productId), updates);
-        } catch (e) { console.warn('stock update failed', e); }
+            await updateDoc(doc(db, "products", item.productId), {
+                salesCount: increment(1)
+            });
+        } catch (e) {
+            console.warn('salesCount update failed', e);
+        }
     }
 
     return true;
