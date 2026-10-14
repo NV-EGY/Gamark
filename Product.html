@@ -4489,18 +4489,31 @@ window.addToCartFromPage = function() {
     openSizeDataModal(product.id, product.name, _availableSizesForModal);
 };
 
-// ========== مشاركة المنتج ==========
 window.shareProduct = function() {
     const product = window.currentProduct;
     if (!product) return;
-    const url = window.location.href;
-    const text = `🛍️ ${product.name} من GAMARK\nالسعر: ${product.price} جنيه\n${url}`;
+    
+    // ✅ الرابط الجديد اللي بيعدي على Cloudflare Worker
+    const shareUrl = `https://gamark.sbs/p?id=${encodeURIComponent(product.id)}`;
+    const shareText = `🛍️ ${product.name} من GAMARK\nالسعر: ${product.price} جنيه\n${shareUrl}`;
+
     if (navigator.share) {
-        navigator.share({ title: product.name, text, url });
-    } else {
-        navigator.clipboard?.writeText(text).then(() => {
-            showToast('✅ تم نسخ الرابط', 'success');
+        navigator.share({
+            title: `${product.name} | GAMARK`,
+            text: `🛍️ ${product.name} من GAMARK`,
+            url: shareUrl
+        }).catch(() => {});
+        return;
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareText).then(() => {
+            customAlert('✅ تم نسخ الرابط، شاركه مع أصدقائك!', 'success');
+        }).catch(() => {
+            fallbackShare(shareText);
         });
+    } else {
+        fallbackShare(shareText);
     }
 };
 
