@@ -2986,8 +2986,10 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let orders = [];
-window.orders = orders;  // ✅ ربط window.orders
+window.orders = orders;
 let lastCount = 0, currentFilter = "all", messages = [];
+let shippingRates = [];        // ← ✅ مضاف
+window.allProducts = [];        // ← ✅ مضاف
 let currentDayFilter = "all"; // فلتر اليوم الافتراضي
 let openStates = {};
 let allReviews = [], currentReviewFilter = "all", reviewSearchTerm = "";
@@ -4417,14 +4419,32 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
   win.document.write(html); win.document.close();
 };
 
+// ===== تحميل أسعار الشحن =====
+function loadShippingRates() {
+    onSnapshot(collection(db, "shippingRates"), (snap) => {
+        shippingRates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (currentTab === 'shipping') renderShippingRates();
+        const govSelect = document.getElementById('govSelect');
+        if (govSelect && govSelect.value) renderCities(govSelect.value);
+    });
+}
+
+// ===== تحميل المنتجات =====
+function loadAllProducts() {
+    onSnapshot(collection(db, "products"), (snap) => {
+        window.allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        console.log('✅ تم تحميل', window.allProducts.length, 'منتج');
+    });
+}
+
 function load() {
     loadOpenStates();
     loadOpenDayGroups();
     loadOpenMonthGroups();
     loadReviews();
     loadShippingRates();
-    startDeferredChecker(); // ⏰ بدء فاحص الطلبات المؤجلة
-
+loadAllProducts();   // ← ✅ مضاف
+startDeferredChecker();
     // ===== مستمع الرسائل =====
     let initialLoadMessages = true;
     onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc")), (snap) => {
