@@ -1029,8 +1029,15 @@
                         <option value="">-- اختر المحافظة --</option>
                     </select>
                 </div>
-                <div class="form-group" style="flex: 1.5;">
+             <div class="form-group" style="flex: 1.5;">
     <label><i class="fas fa-city"></i> المدن (اختر واحدة أو أكثر)</label>
+    <div id="selectAllCitiesBar" style="display: none; margin-bottom: 8px; justify-content: space-between; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; background: #e8f5e9; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; color: #0F7B65; border: 1px solid #c8e6c9;">
+            <input type="checkbox" id="selectAllCitiesCheckbox" style="width: 16px; height: 16px; accent-color: #0F7B65; cursor: pointer;">
+            تحديد كل المدن
+        </label>
+        <span id="selectedCitiesCount" style="font-size: 11px; color: #666; background: #f0f2f5; padding: 3px 10px; border-radius: 20px; font-weight: 700;">0 محدد</span>
+    </div>
     <div id="cityCheckboxes" class="city-checkboxes" style="display: flex; flex-wrap: wrap; gap: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 12px; min-height: 50px; max-height: 200px; overflow-y: auto; background: #fff;">
         <span style="color: #999;">اختر المحافظة أولاً</span>
     </div>
@@ -1588,12 +1595,40 @@ function matchGovernorate(raw) {
     return null;
 }
 
-// ===== مطابقة المدينة =====
-function matchCity(raw) {
+// ===== مطابقة المدينة (ذكية ومقيدة بالمحافظة) =====
+function matchCity(raw, govHint = null) {
     if (!raw) return null;
     const norm = normalizeArabic(raw).replace(/^ال/, '');
-    const { cityMap } = getNormalizedMaps();
+    const { govMap, cityMap } = getNormalizedMaps();
 
+    // ✅ 1. رفض أسماء المحافظات كمدن (إلا لو المحافظة بتستخدم اسمها كمدينة زي الجيزة)
+    const matchingGov = govMap[norm] || govMap['ال' + norm];
+    if (matchingGov) {
+        const govCities = govData[matchingGov] || [];
+        const isCityInGov = govCities.some(c => normalizeArabic(c) === normalizeArabic(raw));
+        if (!isCityInGov) {
+            return null; // "القاهرة" كمدينة → null، مش "القاهرة الجديدة"
+        }
+    }
+
+    // ✅ 2. لو المحافظة محددة → ابحث داخل مدنها أولاً (يمنع "جسر السويس" من التحول للسويس)
+    if (govHint && govData[govHint]) {
+        // 2a. مطابقة دقيقة داخل المحافظة
+        for (const city of govData[govHint]) {
+            if (normalizeArabic(city) === normalizeArabic(raw)) {
+                return { gov: govHint, city };
+            }
+        }
+        // 2b. مطابقة جزئية داخل المحافظة
+        for (const city of govData[govHint]) {
+            const nc = normalizeArabic(city);
+            if (nc.length >= 3 && norm.length >= 3 && (nc.includes(norm) || norm.includes(nc))) {
+                return { gov: govHint, city };
+            }
+        }
+    }
+
+    // ✅ 3. مطابقة عامة (fallback)
     if (cityMap[norm]) return cityMap[norm];
     if (cityMap['ال' + norm]) return cityMap['ال' + norm];
 
@@ -1956,11 +1991,31 @@ function parseOrderBlock(block) {
                 order.gov = matchGovernorate(value) || value;
                 lastKey = 'gov';
             } else if (key.includes('مدين')) {
-                order.cityOriginal = value;
-                const c = matchCity(value);
-                order.city = c ? c.city : value;
-                order._cityUnrecognized = !c;
-                lastKey = 'city';
+    order.cityOriginal = value;
+    const c = matchCity(value, order.gov);
+    order.city = c ? c.city : value;
+    order._cityUnrecognized = !c;
+
+    // ✅ كشف: لو المدينة = اسم المحافظة (والمحافظة مش بتستخدم اسمها كمدينة)
+    if (order.gov && value) {
+        const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
+        const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
+        if (govNameNorm === cityRawNorm) {
+            const govCities = govData[order.gov] || [];
+            const cityInList = govCities.some(city => normalizeArabic(city) === cityRawNorm);
+            if (!cityInList) {
+                order._cityIsGovName = true;
+            }
+        }
+    }
+
+    // ⚠️ تحذير: المدينة تنتمي لمحافظة مختلفة
+    if (c && order.gov && c.gov !== order.gov) {
+        order._cityGovMismatch = { cityGov: c.gov, parsedGov: order.gov };
+    }
+
+    lastKey = 'city';
+}
             } else if (key.includes('عنوان')) {
                 order.address = value;
                 lastKey = 'addr';
@@ -2268,15 +2323,23 @@ window.processPastedOrders = async function() {
             }
 
             // 4️⃣ المدينة (مطلوب)
-            if (!o.cityOriginal && !o.city) {
-                o._errors.push('المدينة غير محددة');
-            }
+if (!o.cityOriginal && !o.city) {
+    o._errors.push('المدينة غير محددة');
+}
 
-                        // ✅ المدينة غير المعروفة (تحذير فقط، مش خطأ)
-            if (o._cityUnrecognized && o.cityOriginal) {
-                o._warnings.push(`⚠️ المدينة "${o.cityOriginal}" غير موجودة بقائمة المدن المعروفة — سيتم إضافتها كما هي، يرجى المراجعة`);
-            }
+// ❌ المدينة = اسم المحافظة → خطأ يمنع الإدخال
+if (o._cityIsGovName) {
+    o._errors.push(`"${o.cityOriginal}" اسم محافظة وليس مدينة — يرجى كتابة المدينة بالتفصيل (مثل: مدينة نصر، مصر الجديدة، المعادي، الخ)`);
+}
+// ⚠️ المدينة غير المعروفة (تحذير فقط)
+else if (o._cityUnrecognized && o.cityOriginal) {
+    o._warnings.push(`⚠️ المدينة "${o.cityOriginal}" غير موجودة بقائمة المدن المعروفة — سيتم إضافتها كما هي، يرجى المراجعة`);
+}
 
+// ⚠️ المدينة في محافظة مختلفة
+if (o._cityGovMismatch) {
+    o._warnings.push(`⚠️ المدينة "${o.city}" تنتمي لمحافظة "${o._cityGovMismatch.cityGov}" وليس "${o._cityGovMismatch.parsedGov}"`);
+}
             // 5️⃣ العنوان (مطلوب)
             if (!o.address || o.address.trim().length < 2) {
                 o._errors.push('العنوان غير محدد');
@@ -4724,7 +4787,7 @@ function loadReviews() {
 }
 
 const govData = {
- "القاهرة": ["مدينة نصر","مصر الجديدة","مصر القديمة","التجمع الأول","التجمع الثالث","التجمع الخامس","الرحاب","مدينتي","الشروق","بدر","المعادي","زهراء المعادي","حلوان","15 مايو","عين شمس","المطرية","السلام","المرج","الزيتون","حدائق القبة","روض الفرج","شبرا مصر","وسط البلد","القاهرة الجديدة","القطامية","المقطم","هليوبوليس الجديدة","مدينة المستقبل","أحياء أخرى"],
+ "القاهرة": ["مدينة نصر","مصر الجديدة","مصر القديمة","التجمع الأول","التجمع الثالث","التجمع الخامس","الرحاب","مدينتي","الشروق","بدر","المعادي","زهراء المعادي","حلوان","15 مايو","عين شمس","المطرية","السلام","المرج","الزيتون","حدائق القبة","روض الفرج","شبرا مصر","وسط البلد","القاهرة الجديدة","القطامية","المقطم","هليوبوليس الجديدة","مدينة المستقبل","جسر السويس","أحياء أخرى"],
  "الجيزة": ["الجيزة","الدقي","العجوزة","إمبابة","بولاق الدكرور","الهرم","فيصل","الطالبية","العمرانية","حدائق الاهرام","6 أكتوبر","الشيخ زايد","حدائق أكتوبر","الحوامدية","البدرشين","العياط","أوسيم","كرداسة","الصف","دهشور","ناهيا","المنصورية","ألبراجيل","أبو رواش","منشأة القناطر","المنيب","أبو النمرس","شبرامنت","سقارة","نكلة","أطفيح","أحياء أخرى"],
  "القليوبية": ["بنها","شبرا الخيمة","قليوب","القناطر الخيرية","ابو زعبل","الخانكة","العبور","الخصوص","كفر شكر","طوخ","شبين القناطر","أحياء أخرى"],
  "الإسكندرية": ["الإسكندرية","العجمي","الدخيلة","برج العرب","سيدي جابر","محرم بك","العصافرة","المنتزه","أحياء أخرى"],
@@ -4757,13 +4820,19 @@ window.govData = govData;
 
 function renderCities(gov) {
     const container = document.getElementById("cityCheckboxes");
+    const bar = document.getElementById("selectAllCitiesBar");
     if (!container) return;
+
     if (!gov || !govData[gov]) {
         container.innerHTML = '<span style="color: #999;">اختر المحافظة أولاً</span>';
+        if (bar) bar.style.display = 'none';
         return;
     }
+    if (bar) bar.style.display = 'flex';
+
     const govRates = shippingRates.filter(r => r.gov === gov);
     container.innerHTML = '';
+
     govData[gov].forEach(city => {
         const hasRate = govRates.some(r => r.city === city);
         const statusText = hasRate ? '✅ محدد' : '❌ غير محدد';
@@ -4773,37 +4842,43 @@ function renderCities(gov) {
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.value = city;
-        checkbox.style.width = '18px';
-        checkbox.style.height = '18px';
-        checkbox.style.accentColor = '#0F7B65';
+        checkbox.style.cssText = 'width: 18px; height: 18px; accent-color: #0F7B65;';
+        checkbox.addEventListener('change', updateSelectedCitiesCount);
         label.appendChild(checkbox);
         const textSpan = document.createElement('span');
         textSpan.textContent = city;
         label.appendChild(textSpan);
         const statusSpan = document.createElement('span');
         statusSpan.textContent = statusText;
-        statusSpan.style.color = statusColor;
-        statusSpan.style.fontSize = '11px';
-        statusSpan.style.fontWeight = 'bold';
-        statusSpan.style.marginRight = '4px';
+        statusSpan.style.cssText = `color: ${statusColor}; font-size: 11px; font-weight: bold; margin-right: 4px;`;
         label.appendChild(statusSpan);
         container.appendChild(label);
     });
+
+    // ✅ ربط "تحديد الكل"
+    const selectAllCb = document.getElementById('selectAllCitiesCheckbox');
+    if (selectAllCb) {
+        selectAllCb.checked = false;
+        selectAllCb.indeterminate = false;
+        selectAllCb.onchange = function () {
+            const checked = this.checked;
+            container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = checked);
+            updateSelectedCitiesCount();
+        };
+    }
+    updateSelectedCitiesCount();
 }
 
-// ========== إدارة أسعار الشحن المتكاملة ==========
-let shippingRates = [];
-
-async function loadShippingRates() {
-    const q = query(collection(db, "shippingRates"));
-    onSnapshot(q, (snap) => {
-        shippingRates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        renderShippingRates();
-        const govSelect = document.getElementById("govSelect");
-        if (govSelect && govSelect.value) {
-            renderCities(govSelect.value);
-        }
-    });
+function updateSelectedCitiesCount() {
+    const count = document.querySelectorAll('#cityCheckboxes input[type="checkbox"]:checked').length;
+    const total = document.querySelectorAll('#cityCheckboxes input[type="checkbox"]').length;
+    const el = document.getElementById('selectedCitiesCount');
+    const selectAllCb = document.getElementById('selectAllCitiesCheckbox');
+    if (el) el.textContent = `${count} / ${total} محدد`;
+    if (selectAllCb) {
+        selectAllCb.checked = (count === total && total > 0);
+        selectAllCb.indeterminate = (count > 0 && count < total);
+    }
 }
 
 function renderShippingRates() {
@@ -4994,6 +5069,9 @@ window.saveShippingRate = async () => {
     document.getElementById("customerShippingFee").value = "70";
     document.getElementById("govSelect").value = "";
     document.getElementById("cityCheckboxes").innerHTML = '<span style="color: #999;">اختر المحافظة أولاً</span>';
+    const selectAllCb = document.getElementById('selectAllCitiesCheckbox');
+if (selectAllCb) { selectAllCb.checked = false; selectAllCb.indeterminate = false; }
+updateSelectedCitiesCount();
 };
 window.editShippingRate = function(id) {
     const rate = shippingRates.find(r => r.id === id);
