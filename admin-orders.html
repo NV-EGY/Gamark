@@ -1005,8 +1005,6 @@
 }
 
 </style>
-
-  </style>
  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 </head>
 <body>
@@ -2986,10 +2984,8 @@ const db = getFirestore(app);
 const auth = getAuth(app);
 
 let orders = [];
-window.orders = orders;
+window.orders = orders;  // ✅ ربط window.orders
 let lastCount = 0, currentFilter = "all", messages = [];
-let shippingRates = [];        // ← ✅ مضاف
-window.allProducts = [];        // ← ✅ مضاف
 let currentDayFilter = "all"; // فلتر اليوم الافتراضي
 let openStates = {};
 let allReviews = [], currentReviewFilter = "all", reviewSearchTerm = "";
@@ -4419,32 +4415,14 @@ window.showPopup = (o) => { let box = document.getElementById("msgPopup"); docum
   win.document.write(html); win.document.close();
 };
 
-// ===== تحميل أسعار الشحن =====
-function loadShippingRates() {
-    onSnapshot(collection(db, "shippingRates"), (snap) => {
-        shippingRates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (currentTab === 'shipping') renderShippingRates();
-        const govSelect = document.getElementById('govSelect');
-        if (govSelect && govSelect.value) renderCities(govSelect.value);
-    });
-}
-
-// ===== تحميل المنتجات =====
-function loadAllProducts() {
-    onSnapshot(collection(db, "products"), (snap) => {
-        window.allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        console.log('✅ تم تحميل', window.allProducts.length, 'منتج');
-    });
-}
-
 function load() {
     loadOpenStates();
     loadOpenDayGroups();
     loadOpenMonthGroups();
     loadReviews();
     loadShippingRates();
-loadAllProducts();   // ← ✅ مضاف
-startDeferredChecker();
+    startDeferredChecker(); // ⏰ بدء فاحص الطلبات المؤجلة
+
     // ===== مستمع الرسائل =====
     let initialLoadMessages = true;
     onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc")), (snap) => {
@@ -6648,7 +6626,6 @@ document.getElementById('dayFilterSelect')?.addEventListener('change', () => ren
         <input id="mOrderShipping" type="number" class="form-control" style="width: 100%;" value="70">
     </div>
 </div>
-      </div>
 
       <!-- المقاس والقياسات -->
       <div style="background: #f0fff4; border-radius: 12px; padding: 14px; margin-bottom: 14px; border-right: 4px solid #2ecc71;">
