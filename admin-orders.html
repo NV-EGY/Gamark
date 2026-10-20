@@ -4957,6 +4957,22 @@ const govData = {
 
 window.govData = govData;
 
+
+// ========== إدارة أسعار الشحن المتكاملة ==========
+let shippingRates = [];
+
+async function loadShippingRates() {
+    const q = query(collection(db, "shippingRates"));
+    onSnapshot(q, (snap) => {
+        shippingRates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderShippingRates();
+        const govSelect = document.getElementById("govSelect");
+        if (govSelect && govSelect.value) {
+            renderCities(govSelect.value);
+        }
+    });
+}
+
 function renderCities(gov) {
     const container = document.getElementById("cityCheckboxes");
     const bar = document.getElementById("selectAllCitiesBar");
