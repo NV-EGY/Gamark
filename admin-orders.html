@@ -2148,7 +2148,6 @@ function parseOrderBlock(block) {
     }
 
     lastKey = 'city';
-}
             } else if (key.includes('عنوان')) {
                 order.address = value;
                 lastKey = 'addr';
@@ -2429,7 +2428,14 @@ window.processPastedOrders = async function() {
         return;
     }
 
-    const parsedOrders = parseOrdersFromPaste(text);
+        let parsedOrders;
+    try {
+        parsedOrders = parseOrdersFromPaste(text);
+    } catch (err) {
+        console.error('❌ فشل تحليل الطلبات:', err);
+        showPasteAlert('❌ خطأ في تحليل الطلبات: ' + err.message, 'error');
+        return;
+    }
     if (parsedOrders.length === 0) {
         showPasteAlert('❌ لم يتم التعرف على أي طلب', 'error');
         return;
