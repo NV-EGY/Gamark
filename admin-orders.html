@@ -2129,13 +2129,16 @@ function parseOrderBlock(block) {
     order.city = c ? c.city : value;
     order._cityUnrecognized = !c;
 
-    // ✅ كشف: لو المدينة = اسم المحافظة (والمحافظة مش بتستخدم اسمها كمدينة)
+        // ✅ كشف: لو المدينة = اسم المحافظة (والمحافظة مش بتستخدم اسمها كمدينة)
     if (order.gov && value) {
         const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
         const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
         if (govNameNorm === cityRawNorm) {
             const govCities = govData[order.gov] || [];
-            const cityInList = govCities.some(city => normalizeArabic(city) === cityRawNorm);
+            // ✅ FIX: شيل "ال" من اسم المدينة في القائمة قبل المقارنة
+            const cityInList = govCities.some(city =>
+                normalizeArabic(city).replace(/^ال/, '') === cityRawNorm
+            );
             if (!cityInList) {
                 order._cityIsGovName = true;
             }
