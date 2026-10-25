@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>GAMARK - Sitemap Generator</title>
+<style>
+    body {
+        font-family: 'Cairo', Tahoma, sans-serif;
+        background: linear-gradient(135deg, #FAF8FB 0%, #F5EDF8 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        margin: 0;
+    }
+    .box {
+        background: #fff;
+        border-radius: 24px;
+        padding: 40px;
+        max-width: 600px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(93,58,122,0.15);
+        border: 1.5px solid #E8DFF0;
+    }
+    h1 {
+        color: #5D3A7A;
+        font-size: 26px;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .sub {
+        color: #888;
+        font-size: 14px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    button {
+        width: 100%;
+        padding: 16px;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: inherit;
+        margin-bottom: 12px;
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+        color: #fff;
+    }
+    .btn-primary:hover:not(:disabled) {
+        background: linear-gradient(135deg, #D4A017, #E8B923);
+        color: #1A1A1A;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(212,160,23,0.3);
+    }
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-secondary {
+        background: #f5f5f5;
+        color: #333;
+    }
+    .btn-secondary:hover {
+        background: #e0e0e0;
+    }
+    #status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 14px;
+        text-align: center;
+        display: none;
+    }
+    .status-loading { background: #fff8e1; color: #8B6914; }
+    .status-success { background: #e8f5e9; color: #1e8449; }
+    .status-error   { background: #fee;    color: #c0392b; }
+    .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    .stat {
+        background: #faf8fb;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #e8dff0;
+    }
+    .stat-num {
+        font-size: 24px;
+        font-weight: 900;
+        color: #5D3A7A;
+    }
+    .stat-lbl {
+        font-size: 11px;
+        color: #888;
+        margin-top: 4px;
+    }
+    pre {
+        background: #1a1a1a;
+        color: #D4AF37;
+        padding: 15px;
+        border-radius: 12px;
+        overflow-x: auto;
+        font-size: 11px;
+        max-height: 200px;
+        display: none;
+        direction: ltr;
+        text-align: left;
+    }
+</style>
+</head>
+<body>
+
+<div class="box">
+    <h1>🗺️ GAMARK Sitemap Generator</h1>
+    <p class="sub">اضغط الزر عشان نولّد sitemap.xml كامل بكل منتجاتك</p>
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-num" id="statProducts">—</div>
+            <div class="stat-lbl">منتج</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num" id="statCategories">7</div>
+            <div class="stat-lbl">قسم</div>
+        </div>
+        <div class="stat">
+            <div class="stat-num" id="statTotal">—</div>
+            <div class="stat-lbl">إجمالي الروابط</div>
+        </div>
+    </div>
+
+    <button class="btn-primary" id="generateBtn" onclick="generateSitemap()">
+        🚀 توليد الـ Sitemap وتحميله
+    </button>
+    <button class="btn-secondary" onclick="previewSitemap()">
+        👁️ معاينة قبل التحميل
+    </button>
+
+    <div id="status"></div>
+    <pre id="preview"></pre>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    getFirestore,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
+  authDomain: "gamark-d04ff.firebaseapp.com",
+  projectId: "gamark-d04ff",
+  storageBucket: "gamark-d04ff.firebasestorage.app",
+  messagingSenderId: "802246864333",
+  appId: "1:802246864333:web:23b5336c0c54280a736884"
+};
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+
+const BASE_URL = "https://gamark.sbs";
+const TODAY    = new Date().toISOString().split('T')[0];
+
+const CATEGORIES = [
+    { slug: "all",                     priority: "0.9" },
+    { slug: "women_waist",             priority: "0.8" },
+    { slug: "women_corset_belly_back", priority: "0.8" },
+    { slug: "women_shorts_belly",      priority: "0.8" },
+    { slug: "women_full_corset",       priority: "0.8" },
+    { slug: "men_vest_corset",         priority: "0.8" },
+    { slug: "men_shorts",              priority: "0.8" }
+];
+
+let cachedXml = "";
+
+// ===== توليد XML =====
+async function buildSitemap() {
+    const productsSnap = await getDocs(collection(db, "products"));
+    const products = productsSnap.docs.map(d => ({
+        id: d.id,
+        ...d.data()
+    }));
+
+    document.getElementById("statProducts").textContent = products.length;
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+    <!-- 🏠 الصفحة الرئيسية -->
+    <url>
+        <loc>${BASE_URL}/</loc>
+        <lastmod>${TODAY}</lastmod>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+`;
+
+    // الأقسام
+    for (const cat of CATEGORIES) {
+        xml += `
+    <!-- 📂 قسم: ${cat.slug} -->
+    <url>
+        <loc>${BASE_URL}/?category=${cat.slug}</loc>
+        <lastmod>${TODAY}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>${cat.priority}</priority>
+    </url>`;
+    }
+
+    // المنتجات
+    for (const p of products) {
+        const safeId = encodeURIComponent(p.id);
+        xml += `
+    <!-- 🛍️ منتج: ${(p.name || '').replace(/[<>&]/g, '')} -->
+    <url>
+        <loc>${BASE_URL}/Product.html?id=${safeId}</loc>
+        <lastmod>${TODAY}</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>`;
+    }
+
+    xml += `
+</urlset>`;
+
+    const total = 1 + CATEGORIES.length + products.length;
+    document.getElementById("statTotal").textContent = total;
+
+    return xml;
+}
+
+// ===== حالة الأزرار =====
+function setStatus(msg, type, duration = null) {
+    const el = document.getElementById("status");
+    el.textContent = msg;
+    el.className = "status-" + type;
+    el.style.display = "block";
+    if (duration) {
+        setTimeout(() => { el.style.display = "none"; }, duration);
+    }
+}
+
+function disableButtons(on) {
+    document.getElementById("generateBtn").disabled = on;
+}
+
+// ===== التوليد والتحميل =====
+window.generateSitemap = async function () {
+    disableButtons(true);
+    setStatus("⏳ جاري سحب المنتجات من Firebase...", "loading");
+
+    try {
+        cachedXml = await buildSitemap();
+        setStatus("✅ تم التوليد بنجاح! جاري التحميل...", "success", 5000);
+
+        const blob = new Blob([cachedXml], { type: "application/xml;charset=utf-8" });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = "sitemap.xml";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error(err);
+        setStatus("❌ خطأ: " + err.message, "error");
+    } finally {
+        disableButtons(false);
+    }
+};
+
+// ===== معاينة قبل التحميل =====
+window.previewSitemap = async function () {
+    disableButtons(true);
+    setStatus("⏳ جاري سحب المنتجات...", "loading");
+    const pre = document.getElementById("preview");
+
+    try {
+        cachedXml = await buildSitemap();
+        pre.textContent = cachedXml;
+        pre.style.display = "block";
+        setStatus("✅ المعاينة جاهزة تحت 👇", "success");
+    } catch (err) {
+        setStatus("❌ خطأ: " + err.message, "error");
+    } finally {
+        disableButtons(false);
+    }
+};
+</script>
+
+</body>
+</html>
