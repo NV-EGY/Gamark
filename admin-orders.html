@@ -1336,6 +1336,15 @@ import {
   updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs,
   where, addDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  collection, increment, query, orderBy, onSnapshot,
+  updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs,
+  where, addDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { logAuditEvent } from './js/logger.js';
 // ===== إدارة الإشعارات المحسّنة =====
@@ -3003,12 +3012,21 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-// ✅ تفعيل Firestore Offline Persistence (كاش + طابور كتابة)
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()  // يدعم فتح أكتر من تاب
-  })
-});
+// ✅ تهيئة Firestore بطريقة صحيحة (يُفعّل الكاش المحلي مرة واحدة فقط)
+let db;
+try {
+    // أولاً: نجرّب التهيئة مع الكاش المحلي
+    db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
+    console.log('✅ تم تهيئة Firestore مع الكاش المحلي (Offline Persistence مفعّل)');
+} catch (e) {
+    // لو كانت مهيأة مسبقاً (مثلاً من صفحة أخرى)، استخدم النسخة الموجودة
+    db = getFirestore(app);
+    console.log('ℹ️ Firestore كانت مهيأة مسبقاً — استخدام النسخة الموجودة (قد لا يكون الكاش مفعّل)');
+}
 const auth = getAuth(app);
 
 let orders = [];
@@ -5837,18 +5855,6 @@ window.forceRender = () => {
     console.log("🔄 تم تحديث الطلبات تلقائياً");
 };
 
-window.copyToClipboard = function(text) {
-    if (!text || text === 'غير متوفر') {
-        customAlert("لا يوجد SKU قابل للنسخ", 'warning');
-        return;
-    }
-    navigator.clipboard.writeText(text).then(() => {
-        customAlert(`✅ تم نسخ SKU: ${text}`, 'success');
-    }).catch(() => {
-        customAlert("❌ فشل النسخ", 'error');
-    });
-};
-
 function ensureTodayGroupOpen() {
     // ✅ فتح الشهر الحالي
     const currentMonthName = new Date().toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' });
@@ -5903,17 +5909,47 @@ window.copyToClipboard = function(text) {
     });
 };
 onAuthStateChanged(auth, (user) => {
-    registerSW();  // ✅ موجود
+    registerSW(); // تسجيل Service Worker (موجود مسبقاً)
+    
     if (Notification.permission === "default") {
         Notification.requestPermission().then(perm => console.log("إذن الإشعارات:", perm));
     }
+    
     if (user) {
+        // ✅ المستخدم مسجل الدخول
         window.currentUserEmail = user.email;
-        registerSW();
         load();
         loadShippingDiscountSettings();
+        console.log('✅ تم تسجيل الدخول بنجاح:', user.email);
     } else {
-        window.location.href = "login.html";  // ⚠️ المشكلة هنا
+        // ⚠️ المستخدم غير مسجل الدخول
+        // ✅ الحل: التحقق من حالة الاتصال أولاً
+        if (!navigator.onLine) {
+            // 🔴 الوضع أوفلاين: منع التحويل إلى login.html
+            console.log('ℹ️ وضع أوفلاين - استخدام الكاش');
+            
+            // عرض تنبيه للمستخدم
+            if (typeof customAlert === 'function') {
+                customAlert('🔴 أنت غير متصل بالإنترنت. سجّل الدخول مرة واحدة مع وجود إنترنت لتفعيل الوضع الأوفلاين.', 'warning');
+            } else {
+                alert('🔴 أنت غير متصل بالإنترنت. يرجى تسجيل الدخول مرة واحدة مع وجود إنترنت.');
+            }
+            
+            // محاولة تحميل البيانات من الكاش (Firestore Offline Persistence)
+            try {
+                load();
+                loadShippingDiscountSettings();
+                console.log('✅ تم تحميل البيانات من الكاش (وضع أوفلاين)');
+            } catch(e) {
+                console.warn('⚠️ تعذر تحميل البيانات أوفلاين:', e);
+                if (typeof customAlert === 'function') {
+                    customAlert('⚠️ لا توجد بيانات محفوظة محليًا. يرجى الاتصال بالإنترنت أولاً.', 'error');
+                }
+            }
+        } else {
+            // 🌐 الوضع أونلاين: تحويل إلى صفحة تسجيل الدخول
+            window.location.href = "login.html";
+        }
     }
 });
 
