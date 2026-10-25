@@ -8463,6 +8463,52 @@ if (typeof window.openInfoModal !== 'function') {
     </div>
   </div>
 </div>
+<!-- زر تثبيت التطبيق -->
+<button id="installAppBtn" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); color: #fff; border: none; padding: 14px 28px; border-radius: 50px; font-family: 'Cairo', sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 8px 25px rgba(93,58,122,0.5); align-items: center; gap: 10px; animation: pulseInstall 2s infinite;">
+    📲 تثبيت تطبيق GAMARK
+</button>
 
+<style>
+@keyframes pulseInstall {
+    0%, 100% { box-shadow: 0 8px 25px rgba(93,58,122,0.5); }
+    50% { box-shadow: 0 8px 35px rgba(212,160,23,0.7); }
+}
+</style>
+<script>
+// ===== تسجيل Service Worker =====
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ SW registered:', reg.scope))
+            .catch(err => console.error('❌ SW failed:', err));
+    });
+}
+
+// ===== زر التثبيت المخصص =====
+let deferredPrompt;
+const installBtn = document.getElementById('installAppBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) {
+        installBtn.style.display = 'flex';
+    }
+});
+
+installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+});
+
+window.addEventListener('appinstalled', () => {
+    console.log('🎉 GAMARK installed!');
+    if (installBtn) installBtn.style.display = 'none';
+});
+</script>
 </body>
 </html>
