@@ -1,8 +1,10 @@
 // js/logger.js
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { initializeApp, getApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp, getApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-    getFirestore, collection, addDoc, Timestamp, getDoc, doc
+    getFirestore, initializeFirestore,
+    persistentLocalCache, persistentMultipleTabManager,
+    collection, addDoc, Timestamp, getDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -15,21 +17,36 @@ const firebaseConfig = {
   measurementId: "G-DNSGDRCYST"
 };
 
-// ✅ منع تكرار تهيئة Firebase
+// ✅ منع تكرار تهيئة Firebase App
 let app;
-try {
+if (getApps().length > 0) {
     app = getApp();
-} catch {
+} else {
     app = initializeApp(firebaseConfig);
 }
 
-const db = getFirestore(app);
+// 🔥 التعديل الجوهري: تهيئة Firestore مع الكاش المحلي من هنا
+// لأن هذا الملف يُستورد أولاً، فسيكون هو أول من يهيّئ Firestore.
+// في admin-orders.html، عندما يحاول initializeFirestore يفشل ويرجع لنفس النسخة
+// هذه — التي تحتوي على persistentLocalCache.
+let db;
+try {
+    db = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager()
+        })
+    });
+    console.log('✅ [logger] Firestore initialized WITH persistence');
+} catch (e) {
+    // Firestore مهيأة بالفعل — استخدم النسخة الموجودة
+    db = getFirestore(app);
+    console.warn('⚠️ [logger] Firestore already initialized — reusing existing instance');
+}
 
 /**
  * تحويل أي قيمة إلى صيغة Firestore REST API
  */
 function convertToFirestoreValue(value) {
-    // ✅ معالجة Timestamp
     if (value && typeof value === 'object' && value.toDate && typeof value.toDate === 'function') {
         return { timestampValue: value.toDate().toISOString() };
     }
@@ -39,7 +56,6 @@ function convertToFirestoreValue(value) {
     if (value === null || value === undefined) {
         return { nullValue: null };
     }
-    
     if (typeof value === 'string') {
         return { stringValue: value };
     }
@@ -67,21 +83,13 @@ function convertToFirestoreValue(value) {
 }
 
 export async function logAuditEvent(data) {
-    // ✅ استخراج performedBy من data أولاً
     let performedBy = data.performedBy || window.currentUserEmail || 'system';
-    
-    // ✅ السماح بالتسجيل فقط من صفحات الإدارة
+
     const currentPath = window.location.pathname;
     const allowedPages = [
-        'admin-order',
-        'admin-products',
-        'admin-product',
-        'Profits',
-        'Audit-log',
-        'admin-order (1)',
-        '/',
-        '/index.html',
-        ''
+        'admin-order', 'admin-products', 'admin-product',
+        'Profits', 'Audit-log', 'admin-order (1)',
+        '/', '/index.html', ''
     ];
     const isAdminPage = allowedPages.some(page => currentPath.includes(page));
     if (!isAdminPage) return;
@@ -95,10 +103,8 @@ export async function logAuditEvent(data) {
             severity = 'info'
         } = data;
 
-        // ✅ تحويل details بالكامل باستخدام الدالة الجديدة
         const cleanDetails = convertToFirestoreValue(details);
 
-        // ✅ بناء المستند النهائي
         const docData = {
             action: { stringValue: action },
             orderId: { stringValue: orderId || '' },
@@ -110,26 +116,19 @@ export async function logAuditEvent(data) {
             createdAt: { timestampValue: new Date().toISOString() }
         };
 
-        // ✅ إضافة حقول مساعدة للعرض السريع
-        if (details.oldStatus) {
-            docData.oldStatus = { stringValue: String(details.oldStatus) };
-        }
-        if (details.newStatus) {
-            docData.newStatus = { stringValue: String(details.newStatus) };
-        }
-        if (details.notes) {
-            docData.notes = { stringValue: String(details.notes) };
-        }
-        if (details.customerName) {
-            docData.customerName = { stringValue: String(details.customerName) };
-        }
-        if (details.finalTotal !== undefined) {
-            docData.finalTotal = { doubleValue: Number(details.finalTotal) };
+        if (details.oldStatus) docData.oldStatus = { stringValue: String(details.oldStatus) };
+        if (details.newStatus) docData.newStatus = { stringValue: String(details.newStatus) };
+        if (details.notes) docData.notes = { stringValue: String(details.notes) };
+        if (details.customerName) docData.customerName = { stringValue: String(details.customerName) };
+        if (details.finalTotal !== undefined) docData.finalTotal = { doubleValue: Number(details.finalTotal) };
+
+        // ⚠️ REST API لا يعمل أوفلاين — نتخطاه ونروح مباشرة للـ SDK
+        if (!navigator.onLine) {
+            throw new Error('offline');
         }
 
-        // ✅ حفظ باستخدام REST API
         const token = await getAuthToken();
-        const projectId = "vante-orders";
+        const projectId = "gamark-d04ff";
         const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/auditLog`;
 
         const response = await fetch(url, {
@@ -141,50 +140,41 @@ export async function logAuditEvent(data) {
             body: JSON.stringify({ fields: docData })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         console.log("✅ [Audit Log] تم تسجيل الحدث:", action, orderNumber);
         return await response.json();
 
     } catch (error) {
-        console.error("❌ [Audit Log] فشل التسجيل عبر REST:", error);
-        // ✅ محاولة بديلة عبر SDK
+        // ✅ fallback عبر SDK (يدعم الأوفلاين عبر الـ queue)
         try {
             const logEntry = {
-                action,
-                orderId,
-                orderNumber,
-                severity,
-                details,
-                performedBy: performedBy,
+                action: data.action,
+                orderId: data.orderId || null,
+                orderNumber: data.orderNumber || null,
+                severity: data.severity || 'info',
+                details: data.details || {},
+                performedBy,
                 createdAt: Timestamp.now()
             };
             await addDoc(collection(db, "auditLog"), logEntry);
-            console.log("✅ [Audit Log] تم التسجيل عبر SDK كحل بديل");
+            console.log("✅ [Audit Log] تم التسجيل عبر SDK");
         } catch (e) {
-            console.error("❌ [Audit Log] فشل التسجيل عبر SDK أيضاً:", e);
+            console.warn("⚠️ [Audit Log] فشل التسجيل تماماً:", e.message);
         }
     }
 }
 
-// ✅ دالة الحصول على توكن المصادقة
 async function getAuthToken() {
     const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
     const auth = getAuth();
-    
     return new Promise((resolve, reject) => {
         if (auth.currentUser) {
             auth.currentUser.getIdToken().then(resolve).catch(reject);
         } else {
-            const unsubscribe = auth.onAuthStateChanged((user) => {
+            const unsubscribe = onAuthStateChanged(auth, (user) => {
                 unsubscribe();
-                if (user) {
-                    user.getIdToken().then(resolve).catch(reject);
-                } else {
-                    reject(new Error('غير مسجل الدخول'));
-                }
+                if (user) user.getIdToken().then(resolve).catch(reject);
+                else reject(new Error('غير مسجل الدخول'));
             });
         }
     });
@@ -194,10 +184,7 @@ export function getChangedFields(oldData, newData, fields) {
     const changes = {};
     fields.forEach(field => {
         if (JSON.stringify(oldData[field]) !== JSON.stringify(newData[field])) {
-            changes[field] = {
-                old: oldData[field],
-                new: newData[field]
-            };
+            changes[field] = { old: oldData[field], new: newData[field] };
         }
     });
     return changes;
