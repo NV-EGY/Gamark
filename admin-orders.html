@@ -1328,7 +1328,14 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, increment, query, orderBy, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs, where, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  collection, increment, query, orderBy, onSnapshot,
+  updateDoc, deleteDoc, doc, serverTimestamp, getDoc, getDocs,
+  where, addDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { logAuditEvent } from './js/logger.js';
 // ===== إدارة الإشعارات المحسّنة =====
@@ -1360,9 +1367,16 @@ function sendNotification(title, body, tag = null) {
 }
 
 async function registerSW() {
-  // تم تعطيل Service Worker لأنه غير ضروري لتشغيل لوحة التحكم
-  console.log('ℹ️ Service Worker معطل (اختياري)');
-  return;
+  if (!('serviceWorker' in navigator)) {
+    console.warn('⚠️ Service Worker غير مدعوم');
+    return;
+  }
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    console.log('✅ Service Worker registered:', reg.scope);
+  } catch (err) {
+    console.error('❌ Service Worker registration failed:', err);
+  }
 }
 
 // ============================================================
@@ -2989,7 +3003,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// ✅ تفعيل Firestore Offline Persistence (كاش + طابور كتابة)
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()  // يدعم فتح أكتر من تاب
+  })
+});
 const auth = getAuth(app);
 
 let orders = [];
@@ -5893,9 +5912,8 @@ onAuthStateChanged(auth, (user) => {
         registerSW();
         load();
         loadShippingDiscountSettings();
-               console.log('✅ تم تفعيل المزامنة التلقائية مع QP Express');
     } else {
-        window.location.href = "login.html";
+        window.location.href = "login.html";  // ⚠️ المشكلة هنا
     }
 });
 
@@ -6391,6 +6409,41 @@ window.forceRender = async function() {
         console.error("❌ [forceRender] فشل التحديث:", e);
     }
 };
+// ============================================================
+// 📡 مراقبة حالة الاتصال (Online/Offline)
+// ============================================================
+const offlineBanner = document.getElementById('offlineBanner');
+const onlineBanner  = document.getElementById('onlineBanner');
+
+function updateNetworkStatus() {
+  if (navigator.onLine) {
+    if (offlineBanner) offlineBanner.style.display = 'none';
+    if (onlineBanner) {
+      onlineBanner.style.display = 'block';
+      setTimeout(() => { onlineBanner.style.display = 'none'; }, 3500);
+    }
+  } else {
+    if (offlineBanner) offlineBanner.style.display = 'block';
+    if (onlineBanner) onlineBanner.style.display = 'none';
+  }
+}
+
+window.addEventListener('online', () => {
+  updateNetworkStatus();
+  console.log('🌐 الاتصال عاد — Firebase سيزامن تلقائيًا');
+  // ✅ إعادة تحميل لضمان ظهور كل التحديثات
+  setTimeout(() => {
+    if (typeof window.forceRender === 'function') window.forceRender();
+  }, 1500);
+});
+
+window.addEventListener('offline', () => {
+  updateNetworkStatus();
+  console.log('🔴 الاتصال انقطع — وضع أوفلاين نشط');
+});
+
+// فحص أولي عند التحميل
+updateNetworkStatus();
 // جعل الدوال المستخدمة في HTML عامة
 window.updateBulkBar = updateBulkBar;
 window.render = render;
@@ -6734,5 +6787,14 @@ window.addEventListener('appinstalled', () => {
     if (installBtn) installBtn.style.display = 'none';
 });
 </script>
+<!-- مؤشر حالة الاتصال -->
+<div id="offlineBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999999; background: linear-gradient(135deg, #e74c3c, #c0392b); color: #fff; text-align: center; padding: 10px 20px; font-weight: 700; font-family: 'Cairo', sans-serif; font-size: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.2);">
+  🔴 أنت غير متصل بالإنترنت — التعديلات تُحفظ محليًا وستُزامن تلقائيًا عند عودة الاتصال
+</div>
+
+<!-- مؤشر إعادة الاتصال (يظهر لثوانٍ) -->
+<div id="onlineBanner" style="display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999999; background: linear-gradient(135deg, #27ae60, #1e8449); color: #fff; text-align: center; padding: 10px 20px; font-weight: 700; font-family: 'Cairo', sans-serif; font-size: 14px; box-shadow: 0 3px 12px rgba(0,0,0,0.2);">
+  ✅ عاد الاتصال — جاري مزامنة التعديلات...
+</div>
 </body>
 </html>
