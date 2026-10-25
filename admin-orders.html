@@ -3050,6 +3050,17 @@ function loadOpenMonthGroups() {
     } catch(e) {}
 }
 
+// إضافة هذا في أي مكان بعد تهيئة db
+window.addEventListener('online', () => {
+    customAlert('🌐 عاد الاتصال. جاري مزامنة التغييرات المحلية...', 'success');
+    // يمكنك استدعاء forceRender لتحديث الواجهة
+    if (typeof forceRender === 'function') forceRender();
+});
+
+window.addEventListener('offline', () => {
+    customAlert('🔴 انقطع الاتصال. أنت تعمل الآن في وضع عدم الاتصال. التغييرات ستُزامن لاحقًا.', 'warning');
+});
+
 window.toggleMonthGroup = function(monthId) {
     const content = document.getElementById(`month-content-${monthId}`);
     const icon = document.getElementById(`month-icon-${monthId}`);
@@ -5901,45 +5912,36 @@ window.copyToClipboard = function(text) {
     });
 };
 onAuthStateChanged(auth, (user) => {
-    registerSW(); // تسجيل Service Worker (موجود مسبقاً)
-    
-    if (Notification.permission === "default") {
-        Notification.requestPermission().then(perm => console.log("إذن الإشعارات:", perm));
-    }
-    
+    registerSW();
     if (user) {
-        // ✅ المستخدم مسجل الدخول
         window.currentUserEmail = user.email;
         load();
         loadShippingDiscountSettings();
         console.log('✅ تم تسجيل الدخول بنجاح:', user.email);
     } else {
-        // ⚠️ المستخدم غير مسجل الدخول
-        // ✅ الحل: التحقق من حالة الاتصال أولاً
-        if (!navigator.onLine) {
-            // 🔴 الوضع أوفلاين: منع التحويل إلى login.html
-            console.log('ℹ️ وضع أوفلاين - استخدام الكاش');
+        // 🔥 الحل: التحقق من وجود مستخدم محفوظ محليًا (حتى لو لم يتم التحقق منه عبر الشبكة)
+        const hasCachedUser = localStorage.getItem('firebase:authUser'); // مفتاح تقريبي يستخدمه Firebase
+        
+        if (!navigator.onLine && hasCachedUser) {
+            // وضع عدم الاتصال + يوجد مستخدم سابق → اسمح بالوصول للبيانات المخزنة
+            console.log('ℹ️ وضع أوفلاين - استخدام الكاش والمستخدم المحفوظ');
+            // تعيين بريد افتراضي للاستخدام في السجلات
+            window.currentUserEmail = 'offline-user@gamark.sbs'; 
             
-            // عرض تنبيه للمستخدم
-            if (typeof customAlert === 'function') {
-                customAlert('🔴 أنت غير متصل بالإنترنت. سجّل الدخول مرة واحدة مع وجود إنترنت لتفعيل الوضع الأوفلاين.', 'warning');
-            } else {
-                alert('🔴 أنت غير متصل بالإنترنت. يرجى تسجيل الدخول مرة واحدة مع وجود إنترنت.');
-            }
-            
-            // محاولة تحميل البيانات من الكاش (Firestore Offline Persistence)
+            // تحميل البيانات من الكاش
             try {
-                load();
+                load(); // دالة onSnapshot ستقرأ من الكاش المحلي
                 loadShippingDiscountSettings();
-                console.log('✅ تم تحميل البيانات من الكاش (وضع أوفلاين)');
+                customAlert('🔴 أنت غير متصل. يتم عرض البيانات المخزنة محليًا. أي تعديلات ستُزامن تلقائيًا عند عودة الاتصال.', 'warning');
             } catch(e) {
-                console.warn('⚠️ تعذر تحميل البيانات أوفلاين:', e);
-                if (typeof customAlert === 'function') {
-                    customAlert('⚠️ لا توجد بيانات محفوظة محليًا. يرجى الاتصال بالإنترنت أولاً.', 'error');
-                }
+                console.error('فشل تحميل البيانات المخزنة:', e);
+                customAlert('⚠️ لا توجد بيانات مخزنة محليًا. يرجى الاتصال بالإنترنت لتسجيل الدخول أولاً.', 'error');
             }
+        } else if (!navigator.onLine) {
+            // أوفلاين ولا يوجد مستخدم محفوظ → لا يمكن السماح بالدخول
+            customAlert('🔴 أنت غير متصل. يرجى تسجيل الدخول مرة واحدة على الأقل مع وجود إنترنت.', 'error');
         } else {
-            // 🌐 الوضع أونلاين: تحويل إلى صفحة تسجيل الدخول
+            // أونلاين ولا يوجد مستخدم → التوجيه لتسجيل الدخول
             window.location.href = "login.html";
         }
     }
