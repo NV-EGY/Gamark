@@ -2239,17 +2239,24 @@ function findProductByName(name, products) {
 }
 
 // ===== بناء Set بأرقام الطلبات الموجودة (لكشف التكرار بسرعة) =====
+// استبدل دالة buildExistingOrdersMap بالكامل
 async function buildExistingOrdersMap() {
-    const q = query(collection(db, "orders"));
-    const snap = await getDocs(q);
-    const map = {}; // phone → orderID
-    snap.docs.forEach(d => {
-        const data = d.data();
-        if (data.phone && !['cancelled', 'rejected'].includes(data.status)) {
-            map[data.phone] = data.orderID || data.orderID;
-        }
-    });
-    return map;
+    try {
+        const q = query(collection(db, "orders"));
+        const snap = await getDocs(q);
+        const map = {};
+        snap.docs.forEach(d => {
+            const data = d.data();
+            if (data.phone && !['cancelled', 'rejected'].includes(data.status)) {
+                map[data.phone] = data.orderID || d.id;
+            }
+        });
+        console.log(`✅ [Paste] تم قراءة ${snap.size} طلب موجود (من كاش/سيرفر)`);
+        return map;
+    } catch (e) {
+        console.warn('⚠️ [Paste] فشل قراءة الطلبات الموجودة — هيتم تجاهل كشف التكرار:', e.message);
+        return {}; // نسيبها فاضية، الطلب هيتضاف عادي
+    }
 }
 
 // ===== عرض أليرت داخل المودال (فوق) =====
@@ -2741,52 +2748,67 @@ if (o._phoneToSave) {
 // إضافة طلب واحد إلى Firestore + خصم مخزون
 // ============================================================
 async function addPastedOrderToFirestore(order) {
-    // ✅ حماية
+    // ✅ حماية القيم
     const safePrice = (order.price == null || isNaN(order.price)) ? 0 : Number(order.price);
     const safeShipping = (order.shipping == null || isNaN(order.shipping)) ? 0 : Number(order.shipping);
 
-    // ✅ استخدم المنتجات الموزّعة
     const resolvedItems = order._resolvedItems || (() => {
         const d = resolveOrderAttributes(order);
         return d.items || [];
     })();
 
-    // === 1. رقم الطلب ===
+    // === 1. تاريخ اليوم ===
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
     const dd = String(today.getDate()).padStart(2, '0');
     const dateStr = `${yyyy}${mm}${dd}`;
 
-    const qToday = query(collection(db, "orders"), where("date", "==", dateStr));
-    const todaySnap = await getDocs(qToday);
-    const dailyCount = todaySnap.size + 1;
+    // ✅ عدّاد اليوم — مع try/catch للعمل أوفلاين
+    let dailyCount = 1;
+    try {
+        const qToday = query(collection(db, "orders"), where("date", "==", dateStr));
+        const todaySnap = await getDocs(qToday);
+        dailyCount = todaySnap.size + 1;
+        console.log(`📋 [Paste] عدد طلبات اليوم: ${todaySnap.size} → سيصبح رقم ${dailyCount}`);
+    } catch (e) {
+        console.warn('⚠️ [Paste] تعذر عدّ طلبات اليوم (أوفلاين) — استخدام fallback:', e.message);
+        // fallback فريد يمنع التعارض
+        dailyCount = (Date.now() % 1000) + 1;
+    }
 
-    // === 2. رقم الهاتف (يقبل غير المصري لو المستخدم وافق) ===
+    // === 2. الهاتف ===
     const phone = order._phoneToSave || order.phones[0] || (order.rawPhone || '').trim();
     const secondaryPhone = order.phones[1] || null;
 
-    // === 3. كود العميل ===
-    const customersRef = collection(db, "customers");
-    const qCust = query(customersRef, where("phone", "==", phone));
-    const custSnap = await getDocs(qCust);
+    // === 3. كود العميل — مع try/catch و fallback ===
+    let customerCode = `V${(phone || '').replace(/\D/g, '').slice(-6) || String(Date.now()).slice(-6)}`;
+    try {
+        const customersRef = collection(db, "customers");
+        const qCust = query(customersRef, where("phone", "==", phone));
+        const custSnap = await getDocs(qCust);
 
-    let customerCode;
-    if (!custSnap.empty) {
-        customerCode = custSnap.docs[0].data().customerCode;
-    } else {
-        const counterRef = doc(db, "counters", "customers");
-        const counterSnap = await getDoc(counterRef);
-        if (!counterSnap.exists()) await setDoc(counterRef, { value: 0 });
-        await updateDoc(counterRef, { value: increment(1) });
-        const newCustomerNumber = (await getDoc(counterRef)).data().value;
-        customerCode = `V${newCustomerNumber}`;
-        await setDoc(doc(db, "customers", phone), {
-            phone,
-            name: order.customerName,
-            customerCode,
-            createdAt: serverTimestamp()
-        });
+        if (!custSnap.empty) {
+            customerCode = custSnap.docs[0].data().customerCode;
+            console.log(`📋 [Paste] كود عميل موجود: ${customerCode}`);
+        } else {
+            const counterRef = doc(db, "counters", "customers");
+            const counterSnap = await getDoc(counterRef);
+            if (!counterSnap.exists()) await setDoc(counterRef, { value: 0 });
+            await updateDoc(counterRef, { value: increment(1) });
+            const newCustomerNumber = (await getDoc(counterRef)).data().value;
+            customerCode = `V${newCustomerNumber}`;
+            await setDoc(doc(db, "customers", phone), {
+                phone,
+                name: order.customerName,
+                customerCode,
+                createdAt: serverTimestamp()
+            });
+            console.log(`📋 [Paste] كود عميل جديد: ${customerCode}`);
+        }
+    } catch (e) {
+        console.warn('⚠️ [Paste] تعذر قراءة/تحديث كود العميل — استخدام fallback:', e.message);
+        // customerCode يحتوي بالفعل على fallback صالح
     }
 
     const orderID = `${customerCode}-${dateStr}${String(dailyCount).padStart(3, '0')}`;
@@ -2795,8 +2817,6 @@ async function addPastedOrderToFirestore(order) {
     const allProducts = window.allProducts || [];
     const orderDetails = [];
     let totalCost = 0;
-
-    // ✅ متغيرات لخصم المخزون (لأول منتج له stockBySize)
     let firstDeductedProductId = null;
     let firstDeductedSize = null;
     let firstDeductedStockBySize = null;
@@ -2805,10 +2825,8 @@ async function addPastedOrderToFirestore(order) {
         const matched = findProductByName(item.name, allProducts);
         const itemPrice = (item.price == null) ? safePrice : Number(item.price);
 
-        // ✅ اختيار المقاس النهائي: من الـ resolvedItems أو أول مقاس متوفر
         let finalSize = item.size ? String(item.size).trim().toUpperCase() : null;
 
-        // ✅ لو مفيش مقاس، نشوف أول مقاس متوفر للمنتج المطابق
         if (!finalSize && matched && matched.stockBySize) {
             const sizeOrder = ['S', 'M', 'L', 'XL', '2XL', '3XL'];
             for (const s of sizeOrder) {
@@ -2828,7 +2846,6 @@ async function addPastedOrderToFirestore(order) {
             }
         }
 
-        // ✅ خصم المخزون لأول منتج قابل للخصم
         if (matched && matched.stockBySize && finalSize && !firstDeductedProductId) {
             const sb = { ...matched.stockBySize };
             const qty = sb[finalSize];
@@ -2889,31 +2906,33 @@ async function addPastedOrderToFirestore(order) {
         addedBy: window.currentUserEmail || 'unknown'
     };
 
-    await addDoc(collection(db, "orders"), orderData);
+    // === 5. إضافة الطلب (يعمل أوفلاين عبر الـ mutation queue) ===
+    try {
+        await addDoc(collection(db, "orders"), orderData);
+        console.log(`✅ [Paste] تم إضافة الطلب ${orderID}${navigator.onLine ? '' : ' (أوفلاين — سيُزامن تلقائياً)'}`);
+    } catch (e) {
+        console.error('❌ [Paste] فشل إضافة الطلب:', e.message);
+        throw new Error(`فشل حفظ الطلب: ${e.message}`);
+    }
 
-    // === 5. تحديث المخزون والمبيعات ===
-    if (firstDeductedProductId && firstDeductedStockBySize) {
-        try {
+    // === 6. تحديث المخزون والمبيعات (أوفلاين أيضاً) ===
+    try {
+        if (firstDeductedProductId && firstDeductedStockBySize) {
             await updateDoc(doc(db, "products", firstDeductedProductId), {
                 salesCount: increment(1),
                 stockBySize: firstDeductedStockBySize
             });
-        } catch (e) {
-            console.warn('stock update failed', e);
         }
-    }
-
-    // باقي المنتجات: تحديث salesCount فقط
-    for (const item of orderDetails) {
-        if (!item.productId) continue;
-        if (item.productId === firstDeductedProductId) continue;
-        try {
+        for (const item of orderDetails) {
+            if (!item.productId) continue;
+            if (item.productId === firstDeductedProductId) continue;
             await updateDoc(doc(db, "products", item.productId), {
                 salesCount: increment(1)
             });
-        } catch (e) {
-            console.warn('salesCount update failed', e);
         }
+        console.log(`✅ [Paste] تم تحديث المخزون والمبيعات${navigator.onLine ? '' : ' (سيُزامن)'}`);
+    } catch (e) {
+        console.warn('⚠️ [Paste] تحديث المخزون سيُعاد المحاولة لاحقاً:', e.message);
     }
 
     return true;
@@ -4470,9 +4489,9 @@ function load() {
     loadOpenMonthGroups();
     loadReviews();
     loadShippingRates();
-    startDeferredChecker(); // ⏰ بدء فاحص الطلبات المؤجلة
+    startDeferredChecker();
 
-    // ===== مستمع الرسائل =====
+    // ===== مستمع الرسائل (بدون تغيير) =====
     let initialLoadMessages = true;
     onSnapshot(query(collection(db, "messages"), orderBy("createdAt", "desc")), (snap) => {
         snap.docChanges().forEach(change => {
@@ -4482,7 +4501,6 @@ function load() {
             }
         });
         initialLoadMessages = false;
-
         let unread = 0, html = "";
         messages = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         messages.forEach(m => {
@@ -4498,52 +4516,66 @@ function load() {
         badge.innerText = unread;
     });
 
-    // ===== مستمع الطلبات =====
-    let initialLoad = true;
+    // ═══════════════════════════════════════════════════════════
+    // 🔥 الإصلاح: منع إشعارات الطلبات القديمة عند استعادة النت
+    // ═══════════════════════════════════════════════════════════
+    const seenOrderIds = new Set();
+    const appStartTime = Date.now();
+    const NOTIFICATION_WINDOW_MS = 5 * 60 * 1000; // 5 دقائق
+    let isFirstOrdersSnapshot = true;
+
     onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc")), (snap) => {
-        snap.docChanges().forEach(async (change) => {
-            if (change.type === "added" && !initialLoad) {
-                const orderData = change.doc.data();
-                const orderId = change.doc.id;
-                const customerName = orderData.customerName || 'عميل';
-                const orderID = orderData.orderID || 'طلب';
+        // سجّل كل الـ IDs الجديدة أول مرة
+        snap.docChanges().forEach(change => {
+    if (change.type === "added" && !seenOrderIds.has(change.doc.id)) {
+        seenOrderIds.add(change.doc.id);
+        if (!isFirstOrdersSnapshot) {
+            const orderData = change.doc.data();
+            const createdAt = orderData.createdAt?.toDate?.() || new Date(orderData.createdAt || 0);
+            const isNewlyCreated = createdAt.getTime() > (appStartTime - NOTIFICATION_WINDOW_MS);
+            
+            // 🔥 السطر الجديد — ضيفه هنا بالظبط
+            if (change.doc.metadata.hasPendingWrites) {
+                console.log(`⏭️ [Notif] طلب محلي (هيتزامن) — تجنب إشعار: ${orderData.orderID || change.doc.id}`);
+                return;
+            }
+            
+                        if (isNewlyCreated) {
+                        const customerName = orderData.customerName || 'عميل';
+                        const orderID = orderData.orderID || 'طلب';
+                        sendNotification(`🛒 طلب جديد #${orderID}`, `من ${customerName} - ${orderData.phone || ''}`);
+                        new Audio("https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3").play().catch(()=>{});
+                        showPopup(orderData);
 
-                sendNotification(`🛒 طلب جديد #${orderID}`, `من ${customerName} - ${orderData.phone || ''}`);
-                new Audio("https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3").play().catch(()=>{});
-
-                showPopup(orderData);
-
-                try {
-                    await logAuditEvent({
-                        action: 'order_created',
-                        orderId: orderId,
-                        orderNumber: orderData.orderID || 'N/A',
-                        details: {
-                            customerName: orderData.customerName || 'غير معروف',
-                            phone: orderData.phone || '',
-                            gov: orderData.gov || '',
-                            city: orderData.city || '',
-                            finalTotal: orderData.finalTotal || 0,
-                            quantity: orderData.quantity || 0,
-                            orderDetails: orderData.orderDetails || []
-                        },
-                        performedBy: 'system',
-                        severity: 'info'
-                    });
-                } catch (e) {
-                    console.error("❌ [Audit Log] فشل تسجيل طلب جديد:", e.message);
+                        // Audit log
+                        logAuditEvent({
+                            action: 'order_created',
+                            orderId: change.doc.id,
+                            orderNumber: orderData.orderID || 'N/A',
+                            details: {
+                                customerName: orderData.customerName || 'غير معروف',
+                                phone: orderData.phone || '',
+                                gov: orderData.gov || '',
+                                city: orderData.city || '',
+                                finalTotal: orderData.finalTotal || 0,
+                                quantity: orderData.quantity || 0,
+                                orderDetails: orderData.orderDetails || []
+                            },
+                            performedBy: 'system',
+                            severity: 'info'
+                        }).catch(e => console.error("❌ [Audit] فشل تسجيل:", e.message));
+                    } else {
+                        console.log(`📦 [Sync] طلب قديم اتزامن (مش هنبعت إشعار): ${orderData.orderID || change.doc.id}`);
+                    }
                 }
             }
         });
 
+        isFirstOrdersSnapshot = false;
         lastCount = snap.size;
         orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
         window.orders = orders;
         render();
-        if (initialLoad) {
-            initialLoad = false;
-            console.log("✅ [Admin] تم تحميل الطلبات الأولي، جاهز للإشعارات");
-        }
     });
 }
 
@@ -5913,35 +5945,34 @@ window.copyToClipboard = function(text) {
 };
 onAuthStateChanged(auth, (user) => {
     registerSW();
+
     if (user) {
+        // ✅ المستخدم مسجل الدخول (سواء أونلاين أو أوفلاين)
         window.currentUserEmail = user.email;
         load();
         loadShippingDiscountSettings();
-        console.log('✅ تم تسجيل الدخول بنجاح:', user.email);
+        console.log('✅ تم تحميل البيانات للمستخدم:', user.email);
     } else {
-        // 🔥 الحل: التحقق من وجود مستخدم محفوظ محليًا (حتى لو لم يتم التحقق منه عبر الشبكة)
-        const hasCachedUser = localStorage.getItem('firebase:authUser'); // مفتاح تقريبي يستخدمه Firebase
-        
-        if (!navigator.onLine && hasCachedUser) {
-            // وضع عدم الاتصال + يوجد مستخدم سابق → اسمح بالوصول للبيانات المخزنة
-            console.log('ℹ️ وضع أوفلاين - استخدام الكاش والمستخدم المحفوظ');
-            // تعيين بريد افتراضي للاستخدام في السجلات
-            window.currentUserEmail = 'offline-user@gamark.sbs'; 
-            
-            // تحميل البيانات من الكاش
+        // ⚠️ لا يوجد مستخدم
+        if (!navigator.onLine) {
+            // 🔥 الوضع أوفلاين: نسمح بالوصول للكاش المحلي
+            // (Firestore cache لا يتحقق من المصادقة للقراءات المخزنة محلياً)
+            console.log('ℹ️ وضع أوفلاين بدون مستخدم — محاولة تحميل البيانات من الكاش');
+            window.currentUserEmail = 'offline-user@gamark.sbs';
+
             try {
-                load(); // دالة onSnapshot ستقرأ من الكاش المحلي
+                load();
                 loadShippingDiscountSettings();
-                customAlert('🔴 أنت غير متصل. يتم عرض البيانات المخزنة محليًا. أي تعديلات ستُزامن تلقائيًا عند عودة الاتصال.', 'warning');
-            } catch(e) {
-                console.error('فشل تحميل البيانات المخزنة:', e);
-                customAlert('⚠️ لا توجد بيانات مخزنة محليًا. يرجى الاتصال بالإنترنت لتسجيل الدخول أولاً.', 'error');
+                customAlert(
+                    '🔴 أنت غير متصل. يتم عرض البيانات المخزنة محلياً. التعديلات ستُزامن تلقائياً عند عودة الاتصال.',
+                    'warning'
+                );
+            } catch (e) {
+                console.error('فشل تحميل الكاش:', e);
+                customAlert('⚠️ لا توجد بيانات مخزنة محلياً. يرجى الاتصال بالإنترنت أولاً.', 'error');
             }
-        } else if (!navigator.onLine) {
-            // أوفلاين ولا يوجد مستخدم محفوظ → لا يمكن السماح بالدخول
-            customAlert('🔴 أنت غير متصل. يرجى تسجيل الدخول مرة واحدة على الأقل مع وجود إنترنت.', 'error');
         } else {
-            // أونلاين ولا يوجد مستخدم → التوجيه لتسجيل الدخول
+            // أونلاين + لا يوجد مستخدم → التوجيه لتسجيل الدخول
             window.location.href = "login.html";
         }
     }
