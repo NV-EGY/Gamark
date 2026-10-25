@@ -35,6 +35,5 @@
       "type": "image/png",
       "purpose": "maskable"
     }
-  ],
-  "display_override": ["fullscreen", "browser", "minimal-ui"]
+  ]
 }
