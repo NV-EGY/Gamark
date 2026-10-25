@@ -2,8 +2,9 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>GAMARK - Sitemap Generator</title>
+<title>GAMARK - Sitemap Generator Pro</title>
 <style>
+    * { box-sizing: border-box; }
     body {
         font-family: 'Cairo', Tahoma, sans-serif;
         background: linear-gradient(135deg, #FAF8FB 0%, #F5EDF8 100%);
@@ -18,7 +19,7 @@
         background: #fff;
         border-radius: 24px;
         padding: 40px;
-        max-width: 600px;
+        max-width: 640px;
         width: 100%;
         box-shadow: 0 20px 60px rgba(93,58,122,0.15);
         border: 1.5px solid #E8DFF0;
@@ -33,8 +34,20 @@
         color: #888;
         font-size: 14px;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 25px;
+        line-height: 1.7;
     }
+    .steps {
+        background: #f0f7ff;
+        border-right: 4px solid #3498db;
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-size: 13px;
+        color: #1e5f99;
+        line-height: 1.8;
+    }
+    .steps strong { color: #0d47a1; }
     button {
         width: 100%;
         padding: 16px;
@@ -57,16 +70,34 @@
         transform: translateY(-2px);
         box-shadow: 0 10px 30px rgba(212,160,23,0.3);
     }
-    .btn-primary:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-secondary {
         background: #f5f5f5;
         color: #333;
     }
-    .btn-secondary:hover {
-        background: #e0e0e0;
+    .btn-secondary:hover:not(:disabled) { background: #e0e0e0; }
+    .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 20px 0;
+    }
+    .stat {
+        background: #faf8fb;
+        padding: 15px;
+        border-radius: 12px;
+        text-align: center;
+        border: 1px solid #e8dff0;
+    }
+    .stat-num {
+        font-size: 28px;
+        font-weight: 900;
+        color: #5D3A7A;
+    }
+    .stat-lbl {
+        font-size: 11px;
+        color: #888;
+        margin-top: 4px;
     }
     #status {
         margin-top: 20px;
@@ -80,82 +111,105 @@
     .status-loading { background: #fff8e1; color: #8B6914; }
     .status-success { background: #e8f5e9; color: #1e8449; }
     .status-error   { background: #fee;    color: #c0392b; }
-    .stats {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 10px;
-        margin: 20px 0;
-    }
-    .stat {
-        background: #faf8fb;
-        padding: 15px;
-        border-radius: 12px;
-        text-align: center;
-        border: 1px solid #e8dff0;
-    }
-    .stat-num {
-        font-size: 24px;
-        font-weight: 900;
-        color: #5D3A7A;
-    }
-    .stat-lbl {
-        font-size: 11px;
-        color: #888;
-        margin-top: 4px;
-    }
-    pre {
-        background: #1a1a1a;
-        color: #D4AF37;
-        padding: 15px;
-        border-radius: 12px;
-        overflow-x: auto;
-        font-size: 11px;
-        max-height: 200px;
+    .file-list {
+        margin-top: 15px;
         display: none;
-        direction: ltr;
-        text-align: left;
+    }
+    .file-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+    .file-item .icon {
+        width: 36px; height: 36px;
+        background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 16px;
+        flex-shrink: 0;
+    }
+    .file-item .name { font-weight: 700; color: #333; }
+    .file-item .url  { font-size: 11px; color: #888; direction: ltr; text-align: left; margin-top: 2px; }
+    .file-item .badge {
+        margin-right: auto;
+        padding: 4px 10px;
+        background: #e8f5e9;
+        color: #1e8449;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 800;
     }
 </style>
 </head>
 <body>
-
 <div class="box">
     <h1>🗺️ GAMARK Sitemap Generator</h1>
-    <p class="sub">اضغط الزر عشان نولّد sitemap.xml كامل بكل منتجاتك</p>
+    <p class="sub">توليد خرائط الموقع (Sitemap Index + Pages + Products) بآخر تعديل حقيقي لكل منتج</p>
+
+    <div class="steps">
+        <strong>📋 خطوات النشر:</strong><br>
+        1. اضغط <strong>"توليد وتحميل"</strong><br>
+        2. هيتحمّل 3 ملفات على جهازك<br>
+        3. ارفعهم لمجلد الموقع الرئيسي (بجانب index.html)<br>
+        4. افتح Google Search Console وقدم رابط: <strong>https://gamark.sbs/sitemap.xml</strong>
+    </div>
 
     <div class="stats">
         <div class="stat">
             <div class="stat-num" id="statProducts">—</div>
-            <div class="stat-lbl">منتج</div>
+            <div class="stat-lbl">عدد المنتجات</div>
         </div>
         <div class="stat">
-            <div class="stat-num" id="statCategories">7</div>
-            <div class="stat-lbl">قسم</div>
-        </div>
-        <div class="stat">
-            <div class="stat-num" id="statTotal">—</div>
+            <div class="stat-num" id="statUrls">—</div>
             <div class="stat-lbl">إجمالي الروابط</div>
         </div>
     </div>
 
-    <button class="btn-primary" id="generateBtn" onclick="generateSitemap()">
-        🚀 توليد الـ Sitemap وتحميله
+    <button class="btn-primary" id="generateBtn" onclick="generateAll()">
+        🚀 توليد وتحميل الملفات الثلاثة
     </button>
-    <button class="btn-secondary" onclick="previewSitemap()">
+    <button class="btn-secondary" onclick="previewAll()">
         👁️ معاينة قبل التحميل
     </button>
 
     <div id="status"></div>
-    <pre id="preview"></pre>
+
+    <div class="file-list" id="fileList">
+        <div class="file-item">
+            <div class="icon">📑</div>
+            <div>
+                <div class="name">sitemap.xml</div>
+                <div class="url">الملف الرئيسي (Index)</div>
+            </div>
+            <span class="badge">✓</span>
+        </div>
+        <div class="file-item">
+            <div class="icon">📄</div>
+            <div>
+                <div class="name">sitemap-pages.xml</div>
+                <div class="url">الرئيسية + الأقسام</div>
+            </div>
+            <span class="badge">✓</span>
+        </div>
+        <div class="file-item">
+            <div class="icon">🛍️</div>
+            <div>
+                <div class="name">sitemap-products.xml</div>
+                <div class="url">كل صفحات المنتجات</div>
+            </div>
+            <span class="badge">✓</span>
+        </div>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-    getFirestore,
-    collection,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA71-ZaaZj7spl6aGxH_xvCi_lmTecIwXU",
@@ -163,119 +217,142 @@ const firebaseConfig = {
   projectId: "gamark-d04ff",
   storageBucket: "gamark-d04ff.firebasestorage.app",
   messagingSenderId: "802246864333",
-  appId: "1:802246864333:web:23b5336c0c54280a736884"
+  appId: "1:802246864333:web:23b5336c0c54280a736884",
+  measurementId: "G-DNSGDRCYST"
 };
 
-const app  = initializeApp(firebaseConfig);
-const db   = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
 
 const BASE_URL = "https://gamark.sbs";
-const TODAY    = new Date().toISOString().split('T')[0];
-
 const CATEGORIES = [
-    { slug: "all",                     priority: "0.9" },
-    { slug: "women_waist",             priority: "0.8" },
-    { slug: "women_corset_belly_back", priority: "0.8" },
-    { slug: "women_shorts_belly",      priority: "0.8" },
-    { slug: "women_full_corset",       priority: "0.8" },
-    { slug: "men_vest_corset",         priority: "0.8" },
-    { slug: "men_shorts",              priority: "0.8" }
+    'women_waist',
+    'women_corset_belly_back',
+    'women_shorts_belly',
+    'women_full_corset',
+    'men_vest_corset',
+    'men_shorts'
 ];
 
-let cachedXml = "";
-
-// ===== توليد XML =====
-async function buildSitemap() {
-    const productsSnap = await getDocs(collection(db, "products"));
-    const products = productsSnap.docs.map(d => ({
-        id: d.id,
-        ...d.data()
-    }));
-
-    document.getElementById("statProducts").textContent = products.length;
-
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-                            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-
-    <!-- 🏠 الصفحة الرئيسية -->
-    <url>
-        <loc>${BASE_URL}/</loc>
-        <lastmod>${TODAY}</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>
-`;
-
-    // الأقسام
-    for (const cat of CATEGORIES) {
-        xml += `
-    <!-- 📂 قسم: ${cat.slug} -->
-    <url>
-        <loc>${BASE_URL}/?category=${cat.slug}</loc>
-        <lastmod>${TODAY}</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>${cat.priority}</priority>
-    </url>`;
-    }
-
-    // المنتجات
-    for (const p of products) {
-        const safeId = encodeURIComponent(p.id);
-        xml += `
-    <!-- 🛍️ منتج: ${(p.name || '').replace(/[<>&]/g, '')} -->
-    <url>
-        <loc>${BASE_URL}/Product.html?id=${safeId}</loc>
-        <lastmod>${TODAY}</lastmod>
-        <changefreq>weekly</changefreq>
-        <priority>0.9</priority>
-    </url>`;
-    }
-
-    xml += `
-</urlset>`;
-
-    const total = 1 + CATEGORIES.length + products.length;
-    document.getElementById("statTotal").textContent = total;
-
-    return xml;
+// ========== أدوات مساعدة ==========
+function toW3CDate(value) {
+    if (!value) return new Date().toISOString();
+    try {
+        if (typeof value.toDate === 'function') return value.toDate().toISOString();
+        if (value instanceof Date) return value.toISOString();
+        if (typeof value === 'string' || typeof value === 'number') {
+            const d = new Date(value);
+            if (!isNaN(d.getTime())) return d.toISOString();
+        }
+    } catch (e) {}
+    return new Date().toISOString();
 }
 
-// ===== حالة الأزرار =====
-function setStatus(msg, type, duration = null) {
+function escapeXml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ========== بناء الملفات الثلاثة ==========
+let cachedSitemaps = null;
+
+async function buildSitemaps() {
+    const snap = await getDocs(collection(db, "products"));
+    const products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const nowISO = new Date().toISOString();
+
+    // ───── ملف الأقسام والصفحات ─────
+    let pagesXml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    pagesXml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    pagesXml += `    <url>\n        <loc>${BASE_URL}/</loc>\n        <lastmod>${nowISO}</lastmod>\n    </url>\n`;
+    pagesXml += `    <url>\n        <loc>${BASE_URL}/?category=all</loc>\n        <lastmod>${nowISO}</lastmod>\n    </url>\n`;
+    for (const slug of CATEGORIES) {
+        pagesXml += `    <url>\n        <loc>${BASE_URL}/?category=${slug}</loc>\n        <lastmod>${nowISO}</lastmod>\n    </url>\n`;
+    }
+    pagesXml += `</urlset>`;
+
+    // ───── ملف المنتجات ─────
+    let productsXml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    productsXml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+    for (const p of products) {
+        const lastmod = toW3CDate(p.updatedAt || p.createdAt);
+        const loc = `${BASE_URL}/Product.html?id=${encodeURIComponent(p.id)}`;
+        productsXml += `    <url>\n        <loc>${escapeXml(loc)}</loc>\n        <lastmod>${lastmod}</lastmod>\n    </url>\n`;
+    }
+    productsXml += `</urlset>`;
+
+    // ───── ملف الفهرسة الرئيسي ─────
+    const indexXml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        `    <sitemap>\n        <loc>${BASE_URL}/sitemap-pages.xml</loc>\n        <lastmod>${nowISO}</lastmod>\n    </sitemap>\n` +
+        `    <sitemap>\n        <loc>${BASE_URL}/sitemap-products.xml</loc>\n        <lastmod>${nowISO}</lastmod>\n    </sitemap>\n` +
+        `</sitemapindex>`;
+
+    const totalUrls = 2 + CATEGORIES.length + products.length;
+    document.getElementById("statProducts").textContent = products.length;
+    document.getElementById("statUrls").textContent = totalUrls;
+
+    return {
+        index: indexXml,
+        pages: pagesXml,
+        products: productsXml,
+        productsCount: products.length,
+        totalUrls
+    };
+}
+
+// ========== تحميل ملف ==========
+function downloadFile(content, filename) {
+    const blob = new Blob([content], { type: "application/xml;charset=utf-8" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+// ========== UI ==========
+function setStatus(msg, type) {
     const el = document.getElementById("status");
     el.textContent = msg;
     el.className = "status-" + type;
     el.style.display = "block";
-    if (duration) {
-        setTimeout(() => { el.style.display = "none"; }, duration);
-    }
 }
 
 function disableButtons(on) {
     document.getElementById("generateBtn").disabled = on;
 }
 
-// ===== التوليد والتحميل =====
-window.generateSitemap = async function () {
+// ========== التوليد والتحميل ==========
+window.generateAll = async function () {
     disableButtons(true);
     setStatus("⏳ جاري سحب المنتجات من Firebase...", "loading");
 
     try {
-        cachedXml = await buildSitemap();
-        setStatus("✅ تم التوليد بنجاح! جاري التحميل...", "success", 5000);
+        cachedSitemaps = await buildSitemaps();
 
-        const blob = new Blob([cachedXml], { type: "application/xml;charset=utf-8" });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement("a");
-        a.href     = url;
-        a.download = "sitemap.xml";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        downloadFile(cachedSitemaps.index, "sitemap.xml");
+        await sleep(400);
+        downloadFile(cachedSitemaps.pages, "sitemap-pages.xml");
+        await sleep(400);
+        downloadFile(cachedSitemaps.products, "sitemap-products.xml");
+
+        document.getElementById("fileList").style.display = "block";
+        setStatus(
+            `✅ تم توليد ${cachedSitemaps.productsCount} منتج + ${cachedSitemaps.totalUrls} رابط — رفع الملفات الثلاثة الآن`,
+            "success"
+        );
+        console.log('✅ [Sitemap]', cachedSitemaps);
     } catch (err) {
         console.error(err);
         setStatus("❌ خطأ: " + err.message, "error");
@@ -284,17 +361,16 @@ window.generateSitemap = async function () {
     }
 };
 
-// ===== معاينة قبل التحميل =====
-window.previewSitemap = async function () {
+// ========== معاينة ==========
+window.previewAll = async function () {
     disableButtons(true);
     setStatus("⏳ جاري سحب المنتجات...", "loading");
-    const pre = document.getElementById("preview");
-
     try {
-        cachedXml = await buildSitemap();
-        pre.textContent = cachedXml;
-        pre.style.display = "block";
-        setStatus("✅ المعاينة جاهزة تحت 👇", "success");
+        cachedSitemaps = await buildSitemaps();
+        console.log('━━━ sitemap.xml ━━━\n', cachedSitemaps.index);
+        console.log('━━━ sitemap-pages.xml ━━━\n', cachedSitemaps.pages);
+        console.log('━━━ sitemap-products.xml ━━━\n', cachedSitemaps.products);
+        setStatus("✅ الملفات جاهزة — افتح Console للمعاينة", "success");
     } catch (err) {
         setStatus("❌ خطأ: " + err.message, "error");
     } finally {
@@ -302,6 +378,5 @@ window.previewSitemap = async function () {
     }
 };
 </script>
-
 </body>
 </html>
