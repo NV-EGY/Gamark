@@ -111,14 +111,23 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // ✅ الصور/الخطوط: cache-first (أسرع)
+     // ✅ الصور/الخطوط: cache-first (أسرع) مع حماية من فشل الشبكة
     event.respondWith(
-        caches.match(request).then(cached => cached || fetch(request).then(res => {
-            if (res.ok && request.method === 'GET') {
-                const copy = res.clone();
-                caches.open(STATIC_CACHE).then(c => c.put(request, copy));
-            }
-            return res;
-        }))
+        caches.match(request).then(cached => {
+            if (cached) return cached;
+
+            return fetch(request)
+                .then(res => {
+                    if (res.ok && request.method === 'GET') {
+                        const copy = res.clone();
+                        caches.open(STATIC_CACHE).then(c => c.put(request, copy));
+                    }
+                    return res;
+                })
+                .catch(() => new Response('', {
+                    status: 503,
+                    statusText: 'Offline - Resource not cached'
+                }));
+        })
     );
 });
