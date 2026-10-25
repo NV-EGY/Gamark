@@ -20,6 +20,8 @@ src="https://www.facebook.com/tr?id=1361900332752731&ev=PageView&noscript=1"
 <!-- End Meta Pixel Code -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="google-site-verification" content="_fDzKhqF8ewkcblSRcq8jR-O7YummObvI1us3_pikgA" />
     
   <!-- Google Tag Manager -->
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -56,10 +58,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <script>
     // تأكد من تحميل الصفحة بالكامل قبل التوجيه لتجنب أخطاء GitHub Pages
     window.addEventListener('load', function() {
-        if (window.innerWidth > 768) {
-            window.location.href = "desktop.html";
-        }
-    });
+    if (window.innerWidth > 768) {
+        window.location.href = "desktop.html";
+    }
+});
 </script>
  <!-- Favicon - الحل النهائي المضمون -->
 <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
@@ -87,12 +89,12 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "GAMARK",
-  "url": "https://vante.sbs/",
-  "description": "متجر إلكتروني متخصص في مشدات الكورسيه الفاخرة للرجال والنساء.",
+  "url": "https://gamark.sbs/",
+  "description": "متجر إلكتروني متخصص في مشدات الكورسيه الفاخرة للرجال والنساء في مصر.",
   "keywords": "مشدات كورسيه, كورسيه بطن وضهر, كورسيه كامل, شورت رجالي, حزام بطن",
   "potentialAction": {
     "@type": "SearchAction",
-    "target": "https://vante.sbs/?search={search_term_string}",
+    "target": "https://gamark.sbs/?search={search_term_string}",
     "query-input": "required name=search_term_string"
   }
 }
@@ -5560,7 +5562,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
   
     <!-- عنوان مخفي لمحركات البحث -->
-    <h1 style="display: none;">فانتي GAMARK - متجر إكسسوارات دهب استانلس فاخرة</h1>
+    <h1 style="position: absolute; left: -9999px; top: -9999px;">GAMARK | مشدات كورسيه طبية فاخرة في مصر</h1>
 
     <div class="top-offer">
         <div class="offer-text">🎁 جارٍ تحضير عرضك الخاص...</div>
@@ -6200,10 +6202,11 @@ const categoryKeywords = {
     women_waist: ["حزام بطن", "حزام", "belt", "waist belt"],
     women_corset_belly_back: ["كورسيه بطن وضهر", "بطن وضهر", "بطن وظهر", "corset belly back"],
     women_shorts_belly: ["شورت وبطن", "شورت بطن", "shorts belly"],
-    women_full_corset: ["كورسيه كامل", "كورسيه كامله", "full corset", "كورسيه"],
+    women_full_corset: ["كورسيه كامل", "كورسيه كامله", "full corset"],
     men_vest_corset: ["كورسيه فانيله", "فانيله", "vest corset", "كورسيه رجالي"],
-    men_shorts: ["شورت رجالي", "شورت رجال", "men shorts", "shorts"]
+    men_shorts: ["شورت رجالي", "شورت رجال", "men shorts"]
 };
+// "كورسيه" لوحدها تسيبها تروح للبحث العام مش قسم محدد
 
 // دالة لاستخراج القسم المطلوب من كلمات البحث
 function getCategoryFromSearch(searchTerm) {
@@ -7129,10 +7132,14 @@ if (loadMoreContainer) {
     }
 }
     
-    if (limitedProducts.length === 0) {
-        productsContainer.innerHTML = `<div style="grid-column:1/-1; display:flex; align-items:center; justify-content:center; min-height:20vh; text-align:center; font-size:18px; color:#888;">لا توجد منتجات في هذا القسم</div>`;
-        return;
-    }
+   if (limitedProducts.length === 0) {
+    const msg = currentSearchFilter 
+        ? `🔍 لا توجد نتائج لـ "<b>${currentSearchFilter}</b>"
+           <button onclick="closeSearch()" style="margin-right:10px;padding:8px 20px;background:#D4AF37;border:none;border-radius:20px;cursor:pointer;font-weight:700;">مسح البحث</button>`
+        : 'لا توجد منتجات في هذا القسم';
+    container.innerHTML = `<div style="grid-column:1/-1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:25vh; text-align:center; font-size:16px; color:#888; gap:15px;">${msg}</div>`;
+    return;
+}
 
     productsContainer.innerHTML = limitedProducts.map(p => {
         const sizes = Array.isArray(p.sizes) && p.sizes.length ? p.sizes : ["7", "8", "9"];
@@ -10463,12 +10470,13 @@ function hideSuggestions() {
 }
 
 window.selectSuggestion = function(productId) {
-    // ... التحقق من وجود المنتج ...
-
+    const product = window.allProducts?.find(p => p.id === productId);
+    if (!product) {
+        customAlert("⚠️ المنتج غير موجود", 'warning');
+        return;
+    }
     pinnedProductId = product.id;
     const category = product.category || "all";
-    
-    // setCategory تقوم باستدعاء renderProducts، لا حاجة لاستدعائها مرة أخرى
     setCategory(category);
     
     // تعيين حقل البحث باسم المنتج
