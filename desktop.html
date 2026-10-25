@@ -8464,14 +8464,84 @@ if (typeof window.openInfoModal !== 'function') {
   </div>
 </div>
 <!-- زر تثبيت التطبيق -->
-<button id="installAppBtn" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 999999; background: linear-gradient(135deg, #5D3A7A, #7B4B8A); color: #fff; border: none; padding: 14px 28px; border-radius: 50px; font-family: 'Cairo', sans-serif; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 8px 25px rgba(93,58,122,0.5); align-items: center; gap: 10px; animation: pulseInstall 2s infinite;">
-    📲 تثبيت تطبيق GAMARK
+<button id="installAppBtn" type="button">
+    📲 تثبيت تطبيق Gamark
 </button>
 
 <style>
+/* ===== زر التثبيت - التصميم الأساسي (ديسكتوب) ===== */
+#installAppBtn {
+    display: flex;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    background: linear-gradient(135deg, #5D3A7A, #7B4B8A);
+    color: #fff;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(93,58,122,0.5);
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    animation: pulseInstall 2s infinite;
+    white-space: nowrap;
+    max-width: calc(100vw - 40px);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+#installAppBtn.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ===== عداد الثواني داخل الزر ===== */
+#installAppBtn .install-countdown {
+    background: rgba(255, 255, 255, 0.28);
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 900;
+    min-width: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.25);
+    letter-spacing: 0.5px;
+}
+
+/* ===== الموبايل: عرض كامل للشاشة ===== */
+@media (max-width: 768px) {
+    #installAppBtn {
+        left: 12px;
+        right: 12px;
+        transform: none;
+        width: auto;
+        max-width: none;
+        padding: 15px 20px;
+        font-size: 16px;
+        border-radius: 50px;
+    }
+
+    #installAppBtn .install-countdown {
+        font-size: 14px;
+        min-width: 42px;
+        padding: 4px 14px;
+    }
+}
+
+/* ===== أنيميشن النبض ===== */
 @keyframes pulseInstall {
     0%, 100% { box-shadow: 0 8px 25px rgba(93,58,122,0.5); }
-    50% { box-shadow: 0 8px 35px rgba(212,160,23,0.7); }
+    50%      { box-shadow: 0 8px 35px rgba(212,160,23,0.7); }
 }
 </style>
 <script>
@@ -8484,7 +8554,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ===== زر التثبيت المخصص مع عداد تنازلي 15 ثانية =====
+// ===== زر التثبيت المخصص مع عداد 15 ثانية =====
 let deferredPrompt;
 const installBtn = document.getElementById('installAppBtn');
 let installCountdownInterval = null;
@@ -8493,39 +8563,29 @@ const INSTALL_COUNTDOWN_SECONDS = 15;
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    
-    if (installBtn) {
-        startInstallCountdown();
-    }
+    if (installBtn) startInstallCountdown();
 });
 
-// بدء العداد التنازلي وعرض الزر
+// بدء العداد التنازلي وإظهار الزر
 function startInstallCountdown() {
+    if (!installBtn) return;
+
     // تنظيف أي عداد سابق
     if (installCountdownInterval) {
         clearInterval(installCountdownInterval);
         installCountdownInterval = null;
     }
-    
+
     let remaining = INSTALL_COUNTDOWN_SECONDS;
-    
-    // عرض الزر بأنيميشن
-    installBtn.style.display = 'flex';
-    installBtn.style.opacity = '0';
-    installBtn.style.transform = 'translateX(-50%) translateY(30px)';
-    
-    // تأخير بسيط لتفعيل الأنيميشن
-    setTimeout(() => {
-        installBtn.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        installBtn.style.opacity = '1';
-        installBtn.style.transform = 'translateX(-50%)';
-    }, 50);
-    
+
+    // تحديث النص + إظهار الزر
     updateInstallBtnText(remaining);
-    
+    installBtn.classList.add('active');
+
+    // بدء العد التنازلي
     installCountdownInterval = setInterval(() => {
         remaining--;
-        
+
         if (remaining <= 0) {
             hideInstallBtn();
         } else {
@@ -8534,63 +8594,40 @@ function startInstallCountdown() {
     }, 1000);
 }
 
-// تحديث نص الزر مع العداد
+// تحديث نص الزر + العداد
 function updateInstallBtnText(seconds) {
+    if (!installBtn) return;
     installBtn.innerHTML = `
-        <span style="display: inline-flex; align-items: center; gap: 8px;">
-            <span>📲 تثبيت التطبيق</span>
-            <span style="
-                background: rgba(255,255,255,0.3);
-                padding: 2px 10px;
-                border-radius: 20px;
-                font-size: 13px;
-                font-weight: 900;
-                min-width: 32px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
-            ">${seconds}s</span>
-        </span>
+        <span>📲 تثبيت تطبيق Gamark</span>
+        <span class="install-countdown">${seconds}s</span>
     `;
 }
 
-// إخفاء الزر بأنيميشن
+// إخفاء الزر
 function hideInstallBtn() {
     if (installCountdownInterval) {
         clearInterval(installCountdownInterval);
         installCountdownInterval = null;
     }
-    
-    if (!installBtn || installBtn.style.display === 'none') return;
-    
-    installBtn.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-    installBtn.style.opacity = '0';
-    installBtn.style.transform = 'translateX(-50%) translateY(30px)';
-    
-    setTimeout(() => {
-        installBtn.style.display = 'none';
-        // إعادة الضبط للاستخدام في المستقبل
-        installBtn.style.opacity = '1';
-        installBtn.style.transform = 'translateX(-50%)';
-    }, 400);
+    if (installBtn) installBtn.classList.remove('active');
 }
 
 // عند الضغط على الزر
 installBtn?.addEventListener('click', async () => {
     if (!deferredPrompt) return;
-    
+
     // إخفاء الزر فوراً
     hideInstallBtn();
-    
+
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
+    console.log(`📲 User response: ${outcome}`);
     deferredPrompt = null;
 });
 
+// بعد التثبيت الفعلي
 window.addEventListener('appinstalled', () => {
-    console.log('🎉 GAMARK installed!');
+    console.log('🎉 Gamark installed!');
     hideInstallBtn();
 });
 </script>
