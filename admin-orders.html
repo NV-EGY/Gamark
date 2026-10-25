@@ -6789,30 +6789,77 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ===== زر التثبيت المخصص =====
-let deferredPrompt;
+// ===== زر التثبيت المخصص (يظهر 10 ثواني ثم يختفي) =====
+let deferredPrompt = null;
+let installHideTimer = null;
 const installBtn = document.getElementById('installAppBtn');
 
+// دالة إخفاء الزر وتنظيف المؤقت
+function hideInstallBtn() {
+    if (installBtn) installBtn.style.display = 'none';
+    if (installHideTimer) {
+        clearTimeout(installHideTimer);
+        installHideTimer = null;
+    }
+}
+
+// إظهار الزر لمدة 10 ثواني من لحظة فتح الصفحة
+window.addEventListener('DOMContentLoaded', () => {
+    if (!installBtn) return;
+
+    // لو التطبيق مثبت بالفعل (standalone mode) → لا تعرض الزر
+    const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        window.navigator.standalone === true;
+
+    if (isStandalone) {
+        installBtn.style.display = 'none';
+        return;
+    }
+
+    // إظهار الزر فوراً
+    installBtn.style.display = 'flex';
+
+    // إخفاء تلقائي بعد 10 ثواني
+    installHideTimer = setTimeout(() => {
+        hideInstallBtn();
+        console.log('⏱️ تم إخفاء زر التثبيت بعد 10 ثواني');
+    }, 10000);
+});
+
+// التقاط حدث beforeinstallprompt
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    if (installBtn) {
-        installBtn.style.display = 'flex';
+    console.log('✅ beforeinstallprompt جاهز');
+});
+
+// عند الضغط على الزر
+installBtn?.addEventListener('click', async () => {
+    if (!deferredPrompt) {
+        // المتصفح لم يجهز الـ prompt بعد (التطبيق مثبت أو المتصفح لا يدعم)
+        hideInstallBtn();
+        console.log('⚠️ prompt غير متاح (التطبيق مثبت أو المتصفح لا يدعم)');
+        return;
+    }
+
+    try {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`👤 استجابة المستخدم: ${outcome}`);
+        deferredPrompt = null;
+    } catch (err) {
+        console.error('❌ خطأ في prompt:', err);
+    } finally {
+        // إخفاء الزر بعد المحاولة (نجحت أو لا)
+        hideInstallBtn();
     }
 });
 
-installBtn?.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-});
-
+// عند تثبيت التطبيق
 window.addEventListener('appinstalled', () => {
     console.log('🎉 GAMARK installed!');
-    if (installBtn) installBtn.style.display = 'none';
+    hideInstallBtn();
 });
 </script>
 <!-- مؤشر حالة الاتصال -->
