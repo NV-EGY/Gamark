@@ -1559,12 +1559,24 @@ td { font-size: 8.5px; }
 // ===== تحويل الأرقام العربية =====
 const AR_DIGITS = { '٠':0,'١':1,'٢':2,'٣':3,'٤':4,'٥':5,'٦':6,'٧':7,'٨':8,'٩':9 };
 // ✅ نمط شامل لكل الحروف المخفية والتحكمية
-const INVISIBLE_CHARS_REGEX = /[\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g;
-function toEnglishDigits(str) {
+// ✅ نمط موسع: يشمل Soft Hyphen + كل الحروف المخفية
+const INVISIBLE_CHARS_REGEX = /[\u00AD\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g;
+// ✅ نمط الفراغات الغريبة (NBSP, Narrow NBSP, Unicode spaces)
+const WEIRD_SPACES_REGEX = /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g;
+
+// ✅ دالة مركزية لتنظيف شامل
+function cleanInvisibleChars(str) {
     if (str === null || str === undefined) return '';
     return String(str)
-        .replace(INVISIBLE_CHARS_REGEX, '')   // ✅ شيل الحروف المخفية
-        .replace(/[٠-٩]/g, d => AR_DIGITS[d]);
+        .replace(INVISIBLE_CHARS_REGEX, '')          // شيل Soft Hyphen والبقية
+        // NBSP بين حرفين عربيين → نشيله (يفضل ملزوق)
+        .replace(/(?<=[\u0600-\u06FF])[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000](?=[\u0600-\u06FF])/g, '')
+        // باقي الفراغات الغريبة → مسافة عادية
+        .replace(WEIRD_SPACES_REGEX, ' ');
+}
+function toEnglishDigits(str) {
+    if (str === null || str === undefined) return '';
+    return cleanInvisibleChars(str).replace(/[٠-٩]/g, d => AR_DIGITS[d]);
 }
 
 // ===== تطبيع النص العربي (نسخة محسّنة) =====
@@ -2019,11 +2031,11 @@ function parseSizes(value) {
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
 function parseOrdersFromPaste(text) {
-    // ✅ تنظيف شامل للحروف المخفية قبل التقسيم
-    const cleanedText = String(text || '').replace(INVISIBLE_CHARS_REGEX, '');
+    // ✅ تنظيف شامل: Soft Hyphen + NBSP + كل الحروف المخفية
+    const cleanedText = cleanInvisibleChars(String(text || ''));
 
     const orders = [];
-    const startRegex = /اسم\s*العميل\s*[:：]/g;
+    const startRegex = /اسم\s*العميل\s*[:：:∶꞉∶︰]/g;
     const positions = [];
     let m;
     while ((m = startRegex.exec(cleanedText)) !== null) positions.push(m.index);
@@ -2124,11 +2136,11 @@ function parseOrderBlock(block) {
     for (const line of lines) {
         if (stopReading) break;
 
-        const km = line.match(/^([^:：]{2,40})\s*[:：]\s*(.*)$/);
+        const km = line.match(/^([^:：:∶꞉∶︰]{2,40})\s*[:：:∶꞉∶︰]\s*(.*)$/);
 
-        if (km) {
-            const key = normalizeArabic(km[1]);
-            const value = km[2].trim();
+if (km) {
+    const key = normalizeArabic(cleanInvisibleChars(km[1])).trim();
+    const value = cleanInvisibleChars(km[2]).trim();
 
             if (wlBuffer !== null) {
                 const wls = parseWeightsLengths(wlBuffer);
