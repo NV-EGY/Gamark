@@ -1558,42 +1558,20 @@ td { font-size: 8.5px; }
 
 // ===== تحويل الأرقام العربية =====
 const AR_DIGITS = { '٠':0,'١':1,'٢':2,'٣':3,'٤':4,'٥':5,'٦':6,'٧':7,'٨':8,'٩':9 };
-// ✅ نمط شامل لكل الحروف المخفية والتحكمية
-// ✅ نمط موسع: يشمل Soft Hyphen + كل الحروف المخفية
-const INVISIBLE_CHARS_REGEX = /[\u00AD\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g;
-// ✅ نمط الفراغات الغريبة (NBSP, Narrow NBSP, Unicode spaces)
-const WEIRD_SPACES_REGEX = /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g;
-
-// ✅ دالة مركزية لتنظيف شامل (بدون lookbehind — متوافق مع كل المتصفحات)
-function cleanInvisibleChars(str) {
-    if (str === null || str === undefined) return '';
-    return String(str)
-        .replace(INVISIBLE_CHARS_REGEX, '')     // Soft Hyphen + كل المخفي
-        .replace(WEIRD_SPACES_REGEX, ' ')        // فراغات غريبة → مسافة عادية
-        // ✅ حذف حروف التحكم مع الحفاظ على \t (9) و \n (10) و \r (13)
-        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
-        // ✅ تطبيع المسافات الأفقية فقط (بدون لمس الأسطر)
-        .replace(/[^\S\r\n]+/g, ' ');
-}
 function toEnglishDigits(str) {
     if (str === null || str === undefined) return '';
-    return cleanInvisibleChars(str).replace(/[٠-٩]/g, d => AR_DIGITS[d]);
+    return String(str).replace(/[٠-٩]/g, d => AR_DIGITS[d]);
 }
 
-// ===== تطبيع النص العربي (نسخة محسّنة) =====
+// ===== تطبيع النص العربي (للتوحيد والمقارنة) =====
 function normalizeArabic(str) {
     return toEnglishDigits(str || '')
-        .replace(INVISIBLE_CHARS_REGEX, '')   // ✅ تأكيد إضافي
         .replace(/[أإآٱ]/g, 'ا')
         .replace(/ى/g, 'ي')
         .replace(/ؤ/g, 'و')
         .replace(/ئ/g, 'ي')
         .replace(/ة/g, 'ه')
         .replace(/[ًٌٍَُِّْـ]/g, '')
-        .replace(/[ظض]/g, 'ض')
-        .replace(/[ثس]/g, 'س')
-        .replace(/[ذز]/g, 'ز')
-        .replace(/[.,،؛:!?؟'"«»\-_]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase();
@@ -2032,88 +2010,21 @@ function parseSizes(value) {
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
 function parseOrdersFromPaste(text) {
-    // ✅ تنظيف شامل: Soft Hyphen + NBSP + كل الحروف المخفية
-    const cleanedText = cleanInvisibleChars(String(text || ''));
-
     const orders = [];
-    const startRegex = /اسم\s*العميل\s*[:：:∶꞉∶︰]/g;
+    const startRegex = /اسم\s*العميل\s*[:：]/g;
     const positions = [];
     let m;
-    while ((m = startRegex.exec(cleanedText)) !== null) positions.push(m.index);
+    while ((m = startRegex.exec(text)) !== null) positions.push(m.index);
     if (positions.length === 0) return [];
 
     for (let i = 0; i < positions.length; i++) {
         const start = positions[i];
-        const end = (i + 1 < positions.length) ? positions[i + 1] : cleanedText.length;
-        const block = cleanedText.substring(start, end);
+        const end = (i + 1 < positions.length) ? positions[i + 1] : text.length;
+        const block = text.substring(start, end);
         const order = parseOrderBlock(block);
         if (order && order.customerName) orders.push(order);
     }
     return orders;
-}
-
-// ✅ استنباط المحافظة من العنوان (fallback ذكي)
-function inferGovernorateFromAddress(address) {
-    if (!address) return null;
-    const normAddr = normalizeArabic(address);
-    if (!normAddr) return null;
-
-    let bestMatch = null;
-    let bestLen = 0;
-
-    for (const gov of Object.keys(govData)) {
-        const normGov = normalizeArabic(gov);
-        // مطابقة كاملة
-        if (normAddr.includes(normGov)) {
-            if (normGov.length > bestLen) {
-                bestLen = normGov.length;
-                bestMatch = gov;
-            }
-        }
-        // مطابقة بدون "ال"
-        else if (normGov.startsWith('ال')) {
-            const withoutAl = normGov.substring(2);
-            if (withoutAl.length >= 3 && normAddr.includes(withoutAl)) {
-                if (withoutAl.length > bestLen) {
-                    bestLen = withoutAl.length;
-                    bestMatch = gov;
-                }
-            }
-        }
-    }
-    return bestMatch;
-}
-
-// ✅ استنباط المدينة من العنوان
-function inferCityFromAddress(address, govHint) {
-    if (!address || !govHint || !govData[govHint]) return null;
-    const normAddr = normalizeArabic(address);
-    if (!normAddr) return null;
-
-    const cities = govData[govHint] || [];
-    let bestMatch = null;
-    let bestLen = 0;
-
-    for (const city of cities) {
-        const normCity = normalizeArabic(city);
-        if (normCity.includes('اخري') || normCity.includes('أخري')) continue;
-
-        if (normAddr.includes(normCity)) {
-            if (normCity.length > bestLen) {
-                bestLen = normCity.length;
-                bestMatch = city;
-            }
-        } else if (normCity.startsWith('ال')) {
-            const withoutAl = normCity.substring(2);
-            if (withoutAl.length >= 3 && normAddr.includes(withoutAl)) {
-                if (withoutAl.length > bestLen) {
-                    bestLen = withoutAl.length;
-                    bestMatch = city;
-                }
-            }
-        }
-    }
-    return bestMatch;
 }
 
 
@@ -2168,13 +2079,8 @@ function resolveOrderAttributes(order) {
     return { items };
 }
 
-// ✅ كاشف قوي للنقطتين (كل الأنواع)
-const COLON_REGEX = /[:：:∶꞉∶︰﹕]/;
-
 function parseOrderBlock(block) {
-    // ✅ تنظيف شامل قبل التقسيم
-    const cleanedBlock = cleanInvisibleChars(block);
-    const lines = cleanedBlock.split(/\r\n|\r|\n/).map(l => l.trim()).filter(Boolean);
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
 
     const order = {
         rawPhone: '', phones: [],
@@ -2206,121 +2112,109 @@ function parseOrderBlock(block) {
     for (const line of lines) {
         if (stopReading) break;
 
-        // ✅ الطريقة المبسطة: نجد أول نقطتين في السطر
-        const colonMatch = line.match(COLON_REGEX);
+        const km = line.match(/^([^:：]{2,40})\s*[:：]\s*(.*)$/);
 
-        if (!colonMatch) {
-            // مفيش نقطتين — ممكن تكون متابعة لـ wlBuffer
-            if (lastKey === 'wl' && wlBuffer !== null) {
-                wlBuffer += ' ' + line;
+        if (km) {
+            const key = normalizeArabic(km[1]);
+            const value = km[2].trim();
+
+            if (wlBuffer !== null) {
+                const wls = parseWeightsLengths(wlBuffer);
+                order.weights = wls;
+                order.weight  = wls[0]?.weight || null;
+                order.weightMax = wls[0]?.weightMax || null;
+                order.length  = wls[0]?.length || null;
+                wlBuffer = null;
             }
-            continue;
-        }
 
-        const colonIdx = colonMatch.index;
-        const rawKey = line.substring(0, colonIdx).trim();
-        const rawValue = line.substring(colonIdx + 1).trim();
+            if (key.includes('اسم') && key.includes('عميل')) {
+                order.customerName = value;
+                lastKey = 'name';
+            } else if (key.includes('تليفون') || key.includes('هاتف') || key.includes('موبايل')) {
+                order.rawPhone = value;
+                order.phones = extractPhones(value);
+                lastKey = 'phone';
+            } else if (key.includes('محافظ')) {
+                order.govOriginal = value;
+                order.gov = matchGovernorate(value) || value;
+                lastKey = 'gov';
+            } else if (key.includes('مدين')) {
+    order.cityOriginal = value;
+    const c = matchCity(value, order.gov);
+    order.city = c ? c.city : value;
+    order._cityUnrecognized = !c;
 
-        if (!rawKey) continue;
-
-        const key = normalizeArabic(rawKey);
-        const value = rawValue;
-
-        if (!key) continue;
-
-        // ✅ تشخيص (اختياري — احذفه لو مش محتاجه)
-        // console.log(`🔍 [Parse] key="${rawKey}" → norm="${key}" | value="${value}"`);
-
-        // ✅ تفريغ wlBuffer قبل معالجة مفتاح جديد
-        if (wlBuffer !== null) {
-            const wls = parseWeightsLengths(wlBuffer);
-            order.weights = wls;
-            order.weight = wls[0]?.weight || null;
-            order.weightMax = wls[0]?.weightMax || null;
-            order.length = wls[0]?.length || null;
-            wlBuffer = null;
-        }
-
-        if (key.includes('اسم') && key.includes('عميل')) {
-            order.customerName = value;
-            lastKey = 'name';
-        } else if (key.includes('تليفون') || key.includes('هاتف') || key.includes('موبايل') || key.includes('جوال')) {
-            order.rawPhone = value;
-            order.phones = extractPhones(value);
-            lastKey = 'phone';
-        } else if (key.includes('محافظ')) {
-            order.govOriginal = value;
-            order.gov = matchGovernorate(value) || value;
-            lastKey = 'gov';
-        } else if (key.includes('مدين') || key.includes('منطق')) {
-            order.cityOriginal = value;
-            const c = matchCity(value, order.gov);
-            order.city = c ? c.city : value;
-            order._cityUnrecognized = !c;
-
-            // كشف: لو المدينة = اسم المحافظة
-            if (order.gov && value) {
-                const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
-                const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
-                if (govNameNorm === cityRawNorm) {
-                    const govCities = govData[order.gov] || [];
-                    const cityInList = govCities.some(city =>
-                        normalizeArabic(city).replace(/^ال/, '') === cityRawNorm
-                    );
-                    if (!cityInList) order._cityIsGovName = true;
-                }
+        // ✅ كشف: لو المدينة = اسم المحافظة (والمحافظة مش بتستخدم اسمها كمدينة)
+    if (order.gov && value) {
+        const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
+        const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
+        if (govNameNorm === cityRawNorm) {
+            const govCities = govData[order.gov] || [];
+            // ✅ FIX: شيل "ال" من اسم المدينة في القائمة قبل المقارنة
+            const cityInList = govCities.some(city =>
+                normalizeArabic(city).replace(/^ال/, '') === cityRawNorm
+            );
+            if (!cityInList) {
+                order._cityIsGovName = true;
             }
-            if (c && order.gov && c.gov !== order.gov) {
-                order._cityGovMismatch = { cityGov: c.gov, parsedGov: order.gov };
-            }
-            lastKey = 'city';
-        } else if (key.includes('عنوان')) {
-            order.address = value;
-            lastKey = 'addr';
-        } else if (key.includes('منتج')) {
-            order.productsRaw = value;
-            order.products = parseProductLine(value);
-            order.productName = order.products[0]?.name || value;
-            lastKey = 'product';
-        } else if (key === 'مقاس' || key.includes('مقاس') || key.includes('قياس')) {
-            order.sizeRaw = value;
-            order.sizes = parseSizes(value);
-            lastKey = 'size';
-        } else if (key.includes('وزن') || key.includes('طول')) {
-            if (lastKey === 'wl' && wlBuffer !== null) {
-                wlBuffer += ' ' + value;
-            } else {
-                wlBuffer = value;
-                lastKey = 'wl';
-            }
-        } else if (key.includes('سعر')) {
-            const p = parseFloat(toEnglishDigits(value));
-            order.price = isNaN(p) ? null : p;
-            order._hasPrice = true;
-            lastKey = 'price';
-        } else if (key.includes('شحن')) {
-            const s = parseFloat(toEnglishDigits(value));
-            order.shipping = isNaN(s) ? 0 : s;
-            order._hasShipping = true;
-            lastKey = 'ship';
-        } else if (key.includes('ملاحظ')) {
-            order.notes = value;
-            lastKey = 'notes';
-            stopReading = true;
-        } else {
-            lastKey = 'unknown';
         }
     }
 
-    // ✅ تفريغ wlBuffer الأخير
+    // ⚠️ تحذير: المدينة تنتمي لمحافظة مختلفة
+    if (c && order.gov && c.gov !== order.gov) {
+        order._cityGovMismatch = { cityGov: c.gov, parsedGov: order.gov };
+    }
+
+    lastKey = 'city';
+            } else if (key.includes('عنوان')) {
+                order.address = value;
+                lastKey = 'addr';
+            } else if (key.includes('منتج')) {
+                order.productsRaw = value;
+                order.products = parseProductLine(value);
+                order.productName = order.products[0]?.name || value;
+                lastKey = 'product';
+            } else if (key === 'مقاس' || key.includes('المقاس') || key === 'قياس') {
+                order.sizeRaw = value;
+                order.sizes = parseSizes(value);
+                lastKey = 'size';
+            } else if (key.includes('وزن') || key.includes('طول')) {
+                if (lastKey === 'wl' && wlBuffer !== null) {
+                    wlBuffer += ' ' + line;
+                } else {
+                    wlBuffer = value;
+                    lastKey = 'wl';
+                }
+            } else if (key.includes('سعر')) {
+                const p = parseFloat(toEnglishDigits(value));
+                order.price = isNaN(p) ? null : p;
+                order._hasPrice = true;
+                lastKey = 'price';
+            } else if (key.includes('شحن')) {
+                const s = parseFloat(toEnglishDigits(value));
+                order.shipping = isNaN(s) ? 0 : s;
+                order._hasShipping = true;
+                lastKey = 'ship';
+            } else if (key.includes('ملاحظ')) {
+                order.notes = value;
+                lastKey = 'notes';
+                stopReading = true;
+            } else {
+                lastKey = 'unknown';
+            }
+        } else if (lastKey === 'wl' && wlBuffer !== null) {
+            wlBuffer += ' ' + line;
+        }
+    }
+
+    // معالجة آخر wlBuffer
     if (wlBuffer !== null) {
         const wls = parseWeightsLengths(wlBuffer);
         order.weights = wls;
-        order.weight = wls[0]?.weight || null;
+        order.weight  = wls[0]?.weight || null;
         order.weightMax = wls[0]?.weightMax || null;
-        order.length = wls[0]?.length || null;
-    }
-
+        order.length  = wls[0]?.length || null;
+    } 
     if (!order.products || order.products.length === 0) {
         order.products = order.productName
             ? [{ name: order.productName, price: order.price, color: null, size: null }]
@@ -2330,126 +2224,18 @@ function parseOrderBlock(block) {
     return order;
 }
 
-// ===== دالة مسافة ليفنشتاين لحساب التشابه بين النصوص =====
-function levenshteinDistance(str1, str2) {
-    const m = str1.length;
-    const n = str2.length;
-    if (m === 0) return n;
-    if (n === 0) return m;
-
-    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
-    for (let i = 0; i <= m; i++) dp[i][0] = i;
-    for (let j = 0; j <= n; j++) dp[0][j] = j;
-
-    for (let i = 1; i <= m; i++) {
-        for (let j = 1; j <= n; j++) {
-            if (str1[i - 1] === str2[j - 1]) {
-                dp[i][j] = dp[i - 1][j - 1];
-            } else {
-                dp[i][j] = 1 + Math.min(
-                    dp[i - 1][j],     // حذف
-                    dp[i][j - 1],     // إضافة
-                    dp[i - 1][j - 1]  // استبدال
-                );
-            }
-        }
-    }
-    return dp[m][n];
-}
-
-// ===== البحث عن المنتج بالاسم مع دعم الأخطاء الإملائية =====
+// ===== البحث عن المنتج بالاسم =====
 function findProductByName(name, products) {
-    if (!name || !products || products.length === 0) return null;
-
+    if (!name) return null;
     const norm = normalizeArabic(name);
-    if (!norm || norm.length < 2) return null;
-
-    // ==================================================
-    // 1️⃣ مطابقة تامة بعد التطبيع
-    //    مثال: "كورسية بطن وظهر" → "كورسيه بطن وضهر"
-    // ==================================================
     for (const p of products) {
         if (normalizeArabic(p.name) === norm) return p;
     }
-
-    // ==================================================
-    // 2️⃣ احتواء نصي (الاسم بيحتوي على اسم المنتج أو العكس)
-    //    مثال: "مشد كورسيه بطن وضهر" يحتوي على "كورسيه بطن وضهر"
-    // ==================================================
-    const containsMatches = [];
     for (const p of products) {
         const pn = normalizeArabic(p.name);
-        if (pn.length < 3) continue;
-
-        if (pn.includes(norm)) {
-            // اسم المنتج أطول ويحتوي على الاسم المُدخل
-            containsMatches.push({ product: p, score: pn.length - norm.length });
-        } else if (norm.includes(pn) && pn.length >= 4) {
-            // الاسم المُدخل أطول ويحتوي على اسم المنتج
-            //    (نشترط طول 4 على الأقل عشان ما نطابقش "بطن" لوحدها)
-            containsMatches.push({ product: p, score: norm.length - pn.length });
-        }
+        if (pn.length >= 4 && (pn.includes(norm) || norm.includes(pn))) return p;
     }
-    if (containsMatches.length > 0) {
-        containsMatches.sort((a, b) => a.score - b.score);
-        return containsMatches[0].product;
-    }
-
-    // ==================================================
-    // 3️⃣ مطابقة على مستوى الكلمات (60%+ من الكلمات متطابقة)
-    //    مثال: "حزام البطن" ← "حزام" + "بطن" (بعد إزالة ال التعريف)
-    // ==================================================
-    const inputWords = norm.split(/\s+/).filter(w => w.length >= 2);
-    let bestWordMatch = null;
-    let bestWordScore = 0;
-
-    for (const p of products) {
-        const pn = normalizeArabic(p.name);
-        const productWords = pn.split(/\s+/).filter(w => w.length >= 2);
-        if (productWords.length === 0) continue;
-
-        let matchedCount = 0;
-        for (const pw of productWords) {
-            const found = inputWords.some(iw =>
-                iw === pw ||
-                (iw.length >= 3 && pw.length >= 3 && (iw.includes(pw) || pw.includes(iw)))
-            );
-            if (found) matchedCount++;
-        }
-
-        const score = matchedCount / productWords.length;
-        if (score >= 0.6 && score > bestWordScore) {
-            bestWordScore = score;
-            bestWordMatch = p;
-        }
-    }
-    if (bestWordMatch) return bestWordMatch;
-
-    // ==================================================
-    // 4️⃣ مطابقة تقريبية Fuzzy (تشابه 70%+)
-    //    دي بتمسك الأخطاء الإملائية البسيطة زي حرف زيادة/ناقص
-    // ==================================================
-    let bestFuzzy = null;
-    let bestDistance = Infinity;
-
-    for (const p of products) {
-        const pn = normalizeArabic(p.name);
-        if (pn.length < 3) continue;
-
-        const maxLen = Math.max(pn.length, norm.length);
-        if (maxLen === 0) continue;
-
-        const distance = levenshteinDistance(pn, norm);
-        const similarity = 1 - (distance / maxLen);
-
-        // نشترط 70% تشابه على الأقل
-        if (similarity >= 0.7 && distance < bestDistance) {
-            bestDistance = distance;
-            bestFuzzy = p;
-        }
-    }
-
-    return bestFuzzy;
+    return null;
 }
 
 // ===== بناء Set بأرقام الطلبات الموجودة (لكشف التكرار بسرعة) =====
@@ -2721,40 +2507,6 @@ if (o._cityGovMismatch) {
             // 5️⃣ العنوان (مطلوب)
             if (!o.address || o.address.trim().length < 2) {
                 o._errors.push('العنوان غير محدد');
-            }
-
-                        // 1️⃣1️⃣ التكرار
-            if (o._phoneToSave) {
-                const dupOrder = existingPhones[o._phoneToSave];
-                if (dupOrder) {
-                    o._duplicate = true;
-                    o._duplicateOf = dupOrder;
-                    o._warnings.push(`رقم مكرر — موجود مسبقاً في الطلب: ${dupOrder}`);
-                }
-            }
-
-            // ✅ 1️⃣2️⃣ FALLBACK: لو المحافظة فاضية → نحاول نستنبطها من العنوان
-            if ((!o.govOriginal && !o.gov) && o.address) {
-                const inferredGov = inferGovernorateFromAddress(o.address);
-                if (inferredGov) {
-                    o.gov = inferredGov;
-                    o.govOriginal = inferredGov;
-                    // إزالة الخطأ لو كان متسجل
-                    o._errors = o._errors.filter(e => !e.includes('المحافظة'));
-                    o._warnings.push(`🔧 تم استنباط المحافظة من العنوان: ${inferredGov}`);
-                }
-            }
-
-            // ✅ 1️⃣3️⃣ FALLBACK: لو المدينة فاضية → نحاول نستنبطها من العنوان
-            if ((!o.cityOriginal && !o.city) && o.address && o.gov) {
-                const inferredCity = inferCityFromAddress(o.address, o.gov);
-                if (inferredCity) {
-                    o.city = inferredCity;
-                    o.cityOriginal = inferredCity;
-                    o._cityUnrecognized = false;
-                    o._errors = o._errors.filter(e => !e.includes('المدينة'));
-                    o._warnings.push(`🔧 تم استنباط المدينة من العنوان: ${inferredCity}`);
-                }
             }
 
            // 6️⃣ المنتج (مطلوب)
