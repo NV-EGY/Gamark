@@ -1569,9 +1569,11 @@ function cleanInvisibleChars(str) {
     if (str === null || str === undefined) return '';
     return String(str)
         .replace(INVISIBLE_CHARS_REGEX, '')     // Soft Hyphen + كل المخفي
-        .replace(WEIRD_SPACES_REGEX, ' ')        // كل الفراغات الغريبة → مسافة
-        .replace(/[\u0000-\u001F\u007F]/g, ' ') // حروف تحكم
-        .replace(/\s+/g, ' ');                   // تطبيع المسافات
+        .replace(WEIRD_SPACES_REGEX, ' ')        // فراغات غريبة → مسافة عادية
+        // ✅ حذف حروف التحكم مع الحفاظ على \t (9) و \n (10) و \r (13)
+        .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+        // ✅ تطبيع المسافات الأفقية فقط (بدون لمس الأسطر)
+        .replace(/[^\S\r\n]+/g, ' ');
 }
 function toEnglishDigits(str) {
     if (str === null || str === undefined) return '';
@@ -2172,7 +2174,7 @@ const COLON_REGEX = /[:：:∶꞉∶︰﹕]/;
 function parseOrderBlock(block) {
     // ✅ تنظيف شامل قبل التقسيم
     const cleanedBlock = cleanInvisibleChars(block);
-    const lines = cleanedBlock.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    const lines = cleanedBlock.split(/\r\n|\r|\n/).map(l => l.trim()).filter(Boolean);
 
     const order = {
         rawPhone: '', phones: [],
