@@ -1558,26 +1558,28 @@ td { font-size: 8.5px; }
 
 // ===== تحويل الأرقام العربية =====
 const AR_DIGITS = { '٠':0,'١':1,'٢':2,'٣':3,'٤':4,'٥':5,'٦':6,'٧':7,'٨':8,'٩':9 };
+// ✅ نمط شامل لكل الحروف المخفية والتحكمية
+const INVISIBLE_CHARS_REGEX = /[\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/g;
 function toEnglishDigits(str) {
     if (str === null || str === undefined) return '';
-    return String(str).replace(/[٠-٩]/g, d => AR_DIGITS[d]);
+    return String(str)
+        .replace(INVISIBLE_CHARS_REGEX, '')   // ✅ شيل الحروف المخفية
+        .replace(/[٠-٩]/g, d => AR_DIGITS[d]);
 }
 
 // ===== تطبيع النص العربي (نسخة محسّنة) =====
 function normalizeArabic(str) {
     return toEnglishDigits(str || '')
+        .replace(INVISIBLE_CHARS_REGEX, '')   // ✅ تأكيد إضافي
         .replace(/[أإآٱ]/g, 'ا')
         .replace(/ى/g, 'ي')
         .replace(/ؤ/g, 'و')
         .replace(/ئ/g, 'ي')
         .replace(/ة/g, 'ه')
         .replace(/[ًٌٍَُِّْـ]/g, '')
-        // ✅ توحيد الحروف المتشابهة في العامية المصرية (ض/ظ، ث/س، ذ/ز)
-        // عشان "ضهر" و"ظهر" يتطابقوا، و"فانيله" و"فانلة" يتطابقوا
         .replace(/[ظض]/g, 'ض')
         .replace(/[ثس]/g, 'س')
         .replace(/[ذز]/g, 'ز')
-        // ✅ إزالة علامات الترقيم الشائعة
         .replace(/[.,،؛:!?؟'"«»\-_]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
@@ -2017,17 +2019,20 @@ function parseSizes(value) {
 
 // ===== تحليل نص اللصق → مصفوفة طلبات =====
 function parseOrdersFromPaste(text) {
+    // ✅ تنظيف شامل للحروف المخفية قبل التقسيم
+    const cleanedText = String(text || '').replace(INVISIBLE_CHARS_REGEX, '');
+
     const orders = [];
     const startRegex = /اسم\s*العميل\s*[:：]/g;
     const positions = [];
     let m;
-    while ((m = startRegex.exec(text)) !== null) positions.push(m.index);
+    while ((m = startRegex.exec(cleanedText)) !== null) positions.push(m.index);
     if (positions.length === 0) return [];
 
     for (let i = 0; i < positions.length; i++) {
         const start = positions[i];
-        const end = (i + 1 < positions.length) ? positions[i + 1] : text.length;
-        const block = text.substring(start, end);
+        const end = (i + 1 < positions.length) ? positions[i + 1] : cleanedText.length;
+        const block = cleanedText.substring(start, end);
         const order = parseOrderBlock(block);
         if (order && order.customerName) orders.push(order);
     }
