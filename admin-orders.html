@@ -1564,15 +1564,14 @@ const INVISIBLE_CHARS_REGEX = /[\u00AD\u061C\u200B-\u200F\u202A-\u202E\u2066-\u2
 // ✅ نمط الفراغات الغريبة (NBSP, Narrow NBSP, Unicode spaces)
 const WEIRD_SPACES_REGEX = /[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g;
 
-// ✅ دالة مركزية لتنظيف شامل
+// ✅ دالة مركزية لتنظيف شامل (بدون lookbehind — متوافق مع كل المتصفحات)
 function cleanInvisibleChars(str) {
     if (str === null || str === undefined) return '';
     return String(str)
-        .replace(INVISIBLE_CHARS_REGEX, '')          // شيل Soft Hyphen والبقية
-        // NBSP بين حرفين عربيين → نشيله (يفضل ملزوق)
-        .replace(/(?<=[\u0600-\u06FF])[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000](?=[\u0600-\u06FF])/g, '')
-        // باقي الفراغات الغريبة → مسافة عادية
-        .replace(WEIRD_SPACES_REGEX, ' ');
+        .replace(INVISIBLE_CHARS_REGEX, '')     // Soft Hyphen + كل المخفي
+        .replace(WEIRD_SPACES_REGEX, ' ')        // كل الفراغات الغريبة → مسافة
+        .replace(/[\u0000-\u001F\u007F]/g, ' ') // حروف تحكم
+        .replace(/\s+/g, ' ');                   // تطبيع المسافات
 }
 function toEnglishDigits(str) {
     if (str === null || str === undefined) return '';
@@ -2051,6 +2050,70 @@ function parseOrdersFromPaste(text) {
     return orders;
 }
 
+// ✅ استنباط المحافظة من العنوان (fallback ذكي)
+function inferGovernorateFromAddress(address) {
+    if (!address) return null;
+    const normAddr = normalizeArabic(address);
+    if (!normAddr) return null;
+
+    let bestMatch = null;
+    let bestLen = 0;
+
+    for (const gov of Object.keys(govData)) {
+        const normGov = normalizeArabic(gov);
+        // مطابقة كاملة
+        if (normAddr.includes(normGov)) {
+            if (normGov.length > bestLen) {
+                bestLen = normGov.length;
+                bestMatch = gov;
+            }
+        }
+        // مطابقة بدون "ال"
+        else if (normGov.startsWith('ال')) {
+            const withoutAl = normGov.substring(2);
+            if (withoutAl.length >= 3 && normAddr.includes(withoutAl)) {
+                if (withoutAl.length > bestLen) {
+                    bestLen = withoutAl.length;
+                    bestMatch = gov;
+                }
+            }
+        }
+    }
+    return bestMatch;
+}
+
+// ✅ استنباط المدينة من العنوان
+function inferCityFromAddress(address, govHint) {
+    if (!address || !govHint || !govData[govHint]) return null;
+    const normAddr = normalizeArabic(address);
+    if (!normAddr) return null;
+
+    const cities = govData[govHint] || [];
+    let bestMatch = null;
+    let bestLen = 0;
+
+    for (const city of cities) {
+        const normCity = normalizeArabic(city);
+        if (normCity.includes('اخري') || normCity.includes('أخري')) continue;
+
+        if (normAddr.includes(normCity)) {
+            if (normCity.length > bestLen) {
+                bestLen = normCity.length;
+                bestMatch = city;
+            }
+        } else if (normCity.startsWith('ال')) {
+            const withoutAl = normCity.substring(2);
+            if (withoutAl.length >= 3 && normAddr.includes(withoutAl)) {
+                if (withoutAl.length > bestLen) {
+                    bestLen = withoutAl.length;
+                    bestMatch = city;
+                }
+            }
+        }
+    }
+    return bestMatch;
+}
+
 
 
 // ═══════════════════════════════════════════════════════
@@ -2103,8 +2166,13 @@ function resolveOrderAttributes(order) {
     return { items };
 }
 
+// ✅ كاشف قوي للنقطتين (كل الأنواع)
+const COLON_REGEX = /[:：:∶꞉∶︰﹕]/;
+
 function parseOrderBlock(block) {
-    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    // ✅ تنظيف شامل قبل التقسيم
+    const cleanedBlock = cleanInvisibleChars(block);
+    const lines = cleanedBlock.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
     const order = {
         rawPhone: '', phones: [],
@@ -2136,109 +2204,121 @@ function parseOrderBlock(block) {
     for (const line of lines) {
         if (stopReading) break;
 
-        const km = line.match(/^([^:：:∶꞉∶︰]{2,40})\s*[:：:∶꞉∶︰]\s*(.*)$/);
+        // ✅ الطريقة المبسطة: نجد أول نقطتين في السطر
+        const colonMatch = line.match(COLON_REGEX);
 
-if (km) {
-    const key = normalizeArabic(cleanInvisibleChars(km[1])).trim();
-    const value = cleanInvisibleChars(km[2]).trim();
-
-            if (wlBuffer !== null) {
-                const wls = parseWeightsLengths(wlBuffer);
-                order.weights = wls;
-                order.weight  = wls[0]?.weight || null;
-                order.weightMax = wls[0]?.weightMax || null;
-                order.length  = wls[0]?.length || null;
-                wlBuffer = null;
+        if (!colonMatch) {
+            // مفيش نقطتين — ممكن تكون متابعة لـ wlBuffer
+            if (lastKey === 'wl' && wlBuffer !== null) {
+                wlBuffer += ' ' + line;
             }
-
-            if (key.includes('اسم') && key.includes('عميل')) {
-                order.customerName = value;
-                lastKey = 'name';
-            } else if (key.includes('تليفون') || key.includes('هاتف') || key.includes('موبايل')) {
-                order.rawPhone = value;
-                order.phones = extractPhones(value);
-                lastKey = 'phone';
-            } else if (key.includes('محافظ')) {
-                order.govOriginal = value;
-                order.gov = matchGovernorate(value) || value;
-                lastKey = 'gov';
-            } else if (key.includes('مدين')) {
-    order.cityOriginal = value;
-    const c = matchCity(value, order.gov);
-    order.city = c ? c.city : value;
-    order._cityUnrecognized = !c;
-
-        // ✅ كشف: لو المدينة = اسم المحافظة (والمحافظة مش بتستخدم اسمها كمدينة)
-    if (order.gov && value) {
-        const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
-        const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
-        if (govNameNorm === cityRawNorm) {
-            const govCities = govData[order.gov] || [];
-            // ✅ FIX: شيل "ال" من اسم المدينة في القائمة قبل المقارنة
-            const cityInList = govCities.some(city =>
-                normalizeArabic(city).replace(/^ال/, '') === cityRawNorm
-            );
-            if (!cityInList) {
-                order._cityIsGovName = true;
-            }
+            continue;
         }
-    }
 
-    // ⚠️ تحذير: المدينة تنتمي لمحافظة مختلفة
-    if (c && order.gov && c.gov !== order.gov) {
-        order._cityGovMismatch = { cityGov: c.gov, parsedGov: order.gov };
-    }
+        const colonIdx = colonMatch.index;
+        const rawKey = line.substring(0, colonIdx).trim();
+        const rawValue = line.substring(colonIdx + 1).trim();
 
-    lastKey = 'city';
-            } else if (key.includes('عنوان')) {
-                order.address = value;
-                lastKey = 'addr';
-            } else if (key.includes('منتج')) {
-                order.productsRaw = value;
-                order.products = parseProductLine(value);
-                order.productName = order.products[0]?.name || value;
-                lastKey = 'product';
-            } else if (key === 'مقاس' || key.includes('المقاس') || key === 'قياس') {
-                order.sizeRaw = value;
-                order.sizes = parseSizes(value);
-                lastKey = 'size';
-            } else if (key.includes('وزن') || key.includes('طول')) {
-                if (lastKey === 'wl' && wlBuffer !== null) {
-                    wlBuffer += ' ' + line;
-                } else {
-                    wlBuffer = value;
-                    lastKey = 'wl';
+        if (!rawKey) continue;
+
+        const key = normalizeArabic(rawKey);
+        const value = rawValue;
+
+        if (!key) continue;
+
+        // ✅ تشخيص (اختياري — احذفه لو مش محتاجه)
+        // console.log(`🔍 [Parse] key="${rawKey}" → norm="${key}" | value="${value}"`);
+
+        // ✅ تفريغ wlBuffer قبل معالجة مفتاح جديد
+        if (wlBuffer !== null) {
+            const wls = parseWeightsLengths(wlBuffer);
+            order.weights = wls;
+            order.weight = wls[0]?.weight || null;
+            order.weightMax = wls[0]?.weightMax || null;
+            order.length = wls[0]?.length || null;
+            wlBuffer = null;
+        }
+
+        if (key.includes('اسم') && key.includes('عميل')) {
+            order.customerName = value;
+            lastKey = 'name';
+        } else if (key.includes('تليفون') || key.includes('هاتف') || key.includes('موبايل') || key.includes('جوال')) {
+            order.rawPhone = value;
+            order.phones = extractPhones(value);
+            lastKey = 'phone';
+        } else if (key.includes('محافظ')) {
+            order.govOriginal = value;
+            order.gov = matchGovernorate(value) || value;
+            lastKey = 'gov';
+        } else if (key.includes('مدين') || key.includes('منطق')) {
+            order.cityOriginal = value;
+            const c = matchCity(value, order.gov);
+            order.city = c ? c.city : value;
+            order._cityUnrecognized = !c;
+
+            // كشف: لو المدينة = اسم المحافظة
+            if (order.gov && value) {
+                const govNameNorm = normalizeArabic(order.gov).replace(/^ال/, '');
+                const cityRawNorm = normalizeArabic(value).replace(/^ال/, '');
+                if (govNameNorm === cityRawNorm) {
+                    const govCities = govData[order.gov] || [];
+                    const cityInList = govCities.some(city =>
+                        normalizeArabic(city).replace(/^ال/, '') === cityRawNorm
+                    );
+                    if (!cityInList) order._cityIsGovName = true;
                 }
-            } else if (key.includes('سعر')) {
-                const p = parseFloat(toEnglishDigits(value));
-                order.price = isNaN(p) ? null : p;
-                order._hasPrice = true;
-                lastKey = 'price';
-            } else if (key.includes('شحن')) {
-                const s = parseFloat(toEnglishDigits(value));
-                order.shipping = isNaN(s) ? 0 : s;
-                order._hasShipping = true;
-                lastKey = 'ship';
-            } else if (key.includes('ملاحظ')) {
-                order.notes = value;
-                lastKey = 'notes';
-                stopReading = true;
-            } else {
-                lastKey = 'unknown';
             }
-        } else if (lastKey === 'wl' && wlBuffer !== null) {
-            wlBuffer += ' ' + line;
+            if (c && order.gov && c.gov !== order.gov) {
+                order._cityGovMismatch = { cityGov: c.gov, parsedGov: order.gov };
+            }
+            lastKey = 'city';
+        } else if (key.includes('عنوان')) {
+            order.address = value;
+            lastKey = 'addr';
+        } else if (key.includes('منتج')) {
+            order.productsRaw = value;
+            order.products = parseProductLine(value);
+            order.productName = order.products[0]?.name || value;
+            lastKey = 'product';
+        } else if (key === 'مقاس' || key.includes('مقاس') || key.includes('قياس')) {
+            order.sizeRaw = value;
+            order.sizes = parseSizes(value);
+            lastKey = 'size';
+        } else if (key.includes('وزن') || key.includes('طول')) {
+            if (lastKey === 'wl' && wlBuffer !== null) {
+                wlBuffer += ' ' + value;
+            } else {
+                wlBuffer = value;
+                lastKey = 'wl';
+            }
+        } else if (key.includes('سعر')) {
+            const p = parseFloat(toEnglishDigits(value));
+            order.price = isNaN(p) ? null : p;
+            order._hasPrice = true;
+            lastKey = 'price';
+        } else if (key.includes('شحن')) {
+            const s = parseFloat(toEnglishDigits(value));
+            order.shipping = isNaN(s) ? 0 : s;
+            order._hasShipping = true;
+            lastKey = 'ship';
+        } else if (key.includes('ملاحظ')) {
+            order.notes = value;
+            lastKey = 'notes';
+            stopReading = true;
+        } else {
+            lastKey = 'unknown';
         }
     }
 
-    // معالجة آخر wlBuffer
+    // ✅ تفريغ wlBuffer الأخير
     if (wlBuffer !== null) {
         const wls = parseWeightsLengths(wlBuffer);
         order.weights = wls;
-        order.weight  = wls[0]?.weight || null;
+        order.weight = wls[0]?.weight || null;
         order.weightMax = wls[0]?.weightMax || null;
-        order.length  = wls[0]?.length || null;
-    } 
+        order.length = wls[0]?.length || null;
+    }
+
     if (!order.products || order.products.length === 0) {
         order.products = order.productName
             ? [{ name: order.productName, price: order.price, color: null, size: null }]
@@ -2639,6 +2719,40 @@ if (o._cityGovMismatch) {
             // 5️⃣ العنوان (مطلوب)
             if (!o.address || o.address.trim().length < 2) {
                 o._errors.push('العنوان غير محدد');
+            }
+
+                        // 1️⃣1️⃣ التكرار
+            if (o._phoneToSave) {
+                const dupOrder = existingPhones[o._phoneToSave];
+                if (dupOrder) {
+                    o._duplicate = true;
+                    o._duplicateOf = dupOrder;
+                    o._warnings.push(`رقم مكرر — موجود مسبقاً في الطلب: ${dupOrder}`);
+                }
+            }
+
+            // ✅ 1️⃣2️⃣ FALLBACK: لو المحافظة فاضية → نحاول نستنبطها من العنوان
+            if ((!o.govOriginal && !o.gov) && o.address) {
+                const inferredGov = inferGovernorateFromAddress(o.address);
+                if (inferredGov) {
+                    o.gov = inferredGov;
+                    o.govOriginal = inferredGov;
+                    // إزالة الخطأ لو كان متسجل
+                    o._errors = o._errors.filter(e => !e.includes('المحافظة'));
+                    o._warnings.push(`🔧 تم استنباط المحافظة من العنوان: ${inferredGov}`);
+                }
+            }
+
+            // ✅ 1️⃣3️⃣ FALLBACK: لو المدينة فاضية → نحاول نستنبطها من العنوان
+            if ((!o.cityOriginal && !o.city) && o.address && o.gov) {
+                const inferredCity = inferCityFromAddress(o.address, o.gov);
+                if (inferredCity) {
+                    o.city = inferredCity;
+                    o.cityOriginal = inferredCity;
+                    o._cityUnrecognized = false;
+                    o._errors = o._errors.filter(e => !e.includes('المدينة'));
+                    o._warnings.push(`🔧 تم استنباط المدينة من العنوان: ${inferredCity}`);
+                }
             }
 
            // 6️⃣ المنتج (مطلوب)
