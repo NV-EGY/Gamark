@@ -1563,7 +1563,7 @@ function toEnglishDigits(str) {
     return String(str).replace(/[٠-٩]/g, d => AR_DIGITS[d]);
 }
 
-// ===== تطبيع النص العربي (للتوحيد والمقارنة) =====
+// ===== تطبيع النص العربي (نسخة محسّنة) =====
 function normalizeArabic(str) {
     return toEnglishDigits(str || '')
         .replace(/[أإآٱ]/g, 'ا')
@@ -1572,6 +1572,13 @@ function normalizeArabic(str) {
         .replace(/ئ/g, 'ي')
         .replace(/ة/g, 'ه')
         .replace(/[ًٌٍَُِّْـ]/g, '')
+        // ✅ توحيد الحروف المتشابهة في العامية المصرية (ض/ظ، ث/س، ذ/ز)
+        // عشان "ضهر" و"ظهر" يتطابقوا، و"فانيله" و"فانلة" يتطابقوا
+        .replace(/[ظض]/g, 'ض')
+        .replace(/[ثس]/g, 'س')
+        .replace(/[ذز]/g, 'ز')
+        // ✅ إزالة علامات الترقيم الشائعة
+        .replace(/[.,،؛:!?؟'"«»\-_]/g, '')
         .replace(/\s+/g, ' ')
         .trim()
         .toLowerCase();
@@ -2224,18 +2231,126 @@ function parseOrderBlock(block) {
     return order;
 }
 
-// ===== البحث عن المنتج بالاسم =====
+// ===== دالة مسافة ليفنشتاين لحساب التشابه بين النصوص =====
+function levenshteinDistance(str1, str2) {
+    const m = str1.length;
+    const n = str2.length;
+    if (m === 0) return n;
+    if (n === 0) return m;
+
+    const dp = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+    for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+            if (str1[i - 1] === str2[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1];
+            } else {
+                dp[i][j] = 1 + Math.min(
+                    dp[i - 1][j],     // حذف
+                    dp[i][j - 1],     // إضافة
+                    dp[i - 1][j - 1]  // استبدال
+                );
+            }
+        }
+    }
+    return dp[m][n];
+}
+
+// ===== البحث عن المنتج بالاسم مع دعم الأخطاء الإملائية =====
 function findProductByName(name, products) {
-    if (!name) return null;
+    if (!name || !products || products.length === 0) return null;
+
     const norm = normalizeArabic(name);
+    if (!norm || norm.length < 2) return null;
+
+    // ==================================================
+    // 1️⃣ مطابقة تامة بعد التطبيع
+    //    مثال: "كورسية بطن وظهر" → "كورسيه بطن وضهر"
+    // ==================================================
     for (const p of products) {
         if (normalizeArabic(p.name) === norm) return p;
     }
+
+    // ==================================================
+    // 2️⃣ احتواء نصي (الاسم بيحتوي على اسم المنتج أو العكس)
+    //    مثال: "مشد كورسيه بطن وضهر" يحتوي على "كورسيه بطن وضهر"
+    // ==================================================
+    const containsMatches = [];
     for (const p of products) {
         const pn = normalizeArabic(p.name);
-        if (pn.length >= 4 && (pn.includes(norm) || norm.includes(pn))) return p;
+        if (pn.length < 3) continue;
+
+        if (pn.includes(norm)) {
+            // اسم المنتج أطول ويحتوي على الاسم المُدخل
+            containsMatches.push({ product: p, score: pn.length - norm.length });
+        } else if (norm.includes(pn) && pn.length >= 4) {
+            // الاسم المُدخل أطول ويحتوي على اسم المنتج
+            //    (نشترط طول 4 على الأقل عشان ما نطابقش "بطن" لوحدها)
+            containsMatches.push({ product: p, score: norm.length - pn.length });
+        }
     }
-    return null;
+    if (containsMatches.length > 0) {
+        containsMatches.sort((a, b) => a.score - b.score);
+        return containsMatches[0].product;
+    }
+
+    // ==================================================
+    // 3️⃣ مطابقة على مستوى الكلمات (60%+ من الكلمات متطابقة)
+    //    مثال: "حزام البطن" ← "حزام" + "بطن" (بعد إزالة ال التعريف)
+    // ==================================================
+    const inputWords = norm.split(/\s+/).filter(w => w.length >= 2);
+    let bestWordMatch = null;
+    let bestWordScore = 0;
+
+    for (const p of products) {
+        const pn = normalizeArabic(p.name);
+        const productWords = pn.split(/\s+/).filter(w => w.length >= 2);
+        if (productWords.length === 0) continue;
+
+        let matchedCount = 0;
+        for (const pw of productWords) {
+            const found = inputWords.some(iw =>
+                iw === pw ||
+                (iw.length >= 3 && pw.length >= 3 && (iw.includes(pw) || pw.includes(iw)))
+            );
+            if (found) matchedCount++;
+        }
+
+        const score = matchedCount / productWords.length;
+        if (score >= 0.6 && score > bestWordScore) {
+            bestWordScore = score;
+            bestWordMatch = p;
+        }
+    }
+    if (bestWordMatch) return bestWordMatch;
+
+    // ==================================================
+    // 4️⃣ مطابقة تقريبية Fuzzy (تشابه 70%+)
+    //    دي بتمسك الأخطاء الإملائية البسيطة زي حرف زيادة/ناقص
+    // ==================================================
+    let bestFuzzy = null;
+    let bestDistance = Infinity;
+
+    for (const p of products) {
+        const pn = normalizeArabic(p.name);
+        if (pn.length < 3) continue;
+
+        const maxLen = Math.max(pn.length, norm.length);
+        if (maxLen === 0) continue;
+
+        const distance = levenshteinDistance(pn, norm);
+        const similarity = 1 - (distance / maxLen);
+
+        // نشترط 70% تشابه على الأقل
+        if (similarity >= 0.7 && distance < bestDistance) {
+            bestDistance = distance;
+            bestFuzzy = p;
+        }
+    }
+
+    return bestFuzzy;
 }
 
 // ===== بناء Set بأرقام الطلبات الموجودة (لكشف التكرار بسرعة) =====
