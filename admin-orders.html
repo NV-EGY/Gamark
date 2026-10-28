@@ -1947,7 +1947,11 @@ function parseProductLine(value) {
             part = part.replace(labelMatch[0], ' ').trim();
         }
 
-        // 2️⃣ استخراج كل الأقواس واحدة واحدة
+                // 2️⃣ استخراج كل الأقواس واحدة واحدة
+        // ✅ القاعدة الجديدة:
+        //    - أي رقم داخل القوس = سعر (حتى لو فيه كلام غريب زي "سعره 300")
+        //    - مطابق تماماً لمقاس معروف = مقاس
+        //    - نص بدون أي أرقام = لون
         let safety = 0;
         while (safety++ < 20) {
             const m = part.match(/\(([^()]*)\)/);
@@ -1955,14 +1959,15 @@ function parseProductLine(value) {
 
             const c = m[1].trim();
 
-            if (/^\d+(\.\d+)?$/.test(c) && price === null) {
-                // رقم صافي → سعر
-                price = parseFloat(c);
-            } else if (/^(S|M|L|XL|2XL|3XL|XXL|XXXL)$/i.test(c) && size === null) {
-                // مقاس معروف → مقاس المنتج
+            if (/^(S|M|L|XL|2XL|3XL|XXL|XXXL)$/i.test(c) && size === null) {
+                // مطابق تماماً لمقاس معروف → مقاس
                 size = c.toUpperCase();
-            } else if (color === null && c) {
-                // أي نص تاني → لون (حتى لو مش من القائمة، لأن المستخدم كتبه جوه قوس صريح)
+            } else if (/\d/.test(c) && price === null) {
+                // ✅ أي رقم داخل القوس → سعر (حتى لو فيه كلام غريب)
+                const numMatch = c.match(/(\d+(?:\.\d+)?)/);
+                if (numMatch) price = parseFloat(numMatch[1]);
+            } else if (color === null && c && !/\d/.test(c)) {
+                // نص بدون أرقام → لون
                 color = c;
             }
 
@@ -2057,16 +2062,16 @@ function resolveOrderAttributes(order) {
         };
     }
 
-    // ✅ التوزيع بالفهرس
+    // ✅ التوزيع بالفهرس (بدون fallback تلقائي لسعر الطلب — نتركه للتحقق تحت)
     const items = [];
     for (let i = 0; i < N; i++) {
         const p = products[i];
-        const s = sizes[i] || p.size || null;   // الأولوية: "المقاس" الخارجي > المقاس الداخلي في ()
+        const s = sizes[i] || p.size || null;
         const w = weights[i] || { weight: null, weightMax: null, length: null };
 
         items.push({
             name: p.name,
-            price: (p.price != null) ? p.price : (order.price != null ? order.price : null),
+            price: (p.price != null) ? p.price : null,
             color: p.color || null,
             size: s ? String(s).trim() : null,
             weight: w.weight,
@@ -2074,6 +2079,39 @@ function resolveOrderAttributes(order) {
             length: w.length,
             qty: p.qty || 1
         });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ✅ التحقق من الأسعار (جديد)
+    // ═══════════════════════════════════════════════════════
+    if (N === 1) {
+        // 🔵 منتج واحد → استخدم السعر الكلي (خانة السعر) فقط
+        if (order.price != null) {
+            items[0].price = order.price;
+        }
+        // لو السعر كمان مش موجود → `!_hasPrice` في processPastedOrders هيلقطها
+    } else {
+        // 🔴 أكثر من منتج → كل منتج لازم يكون له سعر بين قوسين
+        const missingPrices = items.filter(it => it.price == null);
+        if (missingPrices.length > 0) {
+            return {
+                error: `المنتجات التالية ليس لها سعر: ${missingPrices.map(it => `"${it.name}"`).join('، ')} — لازم تحدد سعر لكل منتج بين قوسين، مثال: (سعره 300)`
+            };
+        }
+
+        // 🔴 تحقق أن مجموع أسعار المنتجات = السعر الكلي (خانة السعر)
+        if (order.price != null) {
+            const sum = items.reduce((s, it) => s + ((it.price || 0) * (it.qty || 1)), 0);
+            if (Math.abs(sum - order.price) > 0.01) {
+                const diff = order.price - sum;
+                const diffMsg = diff > 0
+                    ? `ناقص ${diff.toFixed(2)} جنيه`
+                    : `زيادة ${Math.abs(diff).toFixed(2)} جنيه`;
+                return {
+                    error: `مجموع أسعار المنتجات (${sum}) لا يساوي السعر الكلي في خانة السعر (${order.price}) — ${diffMsg}. راجع الأسعار.`
+                };
+            }
+        }
     }
 
     return { items };
