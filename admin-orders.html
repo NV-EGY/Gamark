@@ -1461,13 +1461,15 @@ cells.push(o.secondaryPhone
         cells.push(year);
         cells.push('خلال يومين');
 
-        // 6 منتجات
+                // 6 منتجات (مع دمج الكميات)
         for (let i = 0; i < 6; i++) {
             const it = items[i];
+            const qty = it ? (it.qty || 1) : '';
+            const totalPrice = it ? ((it.price || 0) * (it.qty || 1)) : '';
             cells.push(it ? fmtProductCell(it) : '');
-            cells.push(it ? 1 : '');
-            cells.push(it ? (it.price || 0) : '');
-            if (i === 0) cells.push(o.shipping || 0); // الشحن بعد السعر الأول
+            cells.push(qty);
+            cells.push(totalPrice);
+            if (i === 0) cells.push(o.shipping || 0);
         }
 
               // ===== الأعمدة الأخيرة (مطابقة للشيت المرجعي) =====
@@ -2032,7 +2034,36 @@ function parseOrdersFromPaste(text) {
     return orders;
 }
 
+// ═══════════════════════════════════════════════════════
+// ✅ دمج المنتجات المتطابقة (نفس الاسم + المقاس + الوزن + الطول + اللون + السعر)
+// ═══════════════════════════════════════════════════════
+function mergeIdenticalItems(items) {
+    const merged = [];
+    const seen = new Map();
 
+    for (const item of items) {
+        const key = JSON.stringify([
+            String(item.name || '').trim(),
+            String(item.size || '').trim().toUpperCase(),
+            item.weight == null ? null : Number(item.weight),
+            item.weightMax == null ? null : Number(item.weightMax),
+            item.length == null ? null : Number(item.length),
+            item.color ? String(item.color).trim() : null,
+            item.price == null ? null : Number(item.price)
+        ]);
+
+        if (seen.has(key)) {
+            const existing = seen.get(key);
+            existing.qty = (existing.qty || 1) + (item.qty || 1);
+        } else {
+            const copy = { ...item, qty: item.qty || 1 };
+            seen.set(key, copy);
+            merged.push(copy);
+        }
+    }
+
+    return merged;
+}
 
 // ═══════════════════════════════════════════════════════
 // 🧩 توزيع المقاسات والأوزان على المنتجات (Index-Based)
@@ -2114,7 +2145,9 @@ function resolveOrderAttributes(order) {
         }
     }
 
-    return { items };
+    // ✅ دمج المنتجات المتطابقة قبل الإرجاع
+    const mergedItems = mergeIdenticalItems(items);
+    return { items: mergedItems };
 }
 
 function parseOrderBlock(block) {
@@ -2435,7 +2468,9 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
             </div>`;
         } else {
             itemsHtml = items.map((it, idx) => {
-                const priceText = it.price != null ? `${it.price}ج` : '—';
+                                const priceText = it.price != null
+                    ? (it.qty > 1 ? `${it.price}×${it.qty} = <b>${it.price * it.qty}ج</b>` : `${it.price}ج`)
+                    : '—';
                 const sizeText = it.size ? `مقاس: ${it.size}` : 'بدون مقاس';
                 const weightText = it.weight
                     ? (it.weightMax && it.weightMax !== it.weight
@@ -2452,6 +2487,7 @@ document.getElementById('pasteOrdersTextarea')?.addEventListener('input', functi
                         <span style="background:#0F7B65; color:#fff; padding:1px 6px; border-radius:8px;">${sizeText}</span>
                         ${it.weight ? `<span style="background:#f39c12; color:#000; padding:1px 6px; border-radius:8px;">${weightText} ${lengthText}</span>` : ''}
                         ${colorText ? `<span style="background:#9b59b6; color:#fff; padding:1px 6px; border-radius:8px;">${colorText}</span>` : ''}
+                        ${it.qty > 1 ? `<span style="background:#e67e22; color:#fff; padding:1px 6px; border-radius:8px; font-weight:700;">×${it.qty}</span>` : ''}
                         <span style="background:#D4AF37; color:#000; padding:1px 6px; border-radius:8px; font-weight:700;">💰 ${priceText}</span>
                     </div>
                 `;
@@ -4338,7 +4374,9 @@ if (!createdAtDate) continue;
                 ${colorText ? `<br>${colorText}` : ''}
                 ${sizeText ? `<br>${sizeText}` : ''}
                 <br>🔖 SKU: ${item.sku || 'غير متوفر'} <button class="copy-sku-btn" onclick="event.stopPropagation(); copyToClipboard('${item.sku || ''}')" style="background:transparent; border:none; cursor:pointer; color:#0F7B65; font-size:11px;"><i class="fas fa-copy"></i> نسخ</button>
-                <br>🔢 العدد: <b>${item.qty || 1}</b> | 💰 السعر: <b>${item.price} EGP</b>
+                                <br>🔢 العدد: <b>${item.qty || 1}</b> | 💰 ${item.qty > 1
+                    ? `الإجمالي: <b>${((item.price || 0) * item.qty).toLocaleString()} EGP</b> <small style="color:#888;">(${item.price} × ${item.qty})</small>`
+                    : `السعر: <b>${item.price} EGP</b>`}
                 ${wlText ? `<br>${wlText}` : ''}
             </div>
         </div>`;
@@ -5729,12 +5767,16 @@ function stripLeadingZero(phone) {
         row.push(year);                                      // N: (مخفي — السنة)
         row.push('خلال يومين');                               // O: (مخفي — معاد التسليم)
 
-        // ===== المنتجات الـ 6 (منتج + كمية + سعر) + الشحن =====
+                // ===== المنتجات (منتج + كمية + إجمالي السعر) + الشحن =====
         for (let i = 0; i < 6; i++) {
             const it = items[i];
+            const qty = it ? Number(it.qty || 1) : null;
+            const unitPrice = it ? (Number(it.price) || 0) : 0;
+            const totalPrice = qty != null ? unitPrice * qty : null;
+
             row.push(it ? fmtProductCell(it) : null);
-            row.push(it ? Number(1) : null);
-            row.push(it ? (Number(it.price) || 0) : null);
+            row.push(qty);
+            row.push(totalPrice);
             if (i === 0) row.push(Number(o.shipping) || 0);
         }
 
