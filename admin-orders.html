@@ -778,22 +778,28 @@
 .status.returned_confirmed { background: #2ecc71; color: #fff; }
 .status.returned_confirmed::before { content: "✅"; font-size: 11px; font-weight: normal; }
 /* علامة الطلبات المُصدَّرة إلى Excel قديم */
+/* علامة الطلبات المُصدَّرة إلى Excel قديم - شارة صغيرة */
 .card.exported-old-excel {
-    border-right: 4px solid #217346;
+    border-right: 3px solid #217346;
 }
 .card.exported-old-excel::after {
-    content: "📊 Excel قديم";
+    content: "📊";
     position: absolute;
-    top: 6px;
-    left: 6px;
-    background: #217346;
+    top: 7px;
+    left: 7px;
+    width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #217346 0%, #185c37 100%);
     color: #fff;
-    padding: 2px 8px;
-    border-radius: 20px;
-    font-size: 10px;
-    font-weight: 700;
+    border-radius: 50%;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     z-index: 5;
-    box-shadow: 0 2px 6px rgba(33,115,70,0.4);
+    box-shadow: 0 2px 6px rgba(33,115,70,0.45), 0 0 0 2px #fff;
+    line-height: 1;
+    pointer-events: none;
 }
 
     table { 
@@ -5898,24 +5904,53 @@ function stripLeadingZero(phone) {
         const expYear  = nowExport.getFullYear();
         const fileName = `GAMARK ${expDay}-${expMonth}-${expYear} (${selectedOrders.length} طلب).xlsx`;
 
-        // ✅ cellStyles: true ضروري لتفعيل التنسيقات
-        XLSX.writeFile(wb, fileName, { bookType: 'xlsx', cellStyles: true });
+       // ✅ cellStyles: true ضروري لتفعيل التنسيقات
+XLSX.writeFile(wb, fileName, { bookType: 'xlsx', cellStyles: true });
 
-        customAlert(`✅ تم تصدير ${exportedIds.length} طلب بنجاح إلى: ${fileName}`, 'success');
-        sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب`);
+// ============================================================
+// ✅ تعليم الطلبات اللي فعلاً اتصدّرت (partial success model)
+// ============================================================
+if (!navigator.onLine) {
+    customAlert(
+        '⚠️ أنت غير متصل. سيتم تعليم الطلبات بعد عودة الاتصال — لا تغلق الصفحة قبل ما يرجع النت.',
+        'warning'
+    );
+}
 
-        for (const id of exportedIds) {
-            try {
-                await updateDoc(doc(db, "orders", id), {
-                    exportedToOldExcel: true,
-                    exportedAt: serverTimestamp()
-                });
-            } catch (e) { console.error(e); }
-        }
+let markSuccess = 0;
+let markFailed  = 0;
 
-        closeOldExcelModal();
-        clearAllSelections();
-        render();
+for (const id of exportedIds) {
+    try {
+        await updateDoc(doc(db, "orders", id), {
+            exportedToOldExcel: true,
+            exportedAt: serverTimestamp()
+        });
+        markSuccess++;
+    } catch (markErr) {
+        console.error(`❌ [Excel] فشل تعليم الطلب ${id}:`, markErr);
+        markFailed++;
+    }
+}
+
+// ✅ رسالة دقيقة بناءً على النتيجة الفعلية
+if (markSuccess === exportedIds.length && markFailed === 0) {
+    customAlert(`✅ تم تصدير ${markSuccess} طلب وتعليمهم كـ "Excel قديم" بنجاح`, 'success');
+} else if (markSuccess > 0) {
+    customAlert(
+        `⚠️ تم تصدير الملف (${exportedIds.length} طلب)، لكن فشل تعليم ${markFailed} منهم في قاعدة البيانات — العلامة قد تختفي بعد إعادة التحميل.`,
+        'warning'
+    );
+} else {
+    customAlert(
+        `⚠️ تم تصدير الملف، لكن فشل تعليم جميع الطلبات في قاعدة البيانات (${markFailed} فشل). تأكد من الاتصال وأعد التصدير.`,
+        'error'
+    );
+}
+
+sendNotification('📊 تم التصدير', `تم تصدير ${exportedIds.length} طلب`);
+closeOldExcelModal();
+clearAllSelections();
     } catch (e) {
         console.error('Excel export error:', e);
         customAlert("❌ فشل إنشاء ملف Excel: " + e.message, 'error');
