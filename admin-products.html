@@ -2336,24 +2336,84 @@ function getSelectedProducts() {
     return window.allProducts.filter(p => selectedIds.includes(p.id));
 }
 
-/**
- * تصدير المنتجات المحددة إلى CSV
- */
+// ============================================================
+// 📤 تصدير المنتجات المحددة إلى CSV (مع Validation)
+// ============================================================
 window.exportSelectedToCSV = function() {
     const selected = getSelectedProducts();
-    
+
     if (selected.length === 0) {
         customAlert('⚠️ يرجى تحديد منتج واحد على الأقل للتصدير!', 'warning');
         return;
     }
 
+    // ============================================================
+    // ✅ Validation قبل التصدير (يكشف المشاكل اللي ميتا هترفضها)
+    // ============================================================
+    const issues = [];
+    const seenIds = new Set();
+
+    selected.forEach(p => {
+        const name = p.name || 'بدون اسم';
+
+        // 1️⃣ صورة مفقودة أو غير صالحة
+        if (!p.image || !String(p.image).startsWith('http')) {
+            issues.push(`❌ "${name}": بدون صورة صالحة (image_link)`);
+        }
+
+        // 2️⃣ سعر صفر أو سالب
+        if (!p.price || Number(p.price) <= 0) {
+            issues.push(`❌ "${name}": سعر غير صالح (${p.price})`);
+        }
+
+        // 3️⃣ ID مكرر (لازم يكون فريد لكل صف في CSV)
+        const cleanId = String(p.sku || p.id)
+            .replace(/[^a-zA-Z0-9_\-]/g, '-')
+            .replace(/-+/g, '-');
+        if (seenIds.has(cleanId)) {
+            issues.push(`❌ "${name}": ID مكرر (${cleanId}) — ميتا هترفض المنتج`);
+        }
+        seenIds.add(cleanId);
+
+        // 4️⃣ منتج نفذ تماماً (تحذير فقط)
+        const stockBySize = p.stockBySize || {};
+        const hasUnlimited = Object.values(stockBySize).some(q => q === null || q === undefined);
+        const total = Object.values(stockBySize).reduce((s, q) =>
+            q !== null && q !== undefined ? s + (parseInt(q) || 0) : s, 0);
+        const hasData = Object.keys(stockBySize).length > 0;
+        if (!hasUnlimited && total === 0 && hasData) {
+            issues.push(`⚠️ "${name}": نفذ من المخزون — هيتصدّر كـ "out of stock"`);
+        }
+
+        // 5️⃣ اسم طويل جداً (ميتا بترفض > 200 حرف)
+        if ((p.name || '').length > 200) {
+            issues.push(`⚠️ "${name.substring(0, 30)}...": الاسم أطول من 200 حرف`);
+        }
+    });
+
+    // عرض المشاكل قبل المتابعة
+    if (issues.length > 0) {
+        const proceed = confirm(
+            `⚠️ تم اكتشاف ${issues.length} مشكلة:\n\n` +
+            issues.slice(0, 15).join('\n') +
+            (issues.length > 15 ? `\n... و${issues.length - 15} مشكلة أخرى` : '') +
+            `\n\nهل تريد المتابعة على أي حال؟`
+        );
+        if (!proceed) return;
+    }
+
+    // ============================================================
+    // ✅ التصدير
+    // ============================================================
     try {
         const csv = convertProductsToCSV(selected);
-        const filename = `vante-catalog-selected-${new Date().toISOString().slice(0,10)}.csv`;
+        const filename = `GAMARK-catalog-${new Date().toISOString().slice(0, 10)}.csv`;
         downloadCSV(csv, filename);
+
+        console.log(`✅ [CSV] تم تصدير ${selected.length} منتج بنجاح`);
         customAlert(`✅ تم تصدير ${selected.length} منتج بنجاح!`, 'success');
     } catch (error) {
-        console.error(error);
+        console.error('❌ [CSV] خطأ في التصدير:', error);
         customAlert('❌ حدث خطأ أثناء التصدير: ' + error.message, 'error');
     }
 };
@@ -2420,54 +2480,130 @@ window.exportSelectedToGoogleSheets = function() {
  * تحويل المنتجات إلى CSV
  */
 function convertProductsToCSV(products) {
-    // تعريف تسميات الأعمدة المطلوبة لفيسبوك
+    const SITE_URL = 'https://gamark.sbs';  // ✅ الدومين الصحيح
+
+    // ✅ خريطة تصنيفات Meta الصحيحة للمشدات
+    const CATEGORY_MAP = {
+        'women_waist':              'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+        'women_corset_belly_back':  'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+        'women_shorts_belly':       'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+        'women_full_corset':        'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+        'men_vest_corset':          'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+        'men_shorts':               'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear',
+    };
+
     const headers = [
         'id', 'title', 'description', 'availability', 'condition',
-        'price', 'link', 'image_link', 'brand', 'product_type', 'google_product_category'
+        'price', 'sale_price', 'link', 'image_link', 'brand',
+        'product_type', 'google_product_category'
     ];
 
-    // إنشاء صفوف البيانات (هذه المرة بدون أخطاء برمجية داخل الـ map)
-    const rows = products.map((p, index) => {
+    const rows = products.map((p) => {
         const stockBySize = p.stockBySize || {};
+
+        // ✅ التصحيح الأهم: null = غير محدود = متوفر
+        const hasUnlimited = Object.values(stockBySize)
+            .some(q => q === null || q === undefined);
+
         const totalStock = Object.values(stockBySize).reduce((sum, qty) => {
             if (qty !== null && qty !== undefined) return sum + (parseInt(qty) || 0);
             return sum;
         }, 0);
-        
-        const availability = totalStock > 0 ? 'in stock' : 'out of stock';
-        
-        // الرابط الصحيح
-        const productLink = `https://vante.sbs/Product.html?id=${p.id}`;
-        
-        // إرجاع صف البيانات
+
+        // ✅ في ستوك لو: فيه كمية غير محدودة، أو فيه كمية > 0، أو مفيش بيانات stock أصلاً
+        const hasStockData = Object.keys(stockBySize).length > 0;
+        const inStock = hasUnlimited || totalStock > 0 || !hasStockData;
+
+        const availability = inStock ? 'in stock' : 'out of stock';
+
+        // ✅ الدومين الصح + URL encode للـ id
+        const productLink = `${SITE_URL}/Product.html?id=${encodeURIComponent(p.id)}`;
+
+        // ✅ السعر بالصيغة الصحيحة
+        const currentPrice  = Number(p.price || 0);
+        const originalPrice = Number(p.comparePrice || 0);
+        const hasDiscount   = originalPrice > currentPrice;
+
+        const priceField = `${(hasDiscount ? originalPrice : currentPrice).toFixed(2)} EGP`;
+        const salePriceField = hasDiscount ? `${currentPrice.toFixed(2)} EGP` : '';
+
+        // ✅ ID نظيف (بدون مسافات أو رموز غريبة)
+        const cleanId = String(p.sku || p.id)
+            .replace(/[^a-zA-Z0-9_\-]/g, '-')
+            .replace(/-+/g, '-');
+
+        // ✅ تنظيف الوصف من HTML entities
+        const cleanDesc = cleanHtmlForCSV(p.description || p.name || 'منتج فاخر من GAMARK');
+
+        // ✅ التصنيف
+        const googleCategory = CATEGORY_MAP[p.category] ||
+            'Apparel & Accessories > Clothing > Underwear & Socks > Shapewear';
+
+        // ✅ نوع المنتج بالإنجليزي
+        const productType = mapCategoryToEnglish(p.category);
+
         return [
-            p.sku || p.id || `prod-${index + 1}`,  // ✅ نستخدم SKU في خانة الـ ID
-            (p.name || 'منتج بدون اسم').replace(/,/g, ' '),
-            ((p.description || 'منتج فاخر من GAMARK').replace(/<[^>]*>/g, '').substring(0, 500)).replace(/,/g, ' '),
+            cleanId,
+            p.name || 'منتج',
+            cleanDesc,
             availability,
             'new',
-            p.price || 0,
+            priceField,
+            salePriceField,          // ممكن يكون فاضي
             productLink,
             p.image || '',
             'GAMARK',
-            p.categoryLabel || p.category || 'عام',
-            'Jewelry & Watches > Jewelry'
+            productType,
+            googleCategory
         ];
     });
 
-    // ✅ بناء ملف CSV هنا (هذا هو التصحيح: خارج حلقة الـ map)
-    let csv = headers.join(',') + '\n';
+    // ✅ CSV Escaping صحيح (بدون تخريب البيانات)
+    const escapeCell = (cell) => {
+        const str = String(cell ?? '');
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+            return `"${str.replace(/"/g, '""')}"`;
+        }
+        return str;
+    };
+
+    let csv = headers.map(escapeCell).join(',') + '\n';
     rows.forEach(row => {
-        const escapedRow = row.map(cell => {
-            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
-                return `"${cell.replace(/"/g, '""')}"`;
-            }
-            return cell;
-        });
-        csv += escapedRow.join(',') + '\n';
+        csv += row.map(escapeCell).join(',') + '\n';
     });
 
     return csv;
+}
+
+// ✅ دالة تنظيف الـ HTML للوصف
+function cleanHtmlForCSV(html) {
+    if (!html) return '';
+    return String(html)
+        .replace(/<br\s*\/?>/gi, ' ')
+        .replace(/<\/p>/gi, ' ')
+        .replace(/<[^>]*>/g, '')      // شيل كل الـ tags
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;/gi, "'")
+        .replace(/\s+/g, ' ')         // شيل المسافات الزايدة
+        .trim()
+        .substring(0, 5000);          // حد أقصى 5000 حرف لميتا
+}
+
+// ✅ دالة تحويل تصنيف المنتج للإنجليزي
+function mapCategoryToEnglish(cat) {
+    const map = {
+        'women_waist':              'Women > Shapewear > Waist Trainer',
+        'women_corset_belly_back':  'Women > Shapewear > Corset',
+        'women_shorts_belly':       'Women > Shapewear > Shorts',
+        'women_full_corset':        'Women > Shapewear > Full Body',
+        'men_vest_corset':          'Men > Shapewear > Vest',
+        'men_shorts':               'Men > Shapewear > Shorts',
+    };
+    return map[cat] || 'Shapewear';
 }
 
 /**
