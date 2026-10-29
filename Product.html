@@ -3746,7 +3746,7 @@ function initReadMore() {
 }
 
 // ============================================================
-// 🎯 SEO - تحديث ديناميكي كامل لبيانات المنتج
+// 🎯 SEO - تحديث ديناميكي كامل لبيانات المنتج + Meta Product Tags
 // ============================================================
 window.updateProductSEO = function(product) {
     if (!product) return;
@@ -3754,7 +3754,9 @@ window.updateProductSEO = function(product) {
     const BASE_URL = 'https://gamark.sbs';
     const productUrl = `${BASE_URL}/Product.html?id=${encodeURIComponent(product.id)}`;
 
-    // 1️⃣ Canonical
+    // ============================================================
+    // 1️⃣ Canonical (لازم يكون نفس URL بالحرف)
+    // ============================================================
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
         canonical = document.createElement('link');
@@ -3763,12 +3765,16 @@ window.updateProductSEO = function(product) {
     }
     canonical.setAttribute('href', productUrl);
 
+    // ============================================================
     // 2️⃣ Title محسّن
+    // ============================================================
     document.title = `${product.name} | مشد طبي من GAMARK`;
     const titleEl = document.getElementById('productTitle');
     if (titleEl) titleEl.textContent = document.title;
 
+    // ============================================================
     // 3️⃣ Meta Description ديناميكي
+    // ============================================================
     const cleanDesc = (product.description || '')
         .replace(/<[^>]*>/g, ' ')
         .replace(/\s+/g, ' ')
@@ -3785,16 +3791,21 @@ window.updateProductSEO = function(product) {
         cleanDesc || `${product.name} من GAMARK - جودة طبية عالية وأسعار منافسة مع شحن لكل مصر.`
     );
 
-    // 4️⃣ Availability من المخزون
+    // ============================================================
+    // 4️⃣ حساب Availability (null = غير محدود = in stock)
+    // ============================================================
     const stockBySize = product.stockBySize || {};
     const hasUnlimited = Object.values(stockBySize).some(q => q === null || q === undefined);
     const totalStock = Object.values(stockBySize).reduce((sum, q) => {
         if (q !== null && q !== undefined) return sum + (parseInt(q) || 0);
         return sum;
     }, 0);
-    const inStock = hasUnlimited || totalStock > 0;
+    const hasStockData = Object.keys(stockBySize).length > 0;
+    const inStock = hasUnlimited || totalStock > 0 || !hasStockData;
 
+    // ============================================================
     // 5️⃣ AggregateRating من التقييمات المعتمدة
+    // ============================================================
     const productReviews = (window.allReviews || []).filter(
         r => r.productId === product.id && r.rating > 0
     );
@@ -3810,7 +3821,9 @@ window.updateProductSEO = function(product) {
         };
     }
 
+    // ============================================================
     // 6️⃣ بناء Product JSON-LD
+    // ============================================================
     const images = [product.image, ...(product.additionalImages || [])].filter(Boolean);
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -3833,7 +3846,7 @@ window.updateProductSEO = function(product) {
     };
     if (aggregateRating) jsonLd.aggregateRating = aggregateRating;
 
-    // 7️⃣ إزالة أي JSON-LD قديم من نوع Product
+    // إزالة أي JSON-LD قديم من نوع Product
     document.querySelectorAll('script[type="application/ld+json"]').forEach(script => {
         try {
             const data = JSON.parse(script.textContent);
@@ -3841,35 +3854,73 @@ window.updateProductSEO = function(product) {
         } catch (e) {}
     });
 
-    // 8️⃣ حقن JSON-LD الجديد
+    // حقن JSON-LD الجديد
     const jsonScript = document.createElement('script');
     jsonScript.type = 'application/ld+json';
     jsonScript.textContent = JSON.stringify(jsonLd);
     document.head.appendChild(jsonScript);
 
-    // 9️⃣ تحديث Alt Text للصورة الرئيسية
+    // ============================================================
+    // 7️⃣ Alt Text للصورة الرئيسية
+    // ============================================================
     const mainImg = document.getElementById('productImage');
     if (mainImg) {
         mainImg.alt = `${product.name} - GAMARK`;
     }
 
-    // 🔟 تحديث Open Graph + Twitter
-    const setMeta = (selector, value) => {
-        const el = document.querySelector(selector);
-        if (el) el.setAttribute('content', value);
+    // ============================================================
+    // 8️⃣ دالة مساعدة لتحديث/إنشاء meta tags
+    // ============================================================
+    const setMeta = (attr, name, value) => {
+        let el = document.querySelector(`meta[${attr}="${name}"]`);
+        if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute(attr, name);
+            document.head.appendChild(el);
+        }
+        el.setAttribute('content', value);
     };
+
+    // ============================================================
+    // 9️⃣ ⚡ Open Graph + Twitter
+    // ============================================================
     const ogImage = product.image || `${BASE_URL}/images/preview.jpg`;
     const ogDesc  = cleanDesc || `${product.name} من GAMARK`;
 
-    setMeta('meta[property="og:title"]', `${product.name} | GAMARK`);
-    setMeta('meta[property="og:description"]', ogDesc);
-    setMeta('meta[property="og:image"]', ogImage);
-    setMeta('meta[property="og:url"]', productUrl);
-    setMeta('meta[name="twitter:title"]', `${product.name} | GAMARK`);
-    setMeta('meta[name="twitter:description"]', ogDesc);
-    setMeta('meta[name="twitter:image"]', ogImage);
+    setMeta('property', 'og:title', `${product.name} | GAMARK`);
+    setMeta('property', 'og:description', ogDesc);
+    setMeta('property', 'og:image', ogImage);
+    setMeta('property', 'og:url', productUrl);
+    setMeta('property', 'og:type', 'product');
+    setMeta('property', 'og:site_name', 'GAMARK');
 
-    console.log('✅ [SEO] تم حقن Product Schema + Canonical + Meta Tags');
+    setMeta('name', 'twitter:card', 'summary_large_image');
+    setMeta('name', 'twitter:title', `${product.name} | GAMARK`);
+    setMeta('name', 'twitter:description', ogDesc);
+    setMeta('name', 'twitter:image', ogImage);
+
+    // ============================================================
+    // 🔟 ⚡⚡⚡ Meta Product Tags (الأهم لميتا / WhatsApp Catalog)
+    // ============================================================
+    setMeta('property', 'product:price:amount',    Number(product.price).toFixed(2));
+    setMeta('property', 'product:price:currency',  'EGP');
+    setMeta('property', 'product:availability',    inStock ? 'in stock' : 'out of stock');
+    setMeta('property', 'product:condition',       'new');
+    setMeta('property', 'product:brand',           'GAMARK');
+    setMeta('property', 'product:retailer_item_id', product.sku || product.id);
+
+    // لو فيه خصم
+    if (product.comparePrice && Number(product.comparePrice) > Number(product.price)) {
+        setMeta('property', 'product:sale_price:amount',   Number(product.price).toFixed(2));
+        setMeta('property', 'product:sale_price:currency', 'EGP');
+        setMeta('property', 'product:original_price:amount', Number(product.comparePrice).toFixed(2));
+    }
+
+    console.log('✅ [SEO] Meta Product Tags injected:', {
+        price: Number(product.price).toFixed(2) + ' EGP',
+        availability: inStock ? 'in stock' : 'out of stock',
+        url: productUrl
+    });
 };
 
 // ========== تحميل المنتج ==========
